@@ -1,0 +1,213 @@
+/* Apply full-screen background with overlay */
+.landingpage-body {
+    background: url('./LandingImage.jpg') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Overlay effect */
+.landingpage-body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
+
+/* Main body container */
+.MainBody {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+/* Header Styles */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    z-index: 1000;
+}
+
+/* Header Container */
+.header-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Logo Section */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.logo-container img {
+    width: 50px;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Navigation Menu */
+.nav-menu {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+}
+
+.nav-item {
+    padding: 10px 20px;
+    background-color: rgba(94, 117, 94, 0.55);
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.nav-item:hover {
+    background: rgba(94, 117, 94, 0.8);
+}
+
+/* Authentication Buttons */
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.login-btn, .signup-btn {
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.login-btn {
+    background: transparent;
+    border: 2px solid #4CAF50;
+    color: white;
+}
+
+.signup-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+}
+
+.login-btn:hover {
+    background: rgba(76, 175, 80, 0.5);
+}
+
+.signup-btn:hover {
+    background: #45a049;
+}
+
+/* Main Content */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+}
+
+.one {
+    font-size: 90px;
+}
+
+.two {
+    font-size: 90px;
+}
+
+.three {
+    font-size: 90px;
+    color: #80AF81;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .one, .two, .three {
+        font-size: 60px;
+    }
+
+    .nav-links {
+        gap: 10px;
+    }
+
+    .nav-item {
+        padding: 8px 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        height: 60px;
+    }
+
+    .header-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .logo-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .nav-menu {
+        display: none;
+    }
+
+    .auth-buttons {
+        flex-direction: column;
+    }
+
+    .one, .two, .three {
+        font-size: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .one, .two, .three {
+        font-size: 30px;
+    }
+
+    .login-btn, .signup-btn {
+        padding: 6px 12px;
+    }
+}

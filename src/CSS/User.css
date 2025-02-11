@@ -1,0 +1,80 @@
+.user-container {
+    background-color: #F4F2F2; /* Light gray background */
+    min-height: calc(100vh - 60px); /* Adjust for navbar height */
+    min-width: calc(100vw - 250px); /* Adjust for sidebar width */
+    margin-left: 250px; /* Push content to the right of the sidebar */
+    margin-top: 60px; /* Push content down below the navbar */
+    display: flex;
+    flex-direction: column;
+    padding: 20px; /* Add padding to avoid elements touching the edges */
+  }
+  
+  .user-title {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .user-date {
+    font-size: 14px;
+    color: gray;
+  }
+  
+  .search-bar {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+  }
+  
+  .search-icon {
+    margin-right: 8px;
+  }
+  
+  .user-table {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+  }
+  
+  table {
+    width: 100%;
+    min-height:69vh;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+  }
+  
+  .status-badge.active {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .edit-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  
+  .prev-btn, .next-btn {
+    padding: 5px 10px;
+    background: #ddd;
+    border: none;
+    cursor: pointer;
+  }
+  

@@ -1,0 +1,46 @@
+.navbar {
+    width: calc(100% - 250px); /* Adjusted to account for sidebar width */
+    height: 60px; /* Fixed height for the navbar */
+    background: #FFFFFF;
+    color: black;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 250px; /* Aligns navbar next to the sidebar */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.navbar-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.navbar-menu {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.navbar-menu li {
+    font-size: 16px;
+}
+
+.navbar-menu a {
+    color: black;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background 0.3s ease-in-out;
+}
+
+.navbar-menu a:hover {
+    background: #34495e;
+    color: white;
+}

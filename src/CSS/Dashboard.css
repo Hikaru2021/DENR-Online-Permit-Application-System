@@ -1,0 +1,109 @@
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Main content takes remaining width */
+.dashboard-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Dashboard Body */
+.dashboard-body {
+    background-color: #F4F2F2; /* Light gray background */
+    min-height: calc(100vh - 60px); /* Adjust for navbar height */
+    min-width: calc(100vw - 250px); /* Adjust for sidebar width */
+    margin-left: 250px; /* Push content to the right of the sidebar */
+    margin-top: 60px; /* Push content down below the navbar */
+    display: flex;
+    flex-direction: column;
+    padding: 20px; /* Add padding to avoid elements touching the edges */
+}
+
+/* Title and Date */
+.dashboard-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.dashboard-date {
+    font-size: 14px;
+    color: gray;
+    margin-bottom: 20px;
+}
+
+/* Placeholder Boxes */
+.dashboard-boxes {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.box {
+    flex: 1;
+    background: #e5f5e5; /* Light green */
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Box Titles */
+.box h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Number inside the boxes */
+.count {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+/* "From this month" text */
+.box span {
+    font-size: 12px;
+    color: black;
+    align-items: left;
+    justify-content: space-between;
+}
+
+/* Specific colors for each box */
+.total { background: rgb(24, 164, 21, .66); color: black; }
+.pending { background: rgb(80, 141, 78, .80);; color: black; }
+.approved { background: rgb(128, 175, 129, .80);; color: black; }
+.rejected { background: rgb(214, 239, 216, .80);; color: black; }
+
+/* Big Placeholder Box */
+.big-placeholder-box {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px; /* Space from the previous section */
+    text-align: center;
+    width: 100%;
+    min-height: 75%; /* Adjust the height as needed */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-boxes {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .box {
+        width: 100%;
+    }
+}
