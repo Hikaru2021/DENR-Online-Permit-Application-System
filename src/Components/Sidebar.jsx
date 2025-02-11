@@ -9,8 +9,11 @@ const Sidebar = () => {
     <div className="sidebar">
       {/* Logo Section */}
       <div className="sidebar-header">
-        <img src="/path-to-logo.png" alt="DENR GreenCertify" className="sidebar-logo" />
-        <h2 className="sidebar-title">GREENCERTIFY</h2>
+        <img src="/Logo1.png" alt="DENR GreenCertify" className="sidebar-logo" />
+        <div className="sidebar-header">
+          <h2 className="sidebar-title">DENR</h2>
+          <h2 className="sidebar-title">GREENCERTIFY</h2>
+        </div>
       </div>
 
       {/* Main Menu */}
@@ -19,6 +22,7 @@ const Sidebar = () => {
         <ul className="sidebar-menu">
           <li>
             <NavLink to="/dashboard" activeClassName="active">
+              <img src="/dashboard.svg" alt="DENR GreenCertify" className="sidebar-icon" />
               <i className="fas fa-tachometer-alt"></i> Dashboard
             </NavLink>
           </li>
@@ -57,21 +61,25 @@ const Sidebar = () => {
         <ul className="sidebar-menu">
           <li>
             <NavLink to="/User" activeClassName="active">
+              <img src="/users.svg" alt="DENR GreenCertify" className="sidebar-icon" />
               <i className="fas fa-users"></i> Users
             </NavLink>
           </li>
           <li>
             <NavLink to="/application-list" activeClassName="active">
+              <img src="/applicationlist.svg" alt="DENR GreenCertify" className="sidebar-icon" /> 
               <i className="fas fa-list"></i> Application List
             </NavLink>
           </li>
           <li>
             <NavLink to="/projects" activeClassName="active">
+              <img src="/projects.svg" alt="DENR GreenCertify" className="sidebar-icon" />
               <i className="fas fa-tasks"></i> Projects
             </NavLink>
           </li>
           <li>
             <NavLink to="/reports" activeClassName="active">
+              <img src="/reports.svg" alt="DENR GreenCertify" className="sidebar-icon" />
               <i className="fas fa-chart-bar"></i> Reports
             </NavLink>
           </li>
@@ -84,11 +92,13 @@ const Sidebar = () => {
         <ul className="sidebar-menu">
           <li>
             <NavLink to="/settings" activeClassName="active">
+              <img src="/settings.svg" alt="DENR GreenCertify" className="sidebar-icon" />
               <i className="fas fa-cog"></i> Settings
             </NavLink>
           </li>
           <li>
             <NavLink to="/logout" activeClassName="active">
+              <img src="/logout.svg" alt="DENR GreenCertify" className="sidebar-icon" />
               <i className="fas fa-sign-out-alt"></i> Log out
             </NavLink>
           </li>
