@@ -29,6 +29,29 @@
     width: 100%;
 }
 
+/* Content Transition */
+.content {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+}
+
+.content.active {
+    opacity: 1;
+    transform: translateY(0);
+    position: relative;
+}
+
+/* Highlight active tab */
+.nav-item.active {
+    background: rgba(94, 117, 94, 0.8);
+    color: white;
+}
+
+
 /* Header Styles */
 header {
     position: fixed;
@@ -80,23 +103,33 @@ header {
 }
 
 .nav-links {
-    display: flex;
     list-style: none;
-    gap: 20px;
+    display: flex;
+    background: rgba(94, 117, 94, 0.8); /* Greenish background */
+    border-radius: 25px; /* Rounded corners */
+    padding: 5px 10px;
 }
 
+
 .nav-item {
-    padding: 10px 20px;
-    background-color: rgba(94, 117, 94, 0.55);
-    color: white;
-    font-weight: bold;
+    background: transparent;
     border: none;
+    padding: 5px 40px;
+    color: white;
+    font-size: 16px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    border-radius: 20px; /* Rounded buttons */
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .nav-item:hover {
     background: rgba(94, 117, 94, 0.8);
+}
+
+.nav-item.active {
+    background: #BFC5B9; /* Light green/gray */
+    color: black;
+    font-weight: bold;
 }
 
 /* Authentication Buttons */
