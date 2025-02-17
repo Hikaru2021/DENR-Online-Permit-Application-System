@@ -115,10 +115,10 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li>
-            <button className="logout-btn" onClick={handleLogout}>
+            <NavLink to="/" onClick={handleLogout} activeClassName="active" className="logout-link">
               <img src="/logout.svg" alt="Logout" className="sidebar-icon" />
               Log out
-            </button>
+            </NavLink>
           </li>
         </ul>
       </div>
