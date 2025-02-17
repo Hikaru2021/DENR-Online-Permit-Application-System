@@ -51,7 +51,6 @@
     color: white;
 }
 
-
 /* Header Styles */
 header {
     position: fixed;
@@ -74,6 +73,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 /* Logo Section */
@@ -100,6 +100,7 @@ header {
     flex-grow: 1;
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .nav-links {
@@ -109,7 +110,6 @@ header {
     border-radius: 25px; /* Rounded corners */
     padding: 5px 10px;
 }
-
 
 .nav-item {
     background: transparent;
@@ -136,6 +136,7 @@ header {
 .auth-buttons {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .login-btn, .signup-btn {
@@ -204,6 +205,14 @@ header {
     .nav-item {
         padding: 8px 15px;
     }
+
+    .header-container {
+        flex-direction: column;
+    }
+
+    .auth-buttons {
+        gap: 8px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -242,5 +251,9 @@ header {
 
     .login-btn, .signup-btn {
         padding: 6px 12px;
+    }
+
+    .logo-container img {
+        width: 40px;
     }
 }
