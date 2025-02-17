@@ -25,20 +25,28 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data, error } = await supabase
-          .from("user") // Assuming your user table is called "user"
-          .select("full_name, email")
-          .eq("id", user.id)
-          .single(); // Fetch a single record
-
+      try {
+        const { data, error } = await supabase.auth.getUser();
         if (error) {
-          console.error("Error fetching user data:", error.message);
+          console.error("Error fetching user:", error.message);
+        } else if (data && data.user) {
+          const { user } = data; // The user object
+          const { data: userData, error: userError } = await supabase
+            .from("user") // Assuming your user table is called "user"
+            .select("full_name, email")
+            .eq("id", user.id)
+            .single();
+
+          if (userError) {
+            console.error("Error fetching user details:", userError.message);
+          } else {
+            setUser(userData);
+          }
         } else {
-          setUser(data);
+          console.log("No user found.");
         }
+      } catch (err) {
+        console.error("Error in fetching user data:", err.message);
       }
     };
 
