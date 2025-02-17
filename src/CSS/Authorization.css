@@ -1,6 +1,6 @@
 /* Apply background styling properly */
 .authorization-body {
-  background: url('/LandingImage.jpg') no-repeat center center fixed;
+  background: lightgreen; /*no-repeat center center fixed;*/
   background-size: cover;
   min-height: 100vh;
   min-width: 100vw;
