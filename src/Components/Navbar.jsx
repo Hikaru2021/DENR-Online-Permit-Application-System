@@ -1,19 +1,13 @@
+// Navbar.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "./supabaseClient"; // Import the initialized client
 import "../CSS/Navbar.css"; // External CSS file for styling
 
-// Initialize Supabase Client
-const supabase = createClient(
-  "https://your-supabase-url.supabase.co",
-  "your-anon-key"
-);
-
 const Navbar = () => {
-  const location = useLocation(); // Get the current route
+  const location = useLocation();
   const [user, setUser] = useState(null);
 
-  // Function to determine the page title based on the route
   const getPageTitle = () => {
     switch (location.pathname) {
       case "/dashboard":
@@ -29,17 +23,16 @@ const Navbar = () => {
     }
   };
 
-  // Fetch user data from Supabase
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser(); // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
         const { data, error } = await supabase
-          .from("user") // Table name: public.user
+          .from("user") // Assuming your user table is called "user"
           .select("full_name, email")
           .eq("id", user.id)
-          .single(); // Fetch only one record
+          .single(); // Fetch a single record
 
         if (error) {
           console.error("Error fetching user data:", error.message);
@@ -54,13 +47,11 @@ const Navbar = () => {
 
   return (
     <div className="navbar">
-      {/* Left - Page Title */}
       <div className="navbar-left">
         <h1 className="navbar-title">{getPageTitle()}</h1>
         <p className="navbar-subtitle">September 12, 2024</p>
       </div>
 
-      {/* Right - Profile Section */}
       <div className="navbar-right">
         <div className="avatar"></div>
         <div className="admin-info">
