@@ -1,9 +1,27 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
 import "../CSS/Sidebar.css";
+
+// Initialize Supabase Client
+const supabase = createClient(
+  "https://your-supabase-url.supabase.co",
+  "your-anon-key"
+);
 
 const Sidebar = () => {
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
+  const navigate = useNavigate(); // Hook for navigation
+
+  // Logout function
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Logout failed:", error.message);
+    } else {
+      navigate("/"); // Redirect to Landing Page
+    }
+  };
 
   return (
     <div className="sidebar">
@@ -22,18 +40,18 @@ const Sidebar = () => {
         <ul className="sidebar-menu">
           <li>
             <NavLink to="/dashboard" activeClassName="active">
-              <img src="/dashboard.svg" alt="DENR GreenCertify" className="sidebar-icon" />
-              <i className="fas fa-tachometer-alt"></i> Dashboard
+              <img src="/dashboard.svg" alt="Dashboard" className="sidebar-icon" />
+              Dashboard
             </NavLink>
           </li>
-          
+
           {/* Applications Dropdown */}
           <li className="dropdown">
             <button
               className={`dropdown-btn ${isApplicationsOpen ? "open" : ""}`}
               onClick={() => setIsApplicationsOpen(!isApplicationsOpen)}
             >
-              <i className="fas fa-file-alt"></i> Applications
+              Applications
               <i className={`fas fa-chevron-${isApplicationsOpen ? "up" : "down"}`}></i>
             </button>
             {isApplicationsOpen && (
@@ -60,27 +78,27 @@ const Sidebar = () => {
         <p className="sidebar-section-title">MANAGE</p>
         <ul className="sidebar-menu">
           <li>
-            <NavLink to="/User" activeClassName="active">
-              <img src="/users.svg" alt="DENR GreenCertify" className="sidebar-icon" />
-              <i className="fas fa-users"></i> Users
+            <NavLink to="/user" activeClassName="active">
+              <img src="/users.svg" alt="Users" className="sidebar-icon" />
+              Users
             </NavLink>
           </li>
           <li>
             <NavLink to="/application-list" activeClassName="active">
-              <img src="/applicationlist.svg" alt="DENR GreenCertify" className="sidebar-icon" /> 
-              <i className="fas fa-list"></i> Application List
+              <img src="/applicationlist.svg" alt="Application List" className="sidebar-icon" />
+              Application List
             </NavLink>
           </li>
           <li>
             <NavLink to="/projects" activeClassName="active">
-              <img src="/projects.svg" alt="DENR GreenCertify" className="sidebar-icon" />
-              <i className="fas fa-tasks"></i> Projects
+              <img src="/projects.svg" alt="Projects" className="sidebar-icon" />
+              Projects
             </NavLink>
           </li>
           <li>
             <NavLink to="/reports" activeClassName="active">
-              <img src="/reports.svg" alt="DENR GreenCertify" className="sidebar-icon" />
-              <i className="fas fa-chart-bar"></i> Reports
+              <img src="/reports.svg" alt="Reports" className="sidebar-icon" />
+              Reports
             </NavLink>
           </li>
         </ul>
@@ -92,15 +110,15 @@ const Sidebar = () => {
         <ul className="sidebar-menu">
           <li>
             <NavLink to="/settings" activeClassName="active">
-              <img src="/settings.svg" alt="DENR GreenCertify" className="sidebar-icon" />
-              <i className="fas fa-cog"></i> Settings
+              <img src="/settings.svg" alt="Settings" className="sidebar-icon" />
+              Settings
             </NavLink>
           </li>
           <li>
-            <NavLink to="/logout" activeClassName="active">
-              <img src="/logout.svg" alt="DENR GreenCertify" className="sidebar-icon" />
-              <i className="fas fa-sign-out-alt"></i> Log out
-            </NavLink>
+            <button className="logout-btn" onClick={handleLogout}>
+              <img src="/logout.svg" alt="Logout" className="sidebar-icon" />
+              Log out
+            </button>
           </li>
         </ul>
       </div>

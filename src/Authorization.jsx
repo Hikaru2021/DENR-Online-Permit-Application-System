@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './CSS/Authorization.css';
-// import { FaUser, FaKey } from "react-icons/fa";
-// import { MdEmail } from "react-icons/md";
+import { FaUser, FaKey } from "react-icons/fa";
+import { MdEmail } from "react-icons/md";
 import { supabase } from './library/supabaseClient'; // Ensure you have supabaseClient.js set up
 
 function Authorization() {
@@ -27,13 +27,16 @@ function Authorization() {
       email,
       password,
     });
+  
     if (error) {
-      console.error('Login error:', error.message);
+      console.error('Login error:', error);
+      alert(`Login failed: ${error.message}`); // Show error to user
     } else {
       console.log('Login successful:', data);
       navigate('/Dashboard');
     }
   };
+  
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -75,7 +78,7 @@ function Authorization() {
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
             <h1>Login</h1>
             <div className='input-box'>
-              <input 
+            /  <input 
                 type="email" 
                 placeholder='Email' 
                 required 
