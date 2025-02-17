@@ -26,21 +26,27 @@ const Navbar = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const { data, error } = await supabase.auth.getUser();
+        // Get authenticated user
+        const { data: { user }, error } = await supabase.auth.getUser();
+
         if (error) {
           console.error("Error fetching user:", error.message);
-        } else if (data && data.user) {
-          const { user } = data; // The user object
+          return;
+        }
+
+        // If user is logged in
+        if (user) {
+          // Query the 'public.user' table to get additional user info
           const { data: userData, error: userError } = await supabase
-            .from("user") // Assuming your user table is called "user"
+            .from("user") // Make sure the table name is 'user' and is in the public schema
             .select("full_name, email")
-            .eq("id", user.id)
-            .single();
+            .eq("id", user.id) // Match by the user's id
+            .single(); // Fetch single record
 
           if (userError) {
             console.error("Error fetching user details:", userError.message);
           } else {
-            setUser(userData);
+            setUser(userData); // Set the fetched data in state
           }
         } else {
           console.log("No user found.");
@@ -51,7 +57,7 @@ const Navbar = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount
 
   return (
     <div className="navbar">
