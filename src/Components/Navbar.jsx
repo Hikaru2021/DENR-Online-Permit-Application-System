@@ -1,7 +1,7 @@
 // Navbar.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from './library/supabaseClient'; // Import the initialized client
+import { supabase } from '../library/supabaseClient'; // Import the initialized client
 import "../CSS/Navbar.css"; // External CSS file for styling
 
 const Navbar = () => {
