@@ -78,7 +78,7 @@ function Authorization() {
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
             <h1>Login</h1>
             <div className='input-box'>
-            /  <input 
+              <input 
                 type="email" 
                 placeholder='Email' 
                 required 
@@ -122,7 +122,7 @@ function Authorization() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
-              {/* <FaUser className='icon' /> */}
+              <FaUser className='icon' />
             </div>
             <div className='input-box'>
               <input 
@@ -132,7 +132,7 @@ function Authorization() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              {/* <MdEmail className='icon' /> */}
+              <MdEmail className='icon' />
             </div>
             <div className='input-box'>
               <input 
