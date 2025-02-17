@@ -1,6 +1,6 @@
 /* Apply full-screen background with overlay */
 .landingpage-body {
-    background: lightgreen; /*no-repeat center center fixed;*/
+    background: url('/LandingImage.jpg') no-repeat center center fixed;
     background-size: cover;
     position: relative;
     width: 100vw;
