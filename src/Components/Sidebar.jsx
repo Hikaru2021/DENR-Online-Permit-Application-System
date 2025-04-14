@@ -84,7 +84,7 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/application-list" activeClassName="active">
+            <NavLink to="/ApplicationList" activeClassName="active">
               <img src="/applicationlist.svg" alt="Application List" className="sidebar-icon" />
               Application List
             </NavLink>
