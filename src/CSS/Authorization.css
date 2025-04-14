@@ -1,140 +1,117 @@
-/* Apply background styling properly */
-.authorization-body {
-  background: url('/LandingImage.jpg') no-repeat center center fixed;
-  background-size: cover;
-  min-height: 100vh;
-  min-width: 100vw;
+/* Container based on your provided measurements with new class names */
+.content-container {
+  background-color: #F4F2F2; /* Light gray background */
+  min-height: calc(100vh - 60px); /* Adjust for navbar height */
+  min-width: calc(100vw - 250px); /* Adjust for sidebar width */
+  margin-left: 250px; /* Push content to the right of the sidebar */
+  margin-top: 50px; /* Push content down below the navbar */
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  padding: 20px;
 }
 
-/* Wrapper container */
-.wrapper {
-  position: relative;
-  width: 420px;
-  height: 500px;
-  background: rgba(255, 255, 255, 0.1); /* Slight transparency */
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  border: 1px solid #CACACA;
-  overflow: hidden;
-  backdrop-filter: blur(20px);
-}
-
-/* Form box */
-.wrapper .form-box {
-  width: 100%;
-  padding: 40px;
-  position: absolute;
-  transition: transform 0.3s ease-in-out;
-}
-
-/* Login form transitions */
-.wrapper.active .form-box.login {
-  transform: translateX(-100%);
-}
-.wrapper .form-box.login {
-  transform: translateX(0);
-}
-
-/* Register form transitions */
-.wrapper .form-box.register {
-  transform: translateX(100%);
-}
-.wrapper.active .form-box.register {
-  transform: translateX(0);
-}
-
-/* Logo */
-form img {
-  display: block;
-  height: 60px;
-  width: auto;
-  margin: 0 auto 20px;
-}
-
-/* Form headings */
-form h1 {
-  font-size: 36px;
-  text-align: center;
-  color: white;
-}
-
-/* Input field styling */
-form .input-box {
-  position: relative;
-  width: 100%;
-  height: 50px;
-  margin: 30px 0;
-}
-.input-box input {
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
-  border: 2px solid #CACACA;
-  border-radius: 10px;
-  padding: 20px 45px 20px 20px;
-  color: white;
-}
-.input-box input::placeholder {
-  color: #CACACA;
-}
-.input-box .icon {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 16px;
-  color: white;
-}
-
-/* Remember me and forgot password */
-form .remember-forgot {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14.5px;
-  margin: -15px 0 15px;
-  color: white;
-}
-.remember-forgot label input {
-  accent-color: #fff;
-  margin-right: 4px;
-}
-.remember-forgot a {
-  color: white;
-  text-decoration: none;
-}
-.remember-forgot a:hover {
-  text-decoration: underline;
-}
-
-/* Button styling */
-form button {
-  width: 100%;
-  height: 45px;
-  border: none;
-  outline: none;
-  border-radius: 40px;
-  box-shadow: 0 0 10px #333;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 700;
-  background-color: #80AF81;
-  color: white;
-}
-
-/* Register link text */
-form .register-link {
-  font-size: 14.5px;
-  text-align: center;
-  margin: 20px 0 15px;
-}
-.register-link a {
-  text-decoration: underline;
+/* Header styles */
+.content-title {
+  font-size: 24px;
   font-weight: bold;
-  color: white;
+}
+
+.content-date {
+  font-size: 14px;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+/* Search bar container */
+.content-search-bar {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+  gap: 10px;
+}
+
+.content-search-bar input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Add New Permit Button */
+.content-add-btn {
+  background-color: #4caf50;
+  color: #fff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Section Title for Applications List */
+.content-section-title {
+  font-size: 18px;
+  margin: 20px 0;
+}
+
+/* Applications Grid */
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Application Card Styles */
+.content-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  position: relative;
+}
+
+.content-card h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.content-edit-icon {
+  float: right;
+  cursor: pointer;
+}
+
+.content-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Badge colors */
+.certificate {
+  background-color: #dff0d8;
+  color: #4caf50;
+}
+
+.permit {
+  background-color: #d1ecf1;
+  color: #007bff;
+}
+
+.content-description {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.content-apply-btn {
+  background-color: #4caf50;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
 }

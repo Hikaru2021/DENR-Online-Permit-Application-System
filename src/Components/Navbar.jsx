@@ -1,22 +1,28 @@
-// Navbar.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from '../library/supabaseClient'; // Import the initialized client
-import "../CSS/Navbar.css"; // External CSS file for styling
+import { supabase } from "../library/supabaseClient";
+import "../CSS/Navbar.css";
 
 const Navbar = () => {
   const location = useLocation();
   const [user, setUser] = useState(null);
+  const [currentDate, setCurrentDate] = useState("");
 
   const getPageTitle = () => {
     switch (location.pathname) {
-      case "/dashboard":
+      case "/Dashboard":
         return "Dashboard";
-      case "/users":
+      case "/User":
         return "Users";
-      case "/applications":
-        return "Applications";
-      case "/settings":
+      case "/ApplicationList":
+        return "Application List";
+      case "/Projects":
+        return "Projects";
+      case "/MyApplication":
+        return "My Application";
+      case "/Reports":
+        return "Reports";
+      case "/Settings":
         return "Settings";
       default:
         return "Page Not Found";
@@ -24,29 +30,38 @@ const Navbar = () => {
   };
 
   useEffect(() => {
+    // Update the date
+    const updateDate = () => {
+      const options = { year: "numeric", month: "short", day: "2-digit" };
+      setCurrentDate(new Date().toLocaleDateString("en-US", options));
+    };
+
+    updateDate(); // Call once on mount
+    const timer = setInterval(updateDate, 1000); // Update every second
+
+    return () => clearInterval(timer); // Cleanup
+  }, []);
+
+  useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Get authenticated user
         const { data: { user }, error } = await supabase.auth.getUser();
-
         if (error) {
           console.error("Error fetching user:", error.message);
           return;
         }
 
-        // If user is logged in
         if (user) {
-          // Query the 'public.user' table to get additional user info
           const { data: userData, error: userError } = await supabase
-            .from("user") // Make sure the table name is 'user' and is in the public schema
+            .from("user")
             .select("full_name, email")
-            .eq("id", user.id) // Match by the user's id
-            .single(); // Fetch single record
+            .eq("id", user.id)
+            .single();
 
           if (userError) {
             console.error("Error fetching user details:", userError.message);
           } else {
-            setUser(userData); // Set the fetched data in state
+            setUser(userData);
           }
         } else {
           console.log("No user found.");
@@ -57,13 +72,13 @@ const Navbar = () => {
     };
 
     fetchUserData();
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
   return (
     <div className="navbar">
       <div className="navbar-left">
         <h1 className="navbar-title">{getPageTitle()}</h1>
-        <p className="navbar-subtitle">September 12, 2024</p>
+        <p className="navbar-subtitle">{currentDate}</p>
       </div>
 
       <div className="navbar-right">

@@ -39,7 +39,7 @@ const Sidebar = () => {
         <p className="sidebar-section-title">MAIN MENU</p>
         <ul className="sidebar-menu">
           <li>
-            <NavLink to="/dashboard" activeClassName="active">
+            <NavLink to="/Dashboard" activeClassName="active">
               <img src="/dashboard.svg" alt="Dashboard" className="sidebar-icon" />
               Dashboard
             </NavLink>
@@ -50,7 +50,7 @@ const Sidebar = () => {
             <button
               className={`dropdown-btn ${isApplicationsOpen ? "open" : ""}`}
               onClick={() => setIsApplicationsOpen(!isApplicationsOpen)}
-            >
+            ><img src="/dashboard.svg" alt="Dashboard" className="sidebar-icon" />
               Applications
               <i className={`fas fa-chevron-${isApplicationsOpen ? "up" : "down"}`}></i>
             </button>
@@ -58,7 +58,7 @@ const Sidebar = () => {
               <ul className="dropdown-menu">
                 <li className="dropdown-title">Application Categories</li>
                 <li>
-                  <NavLink to="/applications/list" activeClassName="active">
+                  <NavLink to="/ApplicationList" activeClassName="active">
                     <i className="fas fa-list"></i> List of Possible Applications
                   </NavLink>
                 </li>
