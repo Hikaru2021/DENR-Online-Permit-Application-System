@@ -90,12 +90,6 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/projects" activeClassName="active">
-              <img src="/projects.svg" alt="Projects" className="sidebar-icon" />
-              Projects
-            </NavLink>
-          </li>
-          <li>
             <NavLink to="/reports" activeClassName="active">
               <img src="/reports.svg" alt="Reports" className="sidebar-icon" />
               Reports
