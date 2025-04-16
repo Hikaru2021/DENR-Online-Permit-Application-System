@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { FaEdit } from "react-icons/fa";
-import ApplicationModal from "./Modals/ApplicationModal"; // Adjust path based on your folder structure
+import ApplicationModal from "./Modals/ApplicationModal";
+import AddApplicationModal from "./Modals/AddApplicationModal"; // NEW IMPORT
 import "./CSS/ApplicationList.css";
 
 function ApplicationList() {
   const [search, setSearch] = useState("");
   const [applications, setApplications] = useState([]);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false); // NEW STATE
 
   // Temporary Hardcoded Data (for testing)
   useEffect(() => {
@@ -50,7 +52,12 @@ function ApplicationList() {
     <div className="content-container">
       {/* Search Bar */}
       <div className="content-search-bar">
-        <button className="content-add-btn">+ Add New Permit</button>
+        <button
+          className="content-add-btn"
+          onClick={() => setShowAddModal(true)} // Open Add Modal
+        >
+          + Add New Permit
+        </button>
         <input
           type="text"
           placeholder="Search"
@@ -84,11 +91,18 @@ function ApplicationList() {
         ))}
       </div>
 
-      {/* Application Modal */}
+      {/* View Modal */}
       {selectedApplication && (
         <ApplicationModal
           application={selectedApplication}
           onClose={() => setSelectedApplication(null)}
+        />
+      )}
+
+      {/* Add New Permit Modal */}
+      {showAddModal && (
+        <AddApplicationModal
+          onClose={() => setShowAddModal(false)} // Close handler
         />
       )}
     </div>

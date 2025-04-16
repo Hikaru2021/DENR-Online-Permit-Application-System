@@ -1,7 +1,7 @@
 import React from "react";
 import "./CSS/Settings.css"; 
 
-function Settings()
+function SettingsModal()
 {
     return(
         <div>
@@ -10,4 +10,4 @@ function Settings()
     );
 }
 
-export default Settings;
+export default SettingsModal;
