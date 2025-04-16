@@ -6,8 +6,6 @@ import Dashboard from "./Dashboard";
 import User from "./User";
 import Layout from "./Layout"; // Import the Layout component
 import MyApplication from "./MyApplication";
-import Settings from "./Settings";
-import Projects from "./Projects";
 import Reports from "./Reports";
 
 function App() {
@@ -25,8 +23,6 @@ function App() {
           <Route path="/User" element={<User />} />
           <Route path="/ApplicationList" element={<ApplicationList />} />
           <Route path="/MyApplication" element={<MyApplication />} />
-          <Route path="/Settings" element={<Settings />} />
-          <Route path="/Projects" element={<Projects />} />
           <Route path="/Reports" element={<Reports />} />
           {/* Add other pages that need the sidebar/navbar here */}
         </Route>

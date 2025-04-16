@@ -28,10 +28,8 @@ const Sidebar = () => {
       {/* Logo Section */}
       <div className="sidebar-header">
         <img src="/Logo1.png" alt="DENR GreenCertify" className="sidebar-logo" />
-        <div className="sidebar-header">
-          <h2 className="sidebar-title">DENR</h2>
-          <h2 className="sidebar-title">GREENCERTIFY</h2>
-        </div>
+        <h2 className="sidebar-title">DENR</h2>
+        <h2 className="sidebar-title">GREENCERTIFY</h2>
       </div>
 
       {/* Main Menu */}
@@ -63,7 +61,7 @@ const Sidebar = () => {
                   </NavLink>
                 </li>
                 <li>
-                  <NavLink to="/applications/my" activeClassName="active">
+                  <NavLink to="/MyApplication" activeClassName="active">
                     <i className="fas fa-folder-open"></i> My Applications
                   </NavLink>
                 </li>
@@ -78,7 +76,7 @@ const Sidebar = () => {
         <p className="sidebar-section-title">MANAGE</p>
         <ul className="sidebar-menu">
           <li>
-            <NavLink to="/user" activeClassName="active">
+            <NavLink to="/User" activeClassName="active">
               <img src="/users.svg" alt="Users" className="sidebar-icon" />
               Users
             </NavLink>

@@ -57,7 +57,6 @@ const User = () => {
             <tr>
               <th>User Name</th>
               <th>Email</th>
-              <th>Contacts</th>
               <th>User Permission</th>
               <th>Status</th>
               <th>Action</th>
@@ -73,7 +72,6 @@ const User = () => {
                 <tr key={user.id}>
                   <td>{user.full_name}</td>
                   <td>{user.email}</td>
-                  <td>{user.contact || "N/A"}</td>
                   <td>{user.role || "User"}</td>
                   <td>
                     <span className={`status-badge ${user.status ? user.status.toLowerCase() : 'inactive'}`}>

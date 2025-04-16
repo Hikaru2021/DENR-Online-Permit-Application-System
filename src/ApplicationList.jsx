@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaEdit } from "react-icons/fa";
 import ApplicationModal from "./Modals/ApplicationModal";
-import AddApplicationModal from "./Modals/AddApplicationModal"; // NEW IMPORT
 import "./CSS/ApplicationList.css";
 
 function ApplicationList() {

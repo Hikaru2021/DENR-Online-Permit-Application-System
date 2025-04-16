@@ -19,7 +19,7 @@ const Navbar = () => {
       case "/Projects":
         return "Projects";
       case "/MyApplication":
-        return "My Application";
+        return "My Applications";
       case "/Reports":
         return "Reports";
       case "/Settings":
