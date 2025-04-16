@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './CSS/Authorization.css';
-import { FaUser, FaKey } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { supabase } from './library/supabaseClient'; // Ensure you have supabaseClient.js set up
 
