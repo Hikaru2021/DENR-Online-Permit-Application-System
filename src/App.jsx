@@ -1,30 +1,38 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import Authorization from "./Authorization";
-import ApplicationList from "./ApplicationList";
+import ListOfApplications from "./ListOfApplications";
 import Dashboard from "./Dashboard";
 import User from "./User";
-import Layout from "./Layout"; // Import the Layout component
+import Layout from "./Layout";
 import MyApplication from "./MyApplication";
 import Reports from "./Reports";
+import ApplicationList from "./ApplicationList";
+import ApplicationTracking from "./ApplicationTracking";
+import Settings from "./Components/Settings";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Landing & Authorization Pages (No Sidebar & Navbar) */}
+        {/* Public routes without layout */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/Authorization" element={<Authorization />} />
-        <Route path="/Authorization#" element={<Authorization />} />
+        <Route path="/auth" element={<Authorization />} />
 
-        {/* Wrap all other pages inside Layout */}
-        <Route element={<Layout />}>
-          <Route path="/Dashboard" element={<Dashboard />} />
-          <Route path="/User" element={<User />} />
-          <Route path="/ApplicationList" element={<ApplicationList />} />
-          <Route path="/MyApplication" element={<MyApplication />} />
-          <Route path="/Reports" element={<Reports />} />
-          {/* Add other pages that need the sidebar/navbar here */}
+        {/* Protected routes with layout */}
+        <Route path="/" element={<Layout />}>
+          <Route path="Dashboard" element={<Dashboard />} />
+          <Route path="ListOfApplications" element={<ListOfApplications />} />
+          <Route path="MyApplication" element={<MyApplication />} />
+          <Route path="User" element={<User />} />
+          <Route path="ApplicationList" element={<ApplicationList />} />
+          <Route path="Reports" element={<Reports />} />
+          <Route path="Settings" element={<Settings />} />
+          <Route path="application/:id" element={<ApplicationTracking />} />
+          
+          {/* Redirect to Dashboard if no route matches */}
+          <Route path="*" element={<Navigate to="/Dashboard" replace />} />
         </Route>
       </Routes>
     </Router>

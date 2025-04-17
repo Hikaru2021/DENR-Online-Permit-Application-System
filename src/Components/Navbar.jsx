@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../library/supabaseClient";
 import "../CSS/Navbar.css";
+import { FaBell, FaUserCircle, FaCog, FaSignOutAlt } from "react-icons/fa";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [currentDate, setCurrentDate] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -36,10 +41,10 @@ const Navbar = () => {
       setCurrentDate(new Date().toLocaleDateString("en-US", options));
     };
 
-    updateDate(); // Call once on mount
-    const timer = setInterval(updateDate, 1000); // Update every second
+    updateDate();
+    const timer = setInterval(updateDate, 1000);
 
-    return () => clearInterval(timer); // Cleanup
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -54,7 +59,7 @@ const Navbar = () => {
         if (user) {
           const { data: userData, error: userError } = await supabase
             .from("user")
-            .select("full_name, email")
+            .select("full_name, email, avatar_url")
             .eq("id", user.id)
             .single();
 
@@ -63,8 +68,6 @@ const Navbar = () => {
           } else {
             setUser(userData);
           }
-        } else {
-          console.log("No user found.");
         }
       } catch (err) {
         console.error("Error in fetching user data:", err.message);
@@ -74,6 +77,21 @@ const Navbar = () => {
     fetchUserData();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error logging out:", error.message);
+    }
+  };
+
+  const handleProfileClick = () => {
+    navigate('/Settings');
+    setShowProfileMenu(false);
+  };
+
   return (
     <div className="navbar">
       <div className="navbar-left">
@@ -82,18 +100,60 @@ const Navbar = () => {
       </div>
 
       <div className="navbar-right">
-        <div className="avatar"></div>
-        <div className="admin-info">
-          {user ? (
-            <>
-              <p className="admin-name">{user.full_name}</p>
-              <p className="admin-email">{user.email}</p>
-            </>
-          ) : (
-            <>
-              <p className="admin-name">Loading...</p>
-              <p className="admin-email"></p>
-            </>
+        {/* Notifications */}
+        <div className="navbar-notifications">
+          <button 
+            className="notification-btn"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            <FaBell />
+            {notifications.length > 0 && (
+              <span className="notification-badge">{notifications.length}</span>
+            )}
+          </button>
+          {showNotifications && (
+            <div className="notification-dropdown">
+              {notifications.length > 0 ? (
+                notifications.map((notification, index) => (
+                  <div key={index} className="notification-item">
+                    {notification.message}
+                  </div>
+                ))
+              ) : (
+                <div className="notification-item">No new notifications</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* User Profile */}
+        <div className="navbar-profile">
+          <button 
+            className="profile-btn"
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+          >
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt="Profile" className="profile-avatar" />
+            ) : (
+              <FaUserCircle className="profile-icon" />
+            )}
+            <div className="admin-info">
+              <p className="admin-name">{user?.full_name || "Loading..."}</p>
+              <p className="admin-email">{user?.email || ""}</p>
+            </div>
+          </button>
+          {showProfileMenu && (
+            <div className="profile-dropdown">
+              <button className="profile-menu-item" onClick={handleProfileClick}>
+                <FaUserCircle /> Profile
+              </button>
+              <button className="profile-menu-item" onClick={handleProfileClick}>
+                <FaCog /> Settings
+              </button>
+              <button className="profile-menu-item" onClick={handleLogout}>
+                <FaSignOutAlt /> Logout
+              </button>
+            </div>
           )}
         </div>
       </div>
