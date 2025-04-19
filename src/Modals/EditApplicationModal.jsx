@@ -7,17 +7,30 @@ import 'react-quill/dist/quill.snow.css';
 import { useDropzone } from 'react-dropzone';
 import { convert } from 'html-to-text';
 
-const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
-  const [newApplication, setNewApplication] = useState({
-    title: "",
-    type: "",
-    description: "",
+const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, application }) => {
+  const [editedApplication, setEditedApplication] = useState({
+    title: application?.title || "",
+    type: application?.type || "",
+    description: application?.description || "",
     guidelinesFile: null,
     applicationFormFile: null
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+
+  // Update form when application prop changes
+  useState(() => {
+    if (application) {
+      setEditedApplication({
+        title: application.title || "",
+        type: application.type || "",
+        description: application.description || "",
+        guidelinesFile: null,
+        applicationFormFile: null
+      });
+    }
+  }, [application]);
 
   // Rich text editor modules configuration
   const modules = {
@@ -40,14 +53,14 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewApplication(prev => ({
+    setEditedApplication(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
   const handleDescriptionChange = (content) => {
-    setNewApplication(prev => ({
+    setEditedApplication(prev => ({
       ...prev,
       description: content
     }));
@@ -57,7 +70,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
   const onGuidelinesDrop = useCallback((acceptedFiles) => {
     const file = acceptedFiles[0];
     if (file) {
-      setNewApplication(prev => ({
+      setEditedApplication(prev => ({
         ...prev,
         guidelinesFile: file
       }));
@@ -78,7 +91,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
   const onApplicationFormDrop = useCallback((acceptedFiles) => {
     const file = acceptedFiles[0];
     if (file) {
-      setNewApplication(prev => ({
+      setEditedApplication(prev => ({
         ...prev,
         applicationFormFile: file
       }));
@@ -97,46 +110,41 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!application?.id) return;
+
     setIsSubmitting(true);
     setFormError(null);
     
     try {
       // Convert HTML to plain text
-      const plainTextDescription = convert(newApplication.description, {
+      const plainTextDescription = convert(editedApplication.description, {
         wordwrap: false,
         preserveNewlines: true
       });
 
-      // Create application record without file URLs
       const { data, error } = await supabase
         .from('applications')
-        .insert([
-          { 
-            title: newApplication.title,
-            type: newApplication.type,
-            description: plainTextDescription
-          }
-        ])
+        .update({
+          title: editedApplication.title,
+          type: editedApplication.type,
+          description: plainTextDescription
+        })
+        .eq('id', application.id)
         .select();
       
       if (error) throw error;
       
-      console.log('Application created:', data);
+      // Handle file uploads if needed
+      if (editedApplication.guidelinesFile || editedApplication.applicationFormFile) {
+        // Implement file upload logic here
+      }
       
-      // Reset form and close modal
-      setNewApplication({
-        title: "",
-        type: "",
-        description: "",
-        guidelinesFile: null,
-        applicationFormFile: null
-      });
-      onApplicationAdded();
+      onApplicationUpdated(data[0]);
       onClose();
       
     } catch (err) {
-      setFormError(`Error creating application: ${err.message}`);
-      console.error('Error creating application:', err);
+      setFormError(`Error updating application: ${err.message}`);
+      console.error('Error updating application:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -148,7 +156,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
-          <h2>Create New Application</h2>
+          <h2>Edit Application</h2>
           <button className="modal-close" onClick={onClose}>
             <FaTimes />
           </button>
@@ -159,12 +167,12 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
           
           <form onSubmit={handleSubmit} className="application-form">
             <div className="form-group">
-              <label htmlFor="title">Title</label>
+              <label htmlFor="edit-title">Title</label>
               <input
                 type="text"
-                id="title"
+                id="edit-title"
                 name="title"
-                value={newApplication.title}
+                value={editedApplication.title}
                 onChange={handleInputChange}
                 required
                 placeholder="Enter application title"
@@ -173,27 +181,26 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="type">Type</label>
+              <label htmlFor="edit-type">Type</label>
               <select
-                id="type"
+                id="edit-type"
                 name="type"
-                value={newApplication.type}
+                value={editedApplication.type}
                 onChange={handleInputChange}
                 required
                 className="form-input"
               >
-                <option value="">Select application type</option>
                 <option value="Permit">Permit</option>
                 <option value="Certificate">Certificate</option>
               </select>
             </div>
             
             <div className="form-group">
-              <label htmlFor="description">Description</label>
+              <label htmlFor="edit-description">Description</label>
               <div className="rich-text-editor">
                 <ReactQuill
                   theme="snow"
-                  value={newApplication.description}
+                  value={editedApplication.description}
                   onChange={handleDescriptionChange}
                   modules={modules}
                   formats={formats}
@@ -209,8 +216,8 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                 <FaCloudUploadAlt className="upload-icon" />
                 <p>Drag & drop guidelines file here, or click to select</p>
                 <span className="file-info">
-                  {newApplication.guidelinesFile ? (
-                    newApplication.guidelinesFile.name
+                  {editedApplication.guidelinesFile ? (
+                    editedApplication.guidelinesFile.name
                   ) : (
                     "Supported formats: PDF, DOC, DOCX"
                   )}
@@ -225,8 +232,8 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                 <FaCloudUploadAlt className="upload-icon" />
                 <p>Drag & drop application form here, or click to select</p>
                 <span className="file-info">
-                  {newApplication.applicationFormFile ? (
-                    newApplication.applicationFormFile.name
+                  {editedApplication.applicationFormFile ? (
+                    editedApplication.applicationFormFile.name
                   ) : (
                     "Supported formats: PDF, DOC, DOCX"
                   )}
@@ -251,7 +258,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Creating..." : "Create Application"}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
@@ -259,4 +266,4 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
   );
 };
 
-export default AddApplicationModal; 
+export default EditApplicationModal; 

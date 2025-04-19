@@ -3,6 +3,8 @@ import { FaSearch, FaFilter, FaPlus, FaEye, FaDownload, FaSort, FaTimes, FaEdit 
 import "./CSS/ListOfApplications.css";
 import { supabase } from "./library/supabaseClient";
 import AddApplicationModal from "./Modals/AddApplicationModal";
+import EditApplicationModal from "./Modals/EditApplicationModal";
+import ViewApplicationModal from "./Modals/ViewApplicationModal";
 
 function ListOfApplications() {
   const [search, setSearch] = useState("");
@@ -65,13 +67,22 @@ function ListOfApplications() {
   };
 
   // Handle application added
-  const handleApplicationAdded = () => {
-    fetchApplications();
+  const handleApplicationAdded = (newApplication) => {
+    setApplications(prev => [...prev, newApplication]);
+    setShowAddModal(false);
+  };
+
+  // Handle application updated
+  const handleApplicationUpdated = (updatedApplication) => {
+    setApplications(prev => 
+      prev.map(app => app.id === updatedApplication.id ? updatedApplication : app)
+    );
+    setShowEditModal(false);
+    setEditApplication(null);
   };
 
   // Handle edit click
-  const handleEditClick = (e, application) => {
-    e.stopPropagation(); // Prevent card click event
+  const handleEditClick = (application) => {
     setEditApplication(application);
     setShowEditModal(true);
   };
@@ -133,8 +144,8 @@ function ListOfApplications() {
       return sortOrder === "asc" ? comparison : -comparison;
     });
 
-  // Handle application click
-  const handleApplicationClick = (application) => {
+  // Handle view click
+  const handleViewClick = (application) => {
     setSelectedApplication(application);
     setShowModal(true);
   };
@@ -238,11 +249,11 @@ function ListOfApplications() {
                 <div
                   key={application.id}
                   className="content-card"
-                  onClick={() => handleApplicationClick(application)}
+                  onClick={() => handleViewClick(application)}
                 >
                   <button 
                     className="edit-button-icon"
-                    onClick={(e) => handleEditClick(e, application)}
+                    onClick={(e) => handleEditClick(application)}
                     title="Edit Application"
                   >
                     <FaEdit />
@@ -264,48 +275,14 @@ function ListOfApplications() {
         )}
 
         {/* View Application Modal */}
-        {showModal && selectedApplication && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <div className="modal-header">
-                <div className="modal-title-section">
-                  <h2>{selectedApplication.title}</h2>
-                  <span className="content-badge">{selectedApplication.type}</span>
-                </div>
-                <button className="modal-close" onClick={() => setShowModal(false)}>
-                  <FaTimes />
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="modal-section">
-                  <h3>Description</h3>
-                  <div className="details-description" dangerouslySetInnerHTML={{ __html: selectedApplication.description }} />
-                </div>
-                <div className="download-section">
-                  <h3>Downloadable Files</h3>
-                  <div className="download-buttons">
-                    <button 
-                      className="download-button"
-                      onClick={() => handleDownload('guidelines.pdf', 'Guidelines.pdf')}
-                    >
-                      <FaDownload /> Guidelines
-                    </button>
-                    <button 
-                      className="download-button"
-                      onClick={() => handleDownload('application-form.pdf', 'Application Form.pdf')}
-                    >
-                      <FaDownload /> Application Form
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button className="modal-button" onClick={() => setShowModal(false)}>Close</button>
-                <button className="modal-button primary">Start Application</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ViewApplicationModal
+          isOpen={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedApplication(null);
+          }}
+          application={selectedApplication}
+        />
 
         {/* Add Application Modal */}
         <AddApplicationModal 
@@ -315,63 +292,15 @@ function ListOfApplications() {
         />
 
         {/* Edit Application Modal */}
-        {showEditModal && editApplication && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h2>Edit Application</h2>
-                <button className="modal-close" onClick={() => setShowEditModal(false)}>
-                  <FaTimes />
-                </button>
-              </div>
-              <div className="modal-body">
-                <form className="add-form">
-                  <div className="form-group">
-                    <label htmlFor="edit-title">Title</label>
-                    <input
-                      type="text"
-                      id="edit-title"
-                      name="title"
-                      value={editApplication.title}
-                      onChange={handleEditInputChange}
-                      placeholder="Enter application title"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="edit-type">Type</label>
-                    <select
-                      id="edit-type"
-                      name="type"
-                      value={editApplication.type}
-                      onChange={handleEditInputChange}
-                      required
-                    >
-                      <option value="Permit">Permit</option>
-                      <option value="Certificate">Certificate</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="edit-description">Description</label>
-                    <textarea
-                      id="edit-description"
-                      name="description"
-                      value={editApplication.description}
-                      onChange={handleEditInputChange}
-                      placeholder="Enter application description"
-                      rows="5"
-                      required
-                    />
-                  </div>
-                </form>
-              </div>
-              <div className="modal-footer">
-                <button className="modal-button" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button className="modal-button primary" onClick={handleEditSubmit}>Save Changes</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <EditApplicationModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditApplication(null);
+          }}
+          onApplicationUpdated={handleApplicationUpdated}
+          application={editApplication}
+        />
       </div>
     </div>
   );
