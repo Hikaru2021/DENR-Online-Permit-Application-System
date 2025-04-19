@@ -10,16 +10,24 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Logout failed:", error.message);
-    } else {
-      navigate("/");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Logout failed:", error.message);
+      } else {
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      navigate("/login");
     }
   };
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+    if (!isSidebarCollapsed) {
+      setIsApplicationsOpen(false);
+    }
   };
 
   return (
@@ -42,37 +50,37 @@ const Sidebar = () => {
         {!isSidebarCollapsed && <p className="sidebar-section-title">MAIN MENU</p>}
         <ul className="sidebar-menu">
           <li>
-            <NavLink to="/Dashboard" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/Dashboard">
               <FaTachometerAlt className="sidebar-icon" />
               {!isSidebarCollapsed && <span>Dashboard</span>}
             </NavLink>
           </li>
 
-          <li className="dropdown">
+          <li>
             <button
-              className={`dropdown-btn ${isApplicationsOpen ? "open" : ""}`}
-              onClick={() => setIsApplicationsOpen(!isApplicationsOpen)}
+              className={`dropdown-btn ${isApplicationsOpen ? 'open' : ''}`}
+              onClick={() => !isSidebarCollapsed && setIsApplicationsOpen(!isApplicationsOpen)}
             >
-              <FaClipboardList className="sidebar-icon" />
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <FaClipboardList className="sidebar-icon" />
+                {!isSidebarCollapsed && <span>Applications</span>}
+              </div>
               {!isSidebarCollapsed && (
-                <>
-                  <span>Applications</span>
-                  {isApplicationsOpen ? <FaChevronUp className="dropdown-icon" /> : <FaChevronDown className="dropdown-icon" />}
-                </>
+                <FaChevronDown className="dropdown-icon" />
               )}
             </button>
             {isApplicationsOpen && !isSidebarCollapsed && (
-              <ul className="dropdown-menu">
+              <ul className={`dropdown-menu ${isApplicationsOpen ? 'open' : ''}`}>
                 <li className="dropdown-title">Application Categories</li>
                 <li>
-                  <NavLink to="/ListOfApplications" className={({ isActive }) => isActive ? "active" : ""}>
-                    <FaList className="dropdown-icon" />
+                  <NavLink to="/ListOfApplications">
+                    <FaList className="sidebar-icon" />
                     <span>List of Applications</span>
                   </NavLink>
                 </li>
                 <li>
-                  <NavLink to="/MyApplication" className={({ isActive }) => isActive ? "active" : ""}>
-                    <FaFolderOpen className="dropdown-icon" />
+                  <NavLink to="/MyApplication">
+                    <FaFolderOpen className="sidebar-icon" />
                     <span>My Applications</span>
                   </NavLink>
                 </li>
@@ -86,19 +94,19 @@ const Sidebar = () => {
         {!isSidebarCollapsed && <p className="sidebar-section-title">MANAGE</p>}
         <ul className="sidebar-menu">
           <li>
-            <NavLink to="/User" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/User">
               <FaUsers className="sidebar-icon" />
               {!isSidebarCollapsed && <span>Users</span>}
             </NavLink>
           </li>
           <li>
-            <NavLink to="/ApplicationList" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/ApplicationList">
               <FaClipboardList className="sidebar-icon" />
               {!isSidebarCollapsed && <span>Application List</span>}
             </NavLink>
           </li>
           <li>
-            <NavLink to="/Reports" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/Reports">
               <FaChartBar className="sidebar-icon" />
               {!isSidebarCollapsed && <span>Reports</span>}
             </NavLink>
@@ -110,7 +118,7 @@ const Sidebar = () => {
         {!isSidebarCollapsed && <p className="sidebar-section-title">ACCOUNT</p>}
         <ul className="sidebar-menu">
           <li>
-            <NavLink to="/Settings" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/Settings">
               <FaCog className="sidebar-icon" />
               {!isSidebarCollapsed && <span>Settings</span>}
             </NavLink>

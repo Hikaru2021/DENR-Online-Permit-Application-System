@@ -296,11 +296,11 @@ function ApplicationList() {
       <div className="application-list-filters">
         <div className="search-container">
           <FaSearch className="search-icon" />
-          <input
-            type="text"
+        <input
+          type="text"
             className="search-input"
             placeholder="Search by ID, applicant name, or title..."
-            value={search}
+          value={search}
             onChange={handleSearchChange}
           />
         </div>
@@ -374,7 +374,7 @@ function ApplicationList() {
                       <td>
                         <span className={getStatusBadgeClass(application.status)}>
                           {application.status}
-                        </span>
+            </span>
                       </td>
                       <td className="action-buttons">
                         <button 
@@ -398,13 +398,13 @@ function ApplicationList() {
                         >
                           <FaDownload />
                         </button>
-                        <button 
+            <button
                           className="action-button delete" 
                           onClick={() => handleDeleteApplication(application.id)}
                           title="Delete Application"
-                        >
+            >
                           <FaTrash />
-                        </button>
+            </button>
                       </td>
                     </tr>
                   ))
@@ -483,23 +483,23 @@ function ApplicationList() {
               <div className="modal-section">
                 <h3>Description</h3>
                 <p>{selectedApplication.description}</p>
-              </div>
+                </div>
               {selectedApplication.notes && (
                 <div className="modal-section">
                   <h3>Notes</h3>
                   <p>{selectedApplication.notes}</p>
                 </div>
               )}
-            </div>
+                </div>
             <div className="modal-footer">
               <button className="modal-button" onClick={() => setShowViewModal(false)}>Close</button>
-              <button 
+                  <button
                 className="modal-button primary" 
                 onClick={() => handleDownloadApplication(selectedApplication)}
               >
                 Download
-              </button>
-              <button 
+                  </button>
+                  <button
                 className="modal-button primary" 
                 onClick={() => {
                   setShowViewModal(false);
@@ -507,7 +507,7 @@ function ApplicationList() {
                 }}
               >
                 Track Application
-              </button>
+                  </button>
             </div>
           </div>
         </div>
@@ -525,7 +525,7 @@ function ApplicationList() {
               <form className="edit-form">
                 <div className="form-group">
                   <label htmlFor="status">Status</label>
-                  <select 
+                  <select
                     id="status" 
                     value={selectedApplication.status} 
                     onChange={(e) => setSelectedApplication({
@@ -541,7 +541,7 @@ function ApplicationList() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="notes">Notes</label>
-                  <textarea 
+                  <textarea
                     id="notes" 
                     value={selectedApplication.notes || ''} 
                     onChange={(e) => setSelectedApplication({

@@ -1,7 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
-import Authorization from "./Authorization";
+import Login from "./Login";
+import Signup from "./Signup";
 import ListOfApplications from "./ListOfApplications";
 import Dashboard from "./Dashboard";
 import User from "./User";
@@ -18,7 +19,8 @@ function App() {
       <Routes>
         {/* Public routes without layout */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={<Authorization />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
         {/* Protected routes with layout */}
         <Route path="/" element={<Layout />}>

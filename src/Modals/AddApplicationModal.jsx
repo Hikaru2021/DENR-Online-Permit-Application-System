@@ -150,7 +150,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
         <div className="modal-body">
           {formError && <div className="form-error">{formError}</div>}
           
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="application-form">
             <div className="form-group">
               <label htmlFor="title">Title</label>
               <input

@@ -50,24 +50,34 @@ const Navbar = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error("Error fetching user:", error.message);
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Error getting session:", sessionError.message);
           return;
         }
 
-        if (user) {
-          const { data: userData, error: userError } = await supabase
-            .from("user")
-            .select("full_name, email, avatar_url")
-            .eq("id", user.id)
-            .single();
+        if (!session?.user) {
+          console.log("No user session found");
+          return;
+        }
 
-          if (userError) {
-            console.error("Error fetching user details:", userError.message);
-          } else {
-            setUser(userData);
-          }
+        // Fetch user details from the users table
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("user_name, email, role_id, status")
+          .eq("id", session.user.id)
+          .single();
+
+        if (userError) {
+          console.error("Error fetching user details:", userError.message);
+        } else if (userData) {
+          console.log("User data fetched:", userData); // Debug log
+          setUser({
+            ...userData,
+            id: session.user.id
+          });
         }
       } catch (err) {
         console.error("Error in fetching user data:", err.message);
@@ -75,6 +85,19 @@ const Navbar = () => {
     };
 
     fetchUserData();
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchUserData();
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -132,13 +155,9 @@ const Navbar = () => {
             className="profile-btn"
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
-            {user?.avatar_url ? (
-              <img src={user.avatar_url} alt="Profile" className="profile-avatar" />
-            ) : (
-              <FaUserCircle className="profile-icon" />
-            )}
+            <FaUserCircle className="profile-icon" />
             <div className="admin-info">
-              <p className="admin-name">{user?.full_name || "Loading..."}</p>
+              <p className="admin-name">{user?.user_name || "Guest"}</p>
               <p className="admin-email">{user?.email || ""}</p>
             </div>
           </button>

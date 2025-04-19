@@ -1,45 +1,53 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./CSS/User.css";
-import { FaSearch, FaEdit, FaTimes, FaFilter, FaSort } from "react-icons/fa";
+import { FaSearch, FaEdit, FaTimes, FaFilter, FaSort, FaTrash } from "react-icons/fa";
 import { supabase } from "./library/supabaseClient";
 
 const User = () => {
-  const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(10);
+  const [itemsPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [formData, setFormData] = useState({
+    user_name: '',
+    email: '',
+    role_id: '',
+    status: ''
+  });
 
   useEffect(() => {
     fetchUsers();
   }, [currentPage]);
 
-  const fetchUsers = async () => {
+  async function fetchUsers() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from("users")
-        .select("id, created_at, user_name, email, cell_number, sex, current_address, role_id, status")
-        .range((currentPage - 1) * usersPerPage, currentPage * usersPerPage - 1);
+        .from('users')
+        .select('id, created_at, user_name, email, role_id, status')
+        .order('created_at', { ascending: false })
+        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       setUsers(data || []);
-    } catch (err) {
-      setError(`Error fetching users: ${err.message}`);
-      console.error("Error fetching users:", err);
+    } catch (error) {
+      setError(`Error fetching users: ${error.message}`);
+      console.error('Error fetching users:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -52,15 +60,21 @@ const User = () => {
   };
 
   const handleEditClick = (user) => {
-    setEditingUser(user);
+    setSelectedUser(user);
+    setFormData({
+      user_name: user.user_name,
+      email: user.email,
+      role_id: user.role_id,
+      status: user.status
+    });
     setShowEditModal(true);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditingUser((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
@@ -73,14 +87,12 @@ const User = () => {
       const { data, error } = await supabase
         .from("users")
         .update({
-          user_name: editingUser.user_name,
-          email: editingUser.email,
-          cell_number: editingUser.cell_number,
-          sex: editingUser.sex,
-          current_address: editingUser.current_address,
-          status: editingUser.status,
+          user_name: formData.user_name,
+          email: formData.email,
+          role_id: formData.role_id,
+          status: formData.status,
         })
-        .eq("id", editingUser.id)
+        .eq("id", selectedUser.id)
         .select();
 
       if (error) throw error;
@@ -107,9 +119,9 @@ const User = () => {
   const getStatusBadgeClass = (status) => {
     switch (status?.toLowerCase()) {
       case "active":
-        return "status-approved";
+        return "status-active";
       case "inactive":
-        return "status-denied";
+        return "status-inactive";
       case "pending":
         return "status-pending";
       default:
@@ -117,11 +129,60 @@ const User = () => {
     }
   };
 
+  const getRolePermission = (roleId) => {
+    switch (roleId) {
+      case 1: return 'Admin';
+      case 2: return 'Manager';
+      case 3: return 'User';
+      default: return 'Unknown';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const options = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
   const filteredUsers = users.filter(
     (user) =>
-      (user.user_name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (user.email || "").toLowerCase().includes(search.toLowerCase())
+      (user.user_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.email || "").toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (statusFilter === 'all' || user.status?.toLowerCase() === statusFilter.toLowerCase())
   );
+
+  const handleDeleteClick = (user) => {
+    setDeletingUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingUser) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("users")
+        .delete()
+        .eq("id", deletingUser.id);
+
+      if (error) throw error;
+
+      setUsers(users.filter(user => user.id !== deletingUser.id));
+      setShowDeleteModal(false);
+      setDeletingUser(null);
+    } catch (err) {
+      setError(`Error deleting user: ${err.message}`);
+      console.error("Error deleting user:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="my-application-container">
@@ -134,8 +195,8 @@ const User = () => {
           <input
             type="text"
             placeholder="Search by name or email"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
         </div>
@@ -191,9 +252,8 @@ const User = () => {
               <tr>
                 <th>Username</th>
                 <th>Email</th>
-                <th>Contact</th>
-                <th>Gender</th>
-                <th>Address</th>
+                <th>Role Permission</th>
+                <th>Created At</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -204,28 +264,37 @@ const User = () => {
                   <tr key={user.id}>
                     <td>{user.user_name || "N/A"}</td>
                     <td>{user.email || "N/A"}</td>
-                    <td>{user.cell_number || "N/A"}</td>
-                    <td>{user.sex || "N/A"}</td>
-                    <td>{user.current_address || "N/A"}</td>
+                    <td>{getRolePermission(user.role_id)}</td>
+                    <td>{formatDate(user.created_at)}</td>
                     <td>
                       <span className={`status-badge ${getStatusBadgeClass(user.status)}`}>
                         {user.status || "Pending"}
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="action-button track-button"
-                        onClick={() => handleEditClick(user)}
-                      >
-                        <FaEdit />
-                      </button>
+                      <div className="action-buttons">
+                        <button
+                          className="action-button edit-button"
+                          onClick={() => handleEditClick(user)}
+                          title="Edit User"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="action-button delete-button"
+                          onClick={() => handleDeleteClick(user)}
+                          title="Delete User"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="empty-state">
-                    No users found. {search ? "Try adjusting your search." : ""}
+                  <td colSpan="5" className="empty-state">
+                    No users found. {searchTerm ? "Try adjusting your search." : ""}
                   </td>
                 </tr>
               )}
@@ -246,14 +315,14 @@ const User = () => {
         <button
           className="next-btn"
           onClick={handleNextPage}
-          disabled={filteredUsers.length < usersPerPage}
+          disabled={filteredUsers.length < itemsPerPage}
         >
           Next ❯
         </button>
       </div>
 
       {/* Edit User Modal */}
-      {showEditModal && editingUser && (
+      {showEditModal && selectedUser && (
         <div className="modal-overlay">
           <div className="modal-container">
             <div className="modal-header">
@@ -273,12 +342,12 @@ const User = () => {
 
               <form onSubmit={handleEditSubmit}>
                 <div className="form-group">
-                  <label htmlFor="user_name">Full Name</label>
+                  <label htmlFor="username">Full Name</label>
                   <input
                     type="text"
-                    id="user_name"
+                    id="username"
                     name="user_name"
-                    value={editingUser.user_name || ""}
+                    value={formData.user_name || ""}
                     onChange={handleInputChange}
                     className="form-input"
                   />
@@ -290,50 +359,26 @@ const User = () => {
                     type="email"
                     id="email"
                     name="email"
-                    value={editingUser.email || ""}
+                    value={formData.email || ""}
                     onChange={handleInputChange}
                     className="form-input"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="cell_number">Contact Number</label>
-                  <input
-                    type="text"
-                    id="cell_number"
-                    name="cell_number"
-                    value={editingUser.cell_number || ""}
-                    onChange={handleInputChange}
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="sex">Gender</label>
+                  <label htmlFor="role_id">Role Permission</label>
                   <select
-                    id="sex"
-                    name="sex"
-                    value={editingUser.sex || ""}
+                    id="role_id"
+                    name="role_id"
+                    value={formData.role_id || ""}
                     onChange={handleInputChange}
                     className="form-input"
                   >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="">Select Role</option>
+                    <option value="1">Admin</option>
+                    <option value="2">Manager</option>
+                    <option value="3">User</option>
                   </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="current_address">Address</label>
-                  <textarea
-                    id="current_address"
-                    name="current_address"
-                    value={editingUser.current_address || ""}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="form-textarea"
-                  ></textarea>
                 </div>
 
                 <div className="form-group">
@@ -341,14 +386,14 @@ const User = () => {
                   <select
                     id="status"
                     name="status"
-                    value={editingUser.status || ""}
+                    value={formData.status || ""}
                     onChange={handleInputChange}
                     className="form-input"
                   >
                     <option value="">Select Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="Pending">Pending</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="pending">Pending</option>
                   </select>
                 </div>
 
@@ -370,6 +415,49 @@ const User = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingUser && (
+        <div className="modal-overlay">
+          <div className="modal-container delete-modal">
+            <div className="modal-header">
+              <h2>Delete User</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p className="delete-confirmation-message">
+                Are you sure you want to delete the user "{deletingUser.user_name}"? 
+                This action cannot be undone.
+              </p>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="delete-button"
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete User"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

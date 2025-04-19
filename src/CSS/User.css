@@ -1,187 +1,321 @@
 .user-container {
-    background-color: #F4F2F2; /* Light gray background */
-    min-height: calc(100vh - 60px); /* Adjust for navbar height */
-    min-width: calc(100vw - 250px); /* Adjust for sidebar width */
-    margin-left: 250px; /* Push content to the right of the sidebar */
-    margin-top: 60px; /* Push content down below the navbar */
-    display: flex;
-    flex-direction: column;
-    padding: 20px; /* Add padding to avoid elements touching the edges */
-  }
-  
-  .user-title {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 60px);
+}
+
+.user-header {
+    margin-bottom: 30px;
+}
+
+.user-header h1 {
     font-size: 24px;
-    font-weight: bold;
-  }
-  
-  .user-date {
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.user-header p {
+    color: #666;
     font-size: 14px;
-    color: gray;
-  }
-  
-  .search-bar {
-    display: flex;
-    align-items: center;
-    margin: 10px 0;
-  }
-  
-  .search-icon {
-    margin-right: 8px;
-  }
-  
-  .user-table {
-    background: white;
-    border-radius: 8px;
-    padding: 10px;
-  }
-  
-  table {
-    width: 100%;
-    min-height:69vh;
-    border-collapse: collapse;
-  }
-  
-  th, td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    text-align: left;
-  }
-  
-  .status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 12px;
-  }
-  
-  .status-badge.active {
-    background-color: #4caf50;
-    color: white;
-  }
-  
-  .edit-btn {
-    background: none;
-    border: none;
-    color: #007bff;
-    cursor: pointer;
-  }
-  
-  .pagination {
+}
+
+.user-filters {
     display: flex;
     justify-content: space-between;
-    margin-top: 10px;
-  }
-  
-  .prev-btn, .next-btn {
-    padding: 5px 10px;
-    background: #ddd;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 10px 10px 35px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.filter-container {
+    display: flex;
+    gap: 15px;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-size: 14px;
+    color: #666;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+tr:hover {
+    background-color: #f8f9fa;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #e6f4ea;
+    color: #1e7e34;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-button {
+    padding: 6px;
     border: none;
+    border-radius: 4px;
     cursor: pointer;
-  }
-  
-  /* Modal styles for the User component */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
 }
 
-.modal-container {
-  background-color: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.edit-button {
+    background-color: #e3f2fd;
+    color: #1976d2;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #eee;
+.edit-button:hover {
+    background-color: #bbdefb;
 }
 
-.modal-header h2 {
-  margin: 0;
-  font-size: 18px;
+.delete-button {
+    background-color: #ffebee;
+    color: #d32f2f;
 }
 
-.modal-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: #666;
+.delete-button:hover {
+    background-color: #ffcdd2;
 }
 
-.modal-body {
-  padding: 20px;
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
 }
 
-.form-group {
-  margin-bottom: 16px;
+.pagination-button {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: bold;
+.pagination-button:hover:not(:disabled) {
+    background-color: #f8f9fa;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.cancel-btn,
-.submit-btn {
-  padding: 10px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.cancel-btn {
-  background-color: #f1f1f1;
-  border: 1px solid #ddd;
-  color: #333;
-}
-
-.submit-btn {
-  background-color: #4CAF50;
-  border: none;
-  color: white;
-}
-
-.loading, .error-message, .no-data {
-  text-align: center;
-  padding: 20px;
-}
-
-.error-message {
-  color: #d32f2f;
+.pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .page-info {
-  margin: 0 10px;
+    color: #666;
+    font-size: 14px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-container h3 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-actions button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.cancel-button {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+.cancel-button:hover {
+    background-color: #e9ecef;
+}
+
+.delete-modal .modal-container {
+    max-width: 400px;
+}
+
+.delete-confirmation-message {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-container {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff3f3;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.error-message {
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.retry-button {
+    padding: 8px 16px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+    background-color: #c82333;
 }

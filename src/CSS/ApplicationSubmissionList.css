@@ -252,61 +252,115 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .modal-container {
   background-color: white;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 600px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 800px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e5e5;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-  background-color: #f8f9fa;
-  border-radius: 10px 10px 0 0;
+  background: white;
+  border-radius: 8px 8px 0 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.5rem;
   color: #333;
 }
 
 .modal-close {
   background: none;
   border: none;
+  font-size: 1.25rem;
   cursor: pointer;
-  font-size: 24px;
   color: #666;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
+  padding: 0.5rem;
+  transition: color 0.3s ease;
 }
 
 .modal-close:hover {
-  background-color: #eee;
+  color: #333;
 }
 
 .modal-body {
-  padding: 20px;
-  max-height: calc(90vh - 120px);
+  padding: 1.5rem;
   overflow-y: auto;
+  flex: 1;
+  min-height: 200px;
+  max-height: calc(90vh - 120px);
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body form {
+  width: 100%;
+  flex: 1;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Prevent header and footer from scrolling */
+.modal-header,
+.modal-footer {
+  position: sticky;
+  background: white;
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1rem 1.5rem;
+  margin: 0;
+}
+
+.modal-header {
+  top: 0;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: white;
+  border-radius: 0 0 8px 8px;
 }
 
 .details-section {
@@ -347,79 +401,100 @@
   font-weight: bold;
 }
 
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 20px;
-  border-top: 1px solid #eee;
-}
-
 .cancel-button {
-  padding: 10px 20px;
-  background-color: #f8f9fa;
-  color: #666;
-  border: none;
-  border-radius: 5px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
 }
 
 .cancel-button:hover {
   background-color: #e9ecef;
 }
 
+.cancel-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .submit-button {
-  padding: 10px 20px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
   background-color: #4caf50;
   color: white;
   border: none;
-  border-radius: 5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 .submit-button:hover {
   background-color: #45a049;
 }
 
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
 /* Form Styles */
+.application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
 .form-group {
-  margin-bottom: 20px;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 0.25rem;
   font-weight: 500;
   color: #333;
-}
-
-.form-input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
+  box-sizing: border-box;
 }
 
+.form-input, 
+.form-group select,
 .form-textarea {
   width: 100%;
-  padding: 10px;
+  padding: 0.75rem;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
-  resize: vertical;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+  background-color: white;
+  margin: 0;
+}
+
+.form-input:focus {
+  border-color: #4CAF50;
+  outline: none;
 }
 
 .form-error {
-  color: #dc3545;
-  margin-bottom: 15px;
-  padding: 10px;
-  background-color: #f8d7da;
-  border-radius: 5px;
+  background-color: #fee;
+  color: #d32f2f;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
 }
 
 /* Loading and Error States */
@@ -514,7 +589,16 @@
 
   .modal-container {
     width: 95%;
-    margin: 10px;
+    margin: 1rem;
+  }
+
+  .modal-body {
+    padding: 0.75rem;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 0.75rem;
   }
 
   .applications-grid {
@@ -525,30 +609,57 @@
   .application-card {
     margin-bottom: 15px;
   }
+
+  .file-upload-area {
+    padding: 1rem;
+  }
+
+  .rich-text-editor .ql-container {
+    max-height: 200px;
+  }
+
+  .file-upload-area {
+    max-height: 150px;
+  }
 }
 
 /* Rich Text Editor Styles */
 .rich-text-editor {
-  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
 }
 
-.rich-text-editor .ql-container {
-  border-radius: 0 0 5px 5px;
-  background: white;
-  min-height: 150px;
-  font-size: 14px;
+.rich-text-editor .quill {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .rich-text-editor .ql-toolbar {
-  border-radius: 5px 5px 0 0;
-  border: 1px solid #ddd;
+  padding: 0.5rem;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-bottom: 1px solid #ddd;
   background: #f8f9fa;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rich-text-editor .ql-container {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  max-height: 200px;
 }
 
 .rich-text-editor .ql-editor {
   min-height: 150px;
   font-size: 14px;
   color: #333;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .rich-text-editor .ql-editor.ql-blank::before {
@@ -558,45 +669,95 @@
 
 /* File Upload Area Styles */
 .file-upload-area {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
   border: 2px dashed #ddd;
-  border-radius: 5px;
-  padding: 20px;
+  border-radius: 4px;
+  padding: 1.5rem;
   text-align: center;
-  background-color: #f8f9fa;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
 }
 
 .file-upload-area:hover {
-  border-color: #4caf50;
-  background-color: #f1f8f1;
-}
-
-.file-upload-area .upload-icon {
-  font-size: 32px;
-  color: #4caf50;
-  margin-bottom: 10px;
+  border-color: #4CAF50;
+  background: #f0f9f0;
 }
 
 .file-upload-area p {
-  margin: 0;
-  font-size: 14px;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
   color: #666;
-  margin-bottom: 5px;
 }
 
-.file-upload-area .file-info {
+.upload-icon {
+  font-size: 1.75rem;
+  color: #4CAF50;
+  margin-bottom: 0.5rem;
+}
+
+.file-info {
   display: block;
-  font-size: 12px;
-  color: #999;
-}
-
-.file-upload-area.active {
-  border-color: #4caf50;
-  background-color: #f1f8f1;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #666;
 }
 
 /* Form group spacing for file uploads */
 .form-group + .form-group {
   margin-top: 20px;
+}
+
+/* Ensure Quill editor doesn't overflow */
+.quill {
+  max-height: 300px;
+}
+
+.ql-container {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Ensure Quill editor fits within scrollable area */
+.rich-text-editor .quill {
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.rich-text-editor .ql-container {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+.rich-text-editor .ql-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8f9fa;
+}
+
+/* Ensure file upload areas don't overflow */
+.file-upload-area {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Remove any potential margins that might affect width */
+.form-group > * {
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Ensure all form elements take full width */
+.modal-body > *,
+.application-form > *,
+.form-group > * {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
 } 
