@@ -5,6 +5,7 @@ import { supabase } from "./library/supabaseClient";
 import AddApplicationModal from "./Modals/AddApplicationModal";
 import EditApplicationModal from "./Modals/EditApplicationModal";
 import ViewApplicationModal from "./Modals/ViewApplicationModal";
+import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
 
 function ListOfApplications() {
   const [search, setSearch] = useState("");
@@ -20,6 +21,8 @@ function ListOfApplications() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editApplication, setEditApplication] = useState(null);
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
+  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
+  const [selectedApplicationForSubmission, setSelectedApplicationForSubmission] = useState(null);
 
   // Fetch applications from Supabase
   const fetchApplications = async () => {
@@ -173,6 +176,11 @@ function ListOfApplications() {
     }
   };
 
+  const handleStartApplication = (application) => {
+    setSelectedApplicationForSubmission(application);
+    setShowSubmissionForm(true);
+  };
+
   return (
     <div className={`content-container ${isSidebarMinimized ? 'sidebar-minimized' : ''}`}>
       <div className="content-wrapper">
@@ -282,6 +290,7 @@ function ListOfApplications() {
             setSelectedApplication(null);
           }}
           application={selectedApplication}
+          onStartApplication={handleStartApplication}
         />
 
         {/* Add Application Modal */}
@@ -300,6 +309,15 @@ function ListOfApplications() {
           }}
           onApplicationUpdated={handleApplicationUpdated}
           application={editApplication}
+        />
+
+        <ApplicationSubmissionForm
+          isOpen={showSubmissionForm}
+          onClose={() => {
+            setShowSubmissionForm(false);
+            setSelectedApplicationForSubmission(null);
+          }}
+          application={selectedApplicationForSubmission}
         />
       </div>
     </div>

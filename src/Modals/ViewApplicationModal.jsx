@@ -3,7 +3,7 @@ import { FaTimes, FaDownload, FaFileAlt } from "react-icons/fa";
 import { supabase } from "../library/supabaseClient";
 import "../CSS/ApplicationSubmissionList.css";
 
-const ViewApplicationModal = ({ isOpen, onClose, application }) => {
+const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [files, setFiles] = useState({
@@ -148,7 +148,7 @@ const ViewApplicationModal = ({ isOpen, onClose, application }) => {
           <button 
             className="modal-button primary"
             onClick={() => {
-              // Handle start application logic
+              onStartApplication(application);
               onClose();
             }}
           >

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
+import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
 
 function ApplicationList() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ function ApplicationList() {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -29,7 +31,22 @@ function ApplicationList() {
       submitted_at: "2023-06-15T10:30:00",
       status: "pending",
       description: "Application for a new commercial building construction permit.",
-      notes: "Awaiting review by the zoning department."
+      notes: "Awaiting review by the zoning department.",
+      // User submitted details
+      fullName: "John Doe",
+      email: "john.doe@example.com",
+      contactNumber: "09123456789",
+      address: "123 Main St, City, Province",
+      purpose: "Construction of a new commercial building",
+      documents: [
+        { name: "Building Plan.pdf", size: "2.5MB" },
+        { name: "Business Permit.pdf", size: "1.2MB" }
+      ],
+      fees: {
+        application: 1000,
+        processing: 500,
+        total: 1500
+      }
     },
     {
       id: 2,
@@ -278,12 +295,51 @@ function ApplicationList() {
         setApplications(applications.map(app => 
           app.id === selectedApplication.id ? selectedApplication : app
         ));
-        setShowEditModal(false);
+      setShowEditModal(false);
       }, 500);
     } catch (err) {
       console.error('Error updating application:', err);
       alert(`Error updating application: ${err.message}`);
     }
+  };
+
+  // Handle start application
+  const handleStartApplication = (application) => {
+    setSelectedApplication(application);
+    setShowSubmissionForm(true);
+  };
+
+  // Handle application submitted
+  const handleApplicationSubmitted = (submittedData) => {
+    // Create a new application object with the submitted data
+    const newApplication = {
+      id: applications.length + 1,
+      application_id: `APP-${new Date().getFullYear()}-${String(applications.length + 1).padStart(3, '0')}`,
+      applicant_name: submittedData.fullName,
+      title: selectedApplication.title,
+      type: selectedApplication.type,
+      submitted_at: new Date().toISOString(),
+      status: "pending",
+      description: selectedApplication.description,
+      notes: "New application submitted",
+      // User submitted details
+      fullName: submittedData.fullName,
+      email: submittedData.email,
+      contactNumber: submittedData.contactNumber,
+      address: submittedData.address,
+      purpose: submittedData.purpose,
+      documents: submittedData.documents,
+      fees: {
+        application: 1000,
+        processing: 500,
+        total: 1500
+      }
+    };
+
+    // Add the new application to the list
+    setApplications(prev => [...prev, newApplication]);
+    setShowSubmissionForm(false);
+    setSelectedApplication(null);
   };
 
   return (
@@ -459,16 +515,16 @@ function ApplicationList() {
                 <p>{selectedApplication.application_id}</p>
               </div>
               <div className="modal-section">
-                <h3>Applicant</h3>
-                <p>{selectedApplication.applicant_name}</p>
+                <h3>Applicant Information</h3>
+                <p><strong>Name:</strong> {selectedApplication.fullName}</p>
+                <p><strong>Email:</strong> {selectedApplication.email}</p>
+                <p><strong>Contact:</strong> {selectedApplication.contactNumber}</p>
+                <p><strong>Address:</strong> {selectedApplication.address}</p>
+                <p><strong>Purpose:</strong> {selectedApplication.purpose}</p>
               </div>
               <div className="modal-section">
-                <h3>Title</h3>
-                <p>{selectedApplication.title}</p>
-              </div>
-              <div className="modal-section">
-                <h3>Type</h3>
-                <p>{selectedApplication.type}</p>
+                <h3>Application Type</h3>
+                <p>{selectedApplication.title} ({selectedApplication.type})</p>
               </div>
               <div className="modal-section">
                 <h3>Status</h3>
@@ -477,13 +533,28 @@ function ApplicationList() {
                 </span>
               </div>
               <div className="modal-section">
+                <h3>Submitted Documents</h3>
+                <ul className="documents-list">
+                  {selectedApplication.documents?.map((doc, index) => (
+                    <li key={index}>
+                      <span className="document-name">{doc.name}</span>
+                      <span className="document-size">{doc.size}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="modal-section">
+                <h3>Fees</h3>
+                <div className="fees-details">
+                  <p><strong>Application Fee:</strong> ₱{selectedApplication.fees?.application.toLocaleString()}</p>
+                  <p><strong>Processing Fee:</strong> ₱{selectedApplication.fees?.processing.toLocaleString()}</p>
+                  <p><strong>Total:</strong> ₱{selectedApplication.fees?.total.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="modal-section">
                 <h3>Submitted Date</h3>
                 <p>{new Date(selectedApplication.submitted_at).toLocaleString()}</p>
               </div>
-              <div className="modal-section">
-                <h3>Description</h3>
-                <p>{selectedApplication.description}</p>
-                </div>
               {selectedApplication.notes && (
                 <div className="modal-section">
                   <h3>Notes</h3>
@@ -494,13 +565,7 @@ function ApplicationList() {
             <div className="modal-footer">
               <button className="modal-button" onClick={() => setShowViewModal(false)}>Close</button>
                   <button
-                className="modal-button primary" 
-                onClick={() => handleDownloadApplication(selectedApplication)}
-              >
-                Download
-                  </button>
-                  <button
-                className="modal-button primary" 
+                className="modal-button primary"
                 onClick={() => {
                   setShowViewModal(false);
                   handleTrackApplication(selectedApplication);
@@ -564,6 +629,19 @@ function ApplicationList() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Application Submission Form */}
+      {showSubmissionForm && selectedApplication && (
+        <ApplicationSubmissionForm
+          isOpen={showSubmissionForm}
+          onClose={() => {
+            setShowSubmissionForm(false);
+            setSelectedApplication(null);
+          }}
+          application={selectedApplication}
+          onApplicationSubmitted={handleApplicationSubmitted}
+        />
       )}
     </div>
   );

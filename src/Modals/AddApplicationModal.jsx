@@ -15,9 +15,12 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
     guidelinesFile: null,
     applicationFormFile: null
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState({
+    guidelines: 0,
+    applicationForm: 0
+  });
 
   // Rich text editor modules configuration
   const modules = {
@@ -95,48 +98,103 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
     maxFiles: 1
   });
 
+  const uploadFile = async (file, applicationId, documentType) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${applicationId}/${documentType}.${fileExt}`;
+      const filePath = `applications/${fileName}`;
+
+      // Upload file to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('applications')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const percent = (progress.loaded / progress.total) * 100;
+            setUploadProgress(prev => ({
+              ...prev,
+              [documentType]: percent
+            }));
+          }
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Insert document record in documents table
+      const { data: docData, error: docError } = await supabase
+        .from('documents')
+        .insert([{
+          application_id: applicationId,
+          file_name: file.name,
+          file_path: filePath,
+          file_type: file.type,
+          file_size: file.size,
+          document_type: documentType
+        }])
+        .select();
+
+      if (docError) throw docError;
+
+      return docData[0];
+    } catch (err) {
+      console.error(`Error uploading ${documentType}:`, err);
+      throw err;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setFormError(null);
-    
+
     try {
+      // Validate required fields
+      if (!newApplication.title || !newApplication.type || !newApplication.description) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      if (!newApplication.guidelinesFile || !newApplication.applicationFormFile) {
+        throw new Error('Please upload both guidelines and application form files');
+      }
+
       // Convert HTML to plain text
       const plainTextDescription = convert(newApplication.description, {
         wordwrap: false,
         preserveNewlines: true
       });
 
-      // Create application record without file URLs
-      const { data, error } = await supabase
+      // Insert application record
+      const { data: applicationData, error: applicationError } = await supabase
         .from('applications')
-        .insert([
-          { 
-            title: newApplication.title,
-            type: newApplication.type,
-            description: plainTextDescription
-          }
-        ])
+        .insert([{
+          title: newApplication.title,
+          type: newApplication.type,
+          description: plainTextDescription
+        }])
         .select();
-      
-      if (error) throw error;
-      
-      console.log('Application created:', data);
-      
-      // Reset form and close modal
-      setNewApplication({
-        title: "",
-        type: "",
-        description: "",
-        guidelinesFile: null,
-        applicationFormFile: null
-      });
-      onApplicationAdded();
+
+      if (applicationError) throw applicationError;
+
+      const applicationId = applicationData[0].id;
+
+      // Upload both files
+      const [guidelinesDoc, applicationFormDoc] = await Promise.all([
+        uploadFile(newApplication.guidelinesFile, applicationId, 'guidelines'),
+        uploadFile(newApplication.applicationFormFile, applicationId, 'application_form')
+      ]);
+
+      // Combine all data
+      const newApplicationData = {
+        ...applicationData[0],
+        documents: [guidelinesDoc, applicationFormDoc]
+      };
+
+      onApplicationAdded(newApplicationData);
       onClose();
-      
     } catch (err) {
-      setFormError(`Error creating application: ${err.message}`);
-      console.error('Error creating application:', err);
+      setFormError(err.message);
+      console.error('Error submitting application:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -153,10 +211,10 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
             <FaTimes />
           </button>
         </div>
-        
+
         <div className="modal-body">
           {formError && <div className="form-error">{formError}</div>}
-          
+
           <form onSubmit={handleSubmit} className="application-form">
             <div className="form-group">
               <label htmlFor="title">Title</label>
@@ -171,7 +229,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                 className="form-input"
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="type">Type</label>
               <select
@@ -187,7 +245,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                 <option value="Certificate">Certificate</option>
               </select>
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="description">Description</label>
               <div className="rich-text-editor">
@@ -210,7 +268,17 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                 <p>Drag & drop guidelines file here, or click to select</p>
                 <span className="file-info">
                   {newApplication.guidelinesFile ? (
-                    newApplication.guidelinesFile.name
+                    <>
+                      {newApplication.guidelinesFile.name}
+                      {uploadProgress.guidelines > 0 && uploadProgress.guidelines < 100 && (
+                        <div className="upload-progress">
+                          <div 
+                            className="progress-bar" 
+                            style={{ width: `${uploadProgress.guidelines}%` }}
+                          />
+                        </div>
+                      )}
+                    </>
                   ) : (
                     "Supported formats: PDF, DOC, DOCX"
                   )}
@@ -226,7 +294,17 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                 <p>Drag & drop application form here, or click to select</p>
                 <span className="file-info">
                   {newApplication.applicationFormFile ? (
-                    newApplication.applicationFormFile.name
+                    <>
+                      {newApplication.applicationFormFile.name}
+                      {uploadProgress.applicationForm > 0 && uploadProgress.applicationForm < 100 && (
+                        <div className="upload-progress">
+                          <div 
+                            className="progress-bar" 
+                            style={{ width: `${uploadProgress.applicationForm}%` }}
+                          />
+                        </div>
+                      )}
+                    </>
                   ) : (
                     "Supported formats: PDF, DOC, DOCX"
                   )}
@@ -235,9 +313,9 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
             </div>
           </form>
         </div>
-        
+
         <div className="modal-footer">
-          <button
+          <button 
             type="button"
             className="cancel-button"
             onClick={onClose}
@@ -245,7 +323,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
           >
             Cancel
           </button>
-          <button
+          <button 
             type="button"
             className="submit-button"
             onClick={handleSubmit}
