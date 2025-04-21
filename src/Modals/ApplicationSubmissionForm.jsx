@@ -336,6 +336,3 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
 };
 
 export default ApplicationSubmissionForm; 
- 
- 
- 

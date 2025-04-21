@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { FaSearch, FaFilter, FaPlus, FaEye, FaDownload, FaSort, FaTimes, FaEdit } from "react-icons/fa";
-import "./CSS/ListOfApplications.css";
+import { FaSearch, FaFilter, FaPlus, FaSort, FaEdit } from "react-icons/fa";
+import "./CSS/ApplicationCatalog.css";
 import { supabase } from "./library/supabaseClient";
 import AddApplicationModal from "./Modals/AddApplicationModal";
 import EditApplicationModal from "./Modals/EditApplicationModal";
 import ViewApplicationModal from "./Modals/ViewApplicationModal";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
 
-function ListOfApplications() {
+function ApplicationCatalog() {
   const [search, setSearch] = useState("");
   const [applications, setApplications] = useState([]);
   const [selectedApplication, setSelectedApplication] = useState(null);
@@ -20,7 +20,6 @@ function ListOfApplications() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editApplication, setEditApplication] = useState(null);
-  const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
   const [showSubmissionForm, setShowSubmissionForm] = useState(false);
   const [selectedApplicationForSubmission, setSelectedApplicationForSubmission] = useState(null);
 
@@ -85,44 +84,10 @@ function ListOfApplications() {
   };
 
   // Handle edit click
-  const handleEditClick = (application) => {
+  const handleEditClick = (application, e) => {
+    e.stopPropagation();
     setEditApplication(application);
     setShowEditModal(true);
-  };
-
-  // Handle edit input change
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditApplication(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Handle edit submit
-  const handleEditSubmit = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('applications')
-        .update({
-          title: editApplication.title || null,
-          type: editApplication.type || null,
-          description: editApplication.description || null
-        })
-        .eq('id', editApplication.id)
-        .select('id, title, type, description, application_date');
-      
-      if (error) throw error;
-      
-      setApplications(prev => 
-        prev.map(app => app.id === editApplication.id ? data[0] : app)
-      );
-      setShowEditModal(false);
-      setEditApplication(null);
-    } catch (err) {
-      console.error('Error updating application:', err);
-      alert('Error updating application. Please try again.');
-    }
   };
 
   // Filter and sort applications
@@ -153,38 +118,21 @@ function ListOfApplications() {
     setShowModal(true);
   };
 
-  // Handle download
-  const handleDownload = async (filePath, fileName) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('applications')
-        .download(filePath);
-
-      if (error) throw error;
-
-      const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error downloading file:', err);
-      alert('Error downloading file. Please try again.');
-    }
-  };
-
+  // Handle start application
   const handleStartApplication = (application) => {
     setSelectedApplicationForSubmission(application);
     setShowSubmissionForm(true);
   };
 
   return (
-    <div className={`content-container ${isSidebarMinimized ? 'sidebar-minimized' : ''}`}>
-      <div className="content-wrapper">
-        <div className="content-filters">
+    <div className="catalog-container">
+      <div className="catalog-wrapper">
+        <div className="catalog-header">
+          <h1 className="catalog-title">Application Catalog</h1>
+          <p className="catalog-subtitle">Browse and apply for available permits and certificates</p>
+        </div>
+
+        <div className="catalog-filters">
           <div className="search-container">
             <FaSearch className="search-icon" />
             <input
@@ -227,7 +175,7 @@ function ListOfApplications() {
                 <FaSort className={sortOrder === "asc" ? "asc" : ""} />
               </button>
             </div>
-            <button className="content-add-btn" onClick={() => setShowAddModal(true)}>
+            <button className="add-button" onClick={() => setShowAddModal(true)}>
               <FaPlus /> Add New Application
             </button>
           </div>
@@ -252,29 +200,37 @@ function ListOfApplications() {
             <div className="applications-count">
               {filteredAndSortedApplications.length} available applications
             </div>
-            <div className="content-grid">
+            <div className="catalog-grid">
               {filteredAndSortedApplications.map((application) => (
                 <div
                   key={application.id}
-                  className="content-card"
+                  className="catalog-card"
                   onClick={() => handleViewClick(application)}
                 >
                   <button 
-                    className="edit-button-icon"
-                    onClick={(e) => handleEditClick(application)}
+                    className="edit-button"
+                    onClick={(e) => handleEditClick(application, e)}
                     title="Edit Application"
                   >
                     <FaEdit />
                   </button>
                   <div className="card-header">
                     <h3 className="card-title">{application.title}</h3>
+                    <span className={`card-type ${application.type.toLowerCase()}`}>
+                      {application.type}
+                    </span>
                   </div>
-                  <div className="card-type-container">
-                    <span className="card-type">{application.type}</span>
-                  </div>
-                  <div className="card-description">{application.description}</div>
-                  <div className="card-actions">
-                    <button className="apply-button">Apply Now</button>
+                  <p className="card-description">{application.description}</p>
+                  <div className="card-footer">
+                    <button 
+                      className="apply-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartApplication(application);
+                      }}
+                    >
+                      Apply Now
+                    </button>
                   </div>
                 </div>
               ))}
@@ -282,7 +238,7 @@ function ListOfApplications() {
           </>
         )}
 
-        {/* View Application Modal */}
+        {/* Modals */}
         <ViewApplicationModal
           isOpen={showModal}
           onClose={() => {
@@ -293,14 +249,12 @@ function ListOfApplications() {
           onStartApplication={handleStartApplication}
         />
 
-        {/* Add Application Modal */}
         <AddApplicationModal 
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onApplicationAdded={handleApplicationAdded}
         />
 
-        {/* Edit Application Modal */}
         <EditApplicationModal
           isOpen={showEditModal}
           onClose={() => {
@@ -324,4 +278,4 @@ function ListOfApplications() {
   );
 }
 
-export default ListOfApplications; 
+export default ApplicationCatalog; 

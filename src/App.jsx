@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import LandingPage from "./LandingPage";
 import Login from "./Login";
 import Signup from "./Signup";
-import ListOfApplications from "./ListOfApplications";
 import Dashboard from "./Dashboard";
 import User from "./User";
 import Layout from "./Layout";
@@ -12,6 +11,7 @@ import Reports from "./Reports";
 import ApplicationList from "./ApplicationList";
 import ApplicationTracking from "./ApplicationTracking";
 import Settings from "./Components/Settings";
+import ApplicationCatalog from "./ApplicationCatalog";
 
 function App() {
   return (
@@ -25,7 +25,7 @@ function App() {
         {/* Protected routes with layout */}
         <Route path="/" element={<Layout />}>
           <Route path="Dashboard" element={<Dashboard />} />
-          <Route path="ListOfApplications" element={<ListOfApplications />} />
+          <Route path="ApplicationCatalog" element={<ApplicationCatalog />} />
           <Route path="MyApplication" element={<MyApplication />} />
           <Route path="User" element={<User />} />
           <Route path="ApplicationList" element={<ApplicationList />} />

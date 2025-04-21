@@ -561,10 +561,10 @@ function ApplicationList() {
                   <p>{selectedApplication.notes}</p>
                 </div>
               )}
-                </div>
+            </div>
             <div className="modal-footer">
               <button className="modal-button" onClick={() => setShowViewModal(false)}>Close</button>
-                  <button
+              <button
                 className="modal-button primary"
                 onClick={() => {
                   setShowViewModal(false);
@@ -572,7 +572,7 @@ function ApplicationList() {
                 }}
               >
                 Track Application
-                  </button>
+              </button>
             </div>
           </div>
         </div>

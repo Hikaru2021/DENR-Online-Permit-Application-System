@@ -271,7 +271,7 @@ function LandingPage() {
                                 <p>Monday to Friday: 8:00 AM - 5:00 PM</p>
                                 <p>Closed on weekends and holidays</p>
                             </div>
-                        </div>
+                    </div>
                     </section>
                 </main>
 

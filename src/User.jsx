@@ -186,7 +186,9 @@ const User = () => {
 
   return (
     <div className="my-application-container">
-      <div className="my-application-header">
+      <div className="application-list-header">
+        <h1 className="application-list-title">User Management</h1>
+        <p className="application-list-subtitle">Manage and track all registered users</p>
       </div>
 
       <div className="my-application-filters">

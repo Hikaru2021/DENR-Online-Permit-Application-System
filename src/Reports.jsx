@@ -453,6 +453,10 @@ function Reports() {
 
   return (
     <div className="reports-container">
+      <div className="application-list-header">
+        <h1 className="application-list-title">Reports</h1>
+        <p className="application-list-subtitle">View and analyze application statistics and reports</p>
+      </div>
       
       <div className="filters-container">
         <div className="search-bar">

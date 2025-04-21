@@ -1,7 +1,31 @@
+/* Base Typography */
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-h1: 2rem;
+  --font-h2: 1.75rem;
+  --font-h3: 1.5rem;
+  --font-h4: 1.25rem;
+  --font-body: 1rem;
+  --font-small: 0.875rem;
+  --font-xs: 0.75rem;
+}
+
 .user-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: calc(100vw - 250px);
+    margin-left: 250px;
+    transition: margin-left 0.3s ease;
+    background-color: #F4F2F2;
     padding: 20px;
-    background-color: #f8f9fa;
-    min-height: calc(100vh - 60px);
+    overflow-y: auto;
+    font-family: var(--font-family);
+}
+
+.sidebar-collapsed .user-container {
+    margin-left: 70px;
+    width: calc(100vw - 70px);
 }
 
 .user-header {
@@ -9,14 +33,17 @@
 }
 
 .user-header h1 {
-    font-size: 24px;
+    font-size: var(--font-h1);
+    font-weight: 600;
     color: #333;
     margin-bottom: 8px;
+    line-height: 1.2;
 }
 
 .user-header p {
+    font-size: var(--font-body);
     color: #666;
-    font-size: 14px;
+    line-height: 1.5;
 }
 
 .user-filters {
@@ -46,7 +73,8 @@
     padding: 10px 10px 10px 35px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
+    font-family: var(--font-family);
+    font-size: var(--font-body);
 }
 
 .filter-container {
@@ -61,7 +89,7 @@
 }
 
 .filter-group label {
-    font-size: 14px;
+    font-size: var(--font-small);
     color: #666;
 }
 
@@ -69,7 +97,8 @@
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
+    font-family: var(--font-family);
+    font-size: var(--font-small);
     background-color: white;
 }
 
@@ -89,12 +118,14 @@ th, td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #eee;
+    font-size: var(--font-body);
 }
 
 th {
     background-color: #f8f9fa;
     font-weight: 600;
     color: #333;
+    font-size: var(--font-small);
 }
 
 tr:hover {
@@ -104,7 +135,7 @@ tr:hover {
 .status-badge {
     padding: 4px 8px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: var(--font-xs);
     font-weight: 500;
 }
 
@@ -185,7 +216,7 @@ tr:hover {
 
 .page-info {
     color: #666;
-    font-size: 14px;
+    font-size: var(--font-small);
 }
 
 .modal-overlay {
@@ -213,6 +244,8 @@ tr:hover {
 .modal-container h3 {
     margin-bottom: 20px;
     color: #333;
+    font-size: var(--font-h3);
+    font-weight: 600;
 }
 
 .form-group {
@@ -223,7 +256,8 @@ tr:hover {
     display: block;
     margin-bottom: 5px;
     color: #666;
-    font-size: 14px;
+    font-size: var(--font-small);
+    font-weight: 500;
 }
 
 .form-group input,
@@ -232,7 +266,8 @@ tr:hover {
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
+    font-family: var(--font-family);
+    font-size: var(--font-body);
 }
 
 .form-actions {
@@ -268,6 +303,7 @@ tr:hover {
     color: #666;
     margin-bottom: 20px;
     line-height: 1.5;
+    font-size: var(--font-body);
 }
 
 .loading-container {
@@ -276,6 +312,9 @@ tr:hover {
     align-items: center;
     justify-content: center;
     padding: 40px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .loading-spinner {
@@ -304,6 +343,7 @@ tr:hover {
 .error-message {
     color: #dc3545;
     margin-bottom: 15px;
+    font-size: var(--font-small);
 }
 
 .retry-button {

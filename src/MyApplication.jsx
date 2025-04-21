@@ -288,229 +288,231 @@ function MyApplication() {
 
   return (
     <div className="my-application-container">
-      <div className="my-application-header">
-        <h1>My Applications</h1>
-        <p>Track and manage your submitted applications</p>
+      <div className="application-list-header">
+        <h1 className="application-list-title">My Applications</h1>
+        <p className="application-list-subtitle">Track and manage your permit applications</p>
       </div>
-
-      <div className="my-application-filters">
-        <div className="search-container">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search applications..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="search-input"
-          />
-        </div>
-
-        <div className="filter-container">
-          <div className="filter-group">
-            <label htmlFor="status-filter">Status:</label>
-            <select
-              id="status-filter"
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              className="filter-select"
-            >
-              <option value="all">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="On Review">On Review</option>
-              <option value="Approved">Approved</option>
-              <option value="Denied">Denied</option>
-            </select>
+      
+      <div className="my-application-content">
+        <div className="my-application-filters">
+          <div className="search-container">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search applications..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="search-input"
+            />
           </div>
 
-          <div className="filter-group">
-            <label htmlFor="sort-by">Sort By:</label>
-            <select
-              id="sort-by"
-              value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
-              className="filter-select"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="status">Status</option>
-            </select>
+          <div className="filter-container">
+            <div className="filter-group">
+              <label htmlFor="status-filter">Status:</label>
+              <select
+                id="status-filter"
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                className="filter-select"
+              >
+                <option value="all">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="On Review">On Review</option>
+                <option value="Approved">Approved</option>
+                <option value="Denied">Denied</option>
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="sort-by">Sort By:</label>
+              <select
+                id="sort-by"
+                value={sortBy}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="filter-select"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
           </div>
         </div>
-      </div>
 
-      {isLoading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading your applications...</p>
-        </div>
-      ) : error ? (
-        <div className="error-container">
-          <p className="error-message">{error}</p>
-          <button className="retry-button" onClick={() => window.location.reload()}>
-            Retry
-          </button>
-        </div>
-      ) : filteredApplications.length === 0 ? (
-        <div className="empty-state">
-          <p>No applications found. {searchTerm || statusFilter !== "all" ? "Try adjusting your filters." : ""}</p>
-        </div>
-      ) : (
-        <>
-          <div className="applications-table-container">
-            <table className="applications-table">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSortChange("reference")} className="sortable">
-                    Reference # <FaSort className={getSortIconClass("reference")} />
-                  </th>
-                  <th onClick={() => handleSortChange("title")} className="sortable">
-                    Title <FaSort className={getSortIconClass("title")} />
-                  </th>
-                  <th onClick={() => handleSortChange("type")} className="sortable">
-                    Type <FaSort className={getSortIconClass("type")} />
-                  </th>
-                  <th onClick={() => handleSortChange("status")} className="sortable">
-                    Status <FaSort className={getSortIconClass("status")} />
-                  </th>
-                  <th onClick={() => handleSortChange("submissionDate")} className="sortable">
-                    Submission Date <FaSort className={getSortIconClass("submissionDate")} />
-                  </th>
-                  <th onClick={() => handleSortChange("lastUpdated")} className="sortable">
-                    Last Updated <FaSort className={getSortIconClass("lastUpdated")} />
-                  </th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((application) => (
-                  <tr key={application.id}>
-                    <td>{application.referenceNumber}</td>
-                    <td>{application.title}</td>
-                    <td>{application.type}</td>
-                    <td>
-                      <span className={`status-badge ${getStatusBadgeClass(application.status)}`}>
-                        {application.status}
-                      </span>
-                    </td>
-                    <td>{formatDate(application.submissionDate)}</td>
-                    <td>{formatDate(application.lastUpdated)}</td>
-                    <td className="actions-cell">
-                      <div className="action-buttons">
-                        <button 
-                          className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
-                          onClick={() => handleViewDetails(application)}
-                          title={`${getActionText(application.status)} Application`}
-                        >
-                          {application.status === "Approved" || application.status === "Denied" ? <FaEye /> : <FaChartLine />}
-                        </button>
-                        {application.status !== "Approved" && application.status !== "Denied" && (
-                          <button 
-                            className="action-button delete-button" 
-                            onClick={() => handleDeleteApplication(application.id)}
-                            title="Delete Application"
-                          >
-                            <FaTrash />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+        {isLoading ? (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading your applications...</p>
+          </div>
+        ) : error ? (
+          <div className="error-container">
+            <p className="error-message">{error}</p>
+            <button className="retry-button" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        ) : filteredApplications.length === 0 ? (
+          <div className="empty-state">
+            <p>No applications found. {searchTerm || statusFilter !== "all" ? "Try adjusting your filters." : ""}</p>
+          </div>
+        ) : (
+          <>
+            <div className="applications-table-container">
+              <table className="applications-table">
+                <thead>
+                  <tr>
+                    <th onClick={() => handleSortChange("reference")} className="sortable">
+                      Reference # <FaSort className={getSortIconClass("reference")} />
+                    </th>
+                    <th onClick={() => handleSortChange("title")} className="sortable">
+                      Title <FaSort className={getSortIconClass("title")} />
+                    </th>
+                    <th onClick={() => handleSortChange("type")} className="sortable">
+                      Type <FaSort className={getSortIconClass("type")} />
+                    </th>
+                    <th onClick={() => handleSortChange("status")} className="sortable">
+                      Status <FaSort className={getSortIconClass("status")} />
+                    </th>
+                    <th onClick={() => handleSortChange("submissionDate")} className="sortable">
+                      Submission Date <FaSort className={getSortIconClass("submissionDate")} />
+                    </th>
+                    <th onClick={() => handleSortChange("lastUpdated")} className="sortable">
+                      Last Updated <FaSort className={getSortIconClass("lastUpdated")} />
+                    </th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button 
-                className="pagination-button" 
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <div className="pagination-pages">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    className={`pagination-button ${currentPage === page ? 'active' : ''}`}
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
+                </thead>
+                <tbody>
+                  {currentItems.map((application) => (
+                    <tr key={application.id}>
+                      <td>{application.referenceNumber}</td>
+                      <td>{application.title}</td>
+                      <td>{application.type}</td>
+                      <td>
+                        <span className={`status-badge ${getStatusBadgeClass(application.status)}`}>
+                          {application.status}
+                        </span>
+                      </td>
+                      <td>{formatDate(application.submissionDate)}</td>
+                      <td>{formatDate(application.lastUpdated)}</td>
+                      <td className="actions-cell">
+                        <div className="action-buttons">
+                          <button 
+                            className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
+                            onClick={() => handleViewDetails(application)}
+                            title={`${getActionText(application.status)} Application`}
+                          >
+                            {application.status === "Approved" || application.status === "Denied" ? <FaEye /> : <FaChartLine />}
+                          </button>
+                          {application.status !== "Approved" && application.status !== "Denied" && (
+                            <button 
+                              className="action-button delete-button" 
+                              onClick={() => handleDeleteApplication(application.id)}
+                              title="Delete Application"
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button 
+                  className="pagination-button" 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <div className="pagination-pages">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      className={`pagination-button ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  className="pagination-button" 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
               </div>
-              <button 
-                className="pagination-button" 
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
 
-      {/* Edit Application Modal */}
-      {showEditModal && editApplication && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h2>Edit Application</h2>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>
-                <FaTimes />
-              </button>
-            </div>
-            <div className="modal-body">
-              {formError && <div className="form-error">{formError}</div>}
-              <form onSubmit={handleEditSubmit}>
-                <div className="form-group">
-                  <label htmlFor="edit-title">Title</label>
-                  <input
-                    type="text"
-                    id="edit-title"
-                    name="title"
-                    value={editApplication.title}
-                    onChange={handleEditInputChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="edit-description">Description</label>
-                  <textarea
-                    id="edit-description"
-                    name="description"
-                    value={editApplication.description}
-                    onChange={handleEditInputChange}
-                    required
-                    className="form-textarea"
-                    rows={5}
-                  />
-                </div>
-                <div className="form-actions">
-                  <button 
-                    type="button" 
-                    className="cancel-button"
-                    onClick={() => setShowEditModal(false)}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="submit-button"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
-              </form>
+        {/* Edit Application Modal */}
+        {showEditModal && editApplication && (
+          <div className="modal-overlay">
+            <div className="modal-container">
+              <div className="modal-header">
+                <h2>Edit Application</h2>
+                <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                  <FaTimes />
+                </button>
+              </div>
+              <div className="modal-body">
+                {formError && <div className="form-error">{formError}</div>}
+                <form onSubmit={handleEditSubmit}>
+                  <div className="form-group">
+                    <label htmlFor="edit-title">Title</label>
+                    <input
+                      type="text"
+                      id="edit-title"
+                      name="title"
+                      value={editApplication.title}
+                      onChange={handleEditInputChange}
+                      required
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-description">Description</label>
+                    <textarea
+                      id="edit-description"
+                      name="description"
+                      value={editApplication.description}
+                      onChange={handleEditInputChange}
+                      required
+                      className="form-textarea"
+                      rows={5}
+                    />
+                  </div>
+                  <div className="form-actions">
+                    <button 
+                      type="button" 
+                      className="cancel-button"
+                      onClick={() => setShowEditModal(false)}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="submit-button"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
         </div>
     );
 }
