@@ -70,67 +70,74 @@
 }
 
 /* Action Buttons */
-.action-buttons {
+.shared-table .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
-.action-button {
-  padding: 6px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.shared-table .action-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
   width: 32px;
   height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f3f4f6;
+  padding: 0;
 }
 
-.action-button.edit-button {
-  background-color: #e3f2fd;
-  color: #1976d2;
+.shared-table .action-button svg {
+  width: 16px;
+  height: 16px;
 }
 
-.action-button.edit-button:hover {
-  background-color: #bbdefb;
+.shared-table .action-button.edit-button {
+  color: #4f46e5;
+  background-color: #eef2ff;
 }
 
-.action-button.delete-button {
-  background-color: #ffebee;
-  color: #d32f2f;
+.shared-table .action-button.edit-button:hover {
+  background-color: #e0e7ff;
 }
 
-.action-button.delete-button:hover {
-  background-color: #ffcdd2;
+.shared-table .action-button.delete-button {
+  color: #dc2626;
+  background-color: #fee2e2;
 }
 
-.action-button.view-button {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+.shared-table .action-button.delete-button:hover {
+  background-color: #fecaca;
 }
 
-.action-button.view-button:hover {
-  background-color: #c8e6c9;
+.shared-table .action-button.view-button {
+  color: #2563eb;
+  background-color: #dbeafe;
 }
 
-.action-button.track-button {
-  background-color: #e3f2fd;
-  color: #1976d2;
+.shared-table .action-button.view-button:hover {
+  background-color: #bfdbfe;
 }
 
-.action-button.track-button:hover {
-  background-color: #bbdefb;
+.shared-table .action-button.track-button {
+  color: #059669;
+  background-color: #d1fae5;
 }
 
-.action-button.download-button {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
+.shared-table .action-button.track-button:hover {
+  background-color: #a7f3d0;
 }
 
-.action-button.download-button:hover {
-  background-color: #e1bee7;
+.shared-table .action-button.download-button {
+  color: #7c3aed;
+  background-color: #ede9fe;
+}
+
+.shared-table .action-button.download-button:hover {
+  background-color: #ddd6fe;
 }
 
 /* Pagination */
@@ -257,13 +264,18 @@
     min-width: 800px;
   }
 
-  .action-buttons {
+  .shared-table .action-buttons {
     gap: 4px;
   }
 
-  .action-button {
+  .shared-table .action-button {
     width: 28px;
     height: 28px;
+  }
+
+  .shared-table .action-button svg {
+    width: 14px;
+    height: 14px;
   }
 
   .pagination {

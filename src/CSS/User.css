@@ -147,6 +147,10 @@
   .filter-select {
     width: 100%;
   }
+
+  .action-buttons {
+    gap: 4px;
+  }
 }
 
 .table-container {
