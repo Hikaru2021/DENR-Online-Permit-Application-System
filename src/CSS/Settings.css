@@ -4,7 +4,6 @@
   height: 100vh;
   width: calc(100vw - 250px);
   margin-left: 250px;
-  transition: margin-left 0.3s ease, width 0.3s ease;
   background-color: #F4F2F2;
   padding: 20px;
   overflow-y: auto;
@@ -80,6 +79,11 @@
   width: 150px;
   height: 150px;
   margin-bottom: 1rem;
+  background-color: #E5E7EB;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-image {
@@ -91,24 +95,41 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.default-avatar {
+  width: 60%;
+  height: 60%;
+  color: #9CA3AF;
+}
+
 .image-upload-label {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 5px;
+  right: 5px;
   background: #4CAF50;
   color: white;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s ease;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+  overflow: visible;
 }
 
 .image-upload-label:hover {
   background: #45a049;
+  transform: scale(1.05);
+}
+
+.image-upload-label svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .form-group {
@@ -214,7 +235,7 @@
 
 @media (max-width: 768px) {
   .settings-page {
-    margin-left: 220px;
+    margin-left: 250px;
     padding: 15px;
   }
 

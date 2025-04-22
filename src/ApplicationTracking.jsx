@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaDownload, FaCheckCircle, FaClock, FaFileAlt, FaPaperPlane, FaUpload, FaCog, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaDownload, FaCheckCircle, FaClock, FaFileAlt, FaPaperPlane, FaUpload, FaCog, FaTimes, FaFile } from 'react-icons/fa';
 import { supabase } from './library/supabaseClient';
 import AdminApplicationManagement from './AdminApplicationManagement';
 import './CSS/ApplicationTracking.css';
@@ -343,36 +343,83 @@ function ApplicationTracking() {
           </div>
         </div>
 
-        {/* Tracking Timeline Section */}
-        <section className="timeline-section">
-          <h2>Application Timeline</h2>
-          <div className="timeline">
-            {application.timeline.map((step, index) => (
-              <div 
-                key={index} 
-                className={`timeline-item ${step.isDone ? 'done' : ''} ${step.current ? 'current' : ''} ${application.status === 'Rejected' ? 'rejected' : ''}`}
-              >
-                <div className="timeline-icon">
-                  {step.isDone ? (
-                    <FaCheckCircle className="icon-done" />
-                  ) : application.status === 'Rejected' ? (
-                    <FaTimes className="icon-rejected" />
-                  ) : (
-                    <FaClock className="icon-pending" />
-                  )}
-                </div>
-                <div className="timeline-content">
-                  <h3>{step.status}</h3>
-                  {step.date && step.time ? (
-                    <p className="timeline-date">{step.date} at {step.time}</p>
-                  ) : (
-                    <p className="timeline-date pending">Pending</p>
-                  )}
-                  <p className="timeline-description">{step.description}</p>
-                </div>
+        {/* Horizontal Progress Bar */}
+        <section className="progress-bar-container">
+          <div className="progress-bar">
+            <div 
+              className="progress-bar-fill" 
+              style={{ 
+                width: `${
+                  application.status === 'Rejected' ? '100%' :
+                  application.status === 'Approved' ? '100%' :
+                  application.status === 'Under Review' ? '50%' :
+                  application.status === 'Document Verification' ? '25%' :
+                  '0%'
+                }`
+              }}
+            />
+            <div className={`progress-step ${application.timeline[0].isDone ? 'completed' : ''}`}>
+              <div className="step-icon">
+                {application.timeline[0].isDone ? <FaCheckCircle /> : <FaClock />}
               </div>
-            ))}
+              <span className="step-label">Submitted</span>
+            </div>
+            <div className={`progress-step ${
+              application.timeline[1].isDone ? 'completed' : 
+              application.timeline[1].current ? 'active' : ''
+            }`}>
+              <div className="step-icon">
+                {application.timeline[1].isDone ? <FaCheckCircle /> : 
+                 application.timeline[1].current ? <FaClock /> : <FaFile />}
+              </div>
+              <span className="step-label">Document Verification</span>
+            </div>
+            <div className={`progress-step ${
+              application.timeline[2].isDone ? 'completed' : 
+              application.timeline[2].current ? 'active' : ''
+            }`}>
+              <div className="step-icon">
+                {application.timeline[2].isDone ? <FaCheckCircle /> : 
+                 application.timeline[2].current ? <FaClock /> : <FaFile />}
+              </div>
+              <span className="step-label">Under Review</span>
+            </div>
+            <div className={`progress-step ${
+              application.status === 'Approved' ? 'completed' : 
+              application.status === 'Rejected' ? 'rejected' : ''
+            }`}>
+              <div className="step-icon">
+                {application.status === 'Approved' ? <FaCheckCircle /> :
+                 application.status === 'Rejected' ? <FaTimes /> : <FaFile />}
+              </div>
+              <span className="step-label">
+                {application.status === 'Rejected' ? 'Rejected' : 'Approved'}
+              </span>
+            </div>
           </div>
+        </section>
+
+        {/* Vertical Timeline */}
+        <section className="vertical-timeline">
+          {application.timeline.map((event, index) => (
+            <div key={index} className="timeline-event">
+              <div className="timeline-date">
+                {event.date ? event.date : 'Pending'}
+              </div>
+              <div className={`timeline-marker ${
+                event.isDone ? 'completed' :
+                event.current ? 'review' :
+                'pending'
+              }`} />
+              <div className="timeline-content">
+                <h3 className="timeline-title">{event.status}</h3>
+                <p className="timeline-description">
+                  {event.description}
+                  {event.time && <span className="timeline-time"> at {event.time}</span>}
+                </p>
+              </div>
+            </div>
+          ))}
         </section>
 
         {/* Revision Notice */}

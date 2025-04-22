@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
+import "./CSS/SharedTable.css";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
 
 function ApplicationList() {
@@ -342,6 +343,16 @@ function ApplicationList() {
     setSelectedApplication(null);
   };
 
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(currentPage + 1);
+  };
+
   return (
     <div className="application-list-container">
       <div className="application-list-header">
@@ -390,34 +401,22 @@ function ApplicationList() {
       ) : (
         <>
           <div className="table-container">
-            <table className="application-table">
+            <table className="shared-table">
               <thead>
                 <tr>
-                  <th onClick={() => handleSortChange("id")} className="sortable">
-                    ID <FaSort className={sortBy === "id" ? `sort-icon ${sortOrder}` : "sort-icon"} />
-                  </th>
-                  <th onClick={() => handleSortChange("applicant")} className="sortable">
-                    Applicant <FaSort className={sortBy === "applicant" ? `sort-icon ${sortOrder}` : "sort-icon"} />
-                  </th>
-                  <th onClick={() => handleSortChange("title")} className="sortable">
-                    Title <FaSort className={sortBy === "title" ? `sort-icon ${sortOrder}` : "sort-icon"} />
-                  </th>
-                  <th onClick={() => handleSortChange("type")} className="sortable">
-                    Type <FaSort className={sortBy === "type" ? `sort-icon ${sortOrder}` : "sort-icon"} />
-                  </th>
-                  <th onClick={() => handleSortChange("date")} className="sortable">
-                    Submitted Date <FaSort className={sortBy === "date" ? `sort-icon ${sortOrder}` : "sort-icon"} />
-                  </th>
-                  <th onClick={() => handleSortChange("status")} className="sortable">
-                    Status <FaSort className={sortBy === "status" ? `sort-icon ${sortOrder}` : "sort-icon"} />
-                  </th>
+                  <th>ID</th>
+                  <th>Applicant</th>
+                  <th>Title</th>
+                  <th>Type</th>
+                  <th>Submitted Date</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {currentItems.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="no-data">No applications found</td>
+                    <td colSpan="7" className="empty-state">No applications found</td>
                   </tr>
                 ) : (
                   currentItems.map((application) => (
@@ -428,39 +427,41 @@ function ApplicationList() {
                       <td>{application.type}</td>
                       <td>{new Date(application.submitted_at).toLocaleDateString()}</td>
                       <td>
-                        <span className={getStatusBadgeClass(application.status)}>
+                        <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>
                           {application.status}
-            </span>
+                        </span>
                       </td>
-                      <td className="action-buttons">
-                        <button 
-                          className="action-button view" 
-                          onClick={() => handleViewApplication(application)}
-                          title="View Details"
-                        >
-                          <FaEye />
-                        </button>
-                        <button 
-                          className="action-button track" 
-                          onClick={() => handleTrackApplication(application)}
-                          title="Track Application"
-                        >
-                          <FaChartLine />
-                        </button>
-                        <button 
-                          className="action-button download" 
-                          onClick={() => handleDownloadApplication(application)}
-                          title="Download Application"
-                        >
-                          <FaDownload />
-                        </button>
-            <button
-                          className="action-button delete" 
-                          onClick={() => handleDeleteApplication(application.id)}
-                          title="Delete Application"
-            >
-                          <FaTrash />
-            </button>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="action-button view-button" 
+                            onClick={() => handleViewApplication(application)}
+                            title="View Details"
+                          >
+                            <FaEye />
+                          </button>
+                          <button 
+                            className="action-button track-button" 
+                            onClick={() => handleTrackApplication(application)}
+                            title="Track Application"
+                          >
+                            <FaChartLine />
+                          </button>
+                          <button 
+                            className="action-button download-button" 
+                            onClick={() => handleDownloadApplication(application)}
+                            title="Download Application"
+                          >
+                            <FaDownload />
+                          </button>
+                          <button
+                            className="action-button delete-button" 
+                            onClick={() => handleDeleteApplication(application.id)}
+                            title="Delete Application"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -471,12 +472,12 @@ function ApplicationList() {
           
           {totalPages > 1 && (
             <div className="pagination">
-              <button 
-                className="pagination-button" 
-                onClick={() => handlePageChange(currentPage - 1)}
+              <button
+                className="pagination-button"
+                onClick={handlePrevPage}
                 disabled={currentPage === 1}
               >
-                Previous
+                ❮ Prev
               </button>
               <div className="pagination-pages">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -489,12 +490,12 @@ function ApplicationList() {
                   </button>
                 ))}
               </div>
-              <button 
-                className="pagination-button" 
-                onClick={() => handlePageChange(currentPage + 1)}
+              <button
+                className="pagination-button"
+                onClick={handleNextPage}
                 disabled={currentPage === totalPages}
               >
-                Next
+                Next ❯
               </button>
             </div>
           )}

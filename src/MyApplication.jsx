@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaFilter, FaSort, FaChartLine, FaDownload, FaTrash, FaTimes, FaClock, FaEye } from "react-icons/fa";
 import "./CSS/MyApplication.css"; 
+import "./CSS/SharedTable.css";
 import { supabase } from "./library/supabaseClient";
 import ApplicationTracking from './ApplicationTracking';
 
@@ -286,6 +287,16 @@ function MyApplication() {
     setCurrentPage(pageNumber);
   };
 
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(currentPage + 1);
+  };
+
   return (
     <div className="my-application-container">
       <div className="application-list-header">
@@ -357,28 +368,16 @@ function MyApplication() {
           </div>
         ) : (
           <>
-            <div className="applications-table-container">
-              <table className="applications-table">
+            <div className="table-container">
+              <table className="shared-table">
                 <thead>
                   <tr>
-                    <th onClick={() => handleSortChange("reference")} className="sortable">
-                      Reference # <FaSort className={getSortIconClass("reference")} />
-                    </th>
-                    <th onClick={() => handleSortChange("title")} className="sortable">
-                      Title <FaSort className={getSortIconClass("title")} />
-                    </th>
-                    <th onClick={() => handleSortChange("type")} className="sortable">
-                      Type <FaSort className={getSortIconClass("type")} />
-                    </th>
-                    <th onClick={() => handleSortChange("status")} className="sortable">
-                      Status <FaSort className={getSortIconClass("status")} />
-                    </th>
-                    <th onClick={() => handleSortChange("submissionDate")} className="sortable">
-                      Submission Date <FaSort className={getSortIconClass("submissionDate")} />
-                    </th>
-                    <th onClick={() => handleSortChange("lastUpdated")} className="sortable">
-                      Last Updated <FaSort className={getSortIconClass("lastUpdated")} />
-                    </th>
+                    <th>Reference #</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Submission Date</th>
+                    <th>Last Updated</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -389,13 +388,13 @@ function MyApplication() {
                       <td>{application.title}</td>
                       <td>{application.type}</td>
                       <td>
-                        <span className={`status-badge ${getStatusBadgeClass(application.status)}`}>
+                        <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>
                           {application.status}
                         </span>
                       </td>
                       <td>{formatDate(application.submissionDate)}</td>
                       <td>{formatDate(application.lastUpdated)}</td>
-                      <td className="actions-cell">
+                      <td>
                         <div className="action-buttons">
                           <button 
                             className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
@@ -423,12 +422,12 @@ function MyApplication() {
             
             {totalPages > 1 && (
               <div className="pagination">
-                <button 
-                  className="pagination-button" 
-                  onClick={() => handlePageChange(currentPage - 1)}
+                <button
+                  className="pagination-button"
+                  onClick={handlePrevPage}
                   disabled={currentPage === 1}
                 >
-                  Previous
+                  ❮ Prev
                 </button>
                 <div className="pagination-pages">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -441,12 +440,12 @@ function MyApplication() {
                     </button>
                   ))}
                 </div>
-                <button 
-                  className="pagination-button" 
-                  onClick={() => handlePageChange(currentPage + 1)}
+                <button
+                  className="pagination-button"
+                  onClick={handleNextPage}
                   disabled={currentPage === totalPages}
                 >
-                  Next
+                  Next ❯
                 </button>
               </div>
             )}

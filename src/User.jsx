@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./CSS/User.css";
+import "./CSS/SharedTable.css";
 import { FaSearch, FaEdit, FaTimes, FaFilter, FaSort, FaTrash } from "react-icons/fa";
 import { supabase } from "./library/supabaseClient";
 
@@ -248,8 +249,8 @@ const User = () => {
           </button>
         </div>
       ) : (
-        <div className="applications-table-container">
-          <table className="applications-table">
+        <div className="applications-table-container table-container">
+          <table className="shared-table">
             <thead>
               <tr>
                 <th>Username</th>

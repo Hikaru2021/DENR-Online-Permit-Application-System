@@ -150,11 +150,15 @@ const Settings = () => {
           <h2>Profile Information</h2>
           <div className="profile-image-section">
             <div className="profile-image-container">
-              <img 
-                src={previewUrl || '/default-avatar.png'} 
-                alt="Profile" 
-                className="profile-image"
-              />
+              {previewUrl ? (
+                <img 
+                  src={previewUrl} 
+                  alt="Profile" 
+                  className="profile-image"
+                />
+              ) : (
+                <FaUser className="default-avatar" />
+              )}
               <label className="image-upload-label">
                 <FaCamera />
                 <input

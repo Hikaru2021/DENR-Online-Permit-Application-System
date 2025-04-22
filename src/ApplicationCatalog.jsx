@@ -145,8 +145,9 @@ function ApplicationCatalog() {
           </div>
           <div className="filter-container">
             <div className="filter-group">
-              <label>Type:</label>
+              <label htmlFor="type-filter">Type:</label>
               <select
+                id="type-filter"
                 className="filter-select"
                 value={typeFilter}
                 onChange={handleTypeFilterChange}
@@ -157,8 +158,9 @@ function ApplicationCatalog() {
               </select>
             </div>
             <div className="filter-group">
-              <label>Sort by:</label>
+              <label htmlFor="sort-by">Sort by:</label>
               <select
+                id="sort-by"
                 className="filter-select"
                 value={sortBy}
                 onChange={(e) => handleSortChange(e.target.value)}
@@ -167,18 +169,11 @@ function ApplicationCatalog() {
                 <option value="title">Title</option>
                 <option value="type">Type</option>
               </select>
-              <button 
-                className="sort-order-btn"
-                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                title={sortOrder === "asc" ? "Ascending" : "Descending"}
-              >
-                <FaSort className={sortOrder === "asc" ? "asc" : ""} />
-              </button>
             </div>
-            <button className="add-button" onClick={() => setShowAddModal(true)}>
-              <FaPlus /> Add New Application
-            </button>
           </div>
+          <button className="add-button" onClick={() => setShowAddModal(true)}>
+            <FaPlus /> Add New Application
+          </button>
         </div>
 
         {isLoading ? (
