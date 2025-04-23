@@ -3,6 +3,7 @@ import { FaSearch, FaFilter, FaSort, FaPlus, FaTimes } from "react-icons/fa";
 import "./CSS/ApplicationSubmissionList.css";
 import { supabase } from "./library/supabaseClient";
 import AddApplicationModal from "./Modals/AddApplicationModal";
+import ViewApplicationDetailsModal from "./Modals/ViewApplicationDetailsModal";
 
 function ApplicationSubmissionList() {
   const [search, setSearch] = useState("");
@@ -123,6 +124,13 @@ function ApplicationSubmissionList() {
     setSelectedApplication(null);
   };
 
+  const handleProceedToApplication = () => {
+    // Here you would typically navigate to the application form
+    // For example:
+    // navigate(`/submit-application/${selectedApplication.id}`);
+    closeApplicationModal();
+  };
+
   return (
     <div className="submission-container">
       <div className="submission-header">
@@ -222,61 +230,14 @@ function ApplicationSubmissionList() {
         </div>
       )}
 
-      {/* Application Details Modal */}
-      {showApplicationModal && selectedApplication && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h2>{selectedApplication.title}</h2>
-              <button className="modal-close" onClick={closeApplicationModal}>
-                <FaTimes />
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="details-section">
-                <h3>Description</h3>
-                <p className="details-description">{selectedApplication.description}</p>
-              </div>
-              <div className="details-section">
-                <h3>Requirements</h3>
-                <ul className="details-list">
-                  <li>Valid ID</li>
-                  <li>Proof of Address</li>
-                  <li>Previous Permits (if applicable)</li>
-                  <li>Business Registration (for business permits)</li>
-                </ul>
-              </div>
-              <div className="details-section">
-                <h3>Processing Time</h3>
-                <p className="details-value">Estimated processing time: 5-7 business days</p>
-              </div>
-              <div className="details-section">
-                <h3>Fees</h3>
-                <div className="details-grid">
-                  <div className="details-item">
-                    <span className="details-label">Application Fee</span>
-                    <span className="details-value">₱500.00</span>
-                  </div>
-                  <div className="details-item">
-                    <span className="details-label">Processing Fee</span>
-                    <span className="details-value">₱1,000.00</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="cancel-button" onClick={closeApplicationModal}>
-                Close
-              </button>
-              <button className="submit-button">
-                Proceed to Application
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modals */}
+      <ViewApplicationDetailsModal
+        isOpen={showApplicationModal}
+        onClose={closeApplicationModal}
+        application={selectedApplication}
+        onProceed={handleProceedToApplication}
+      />
 
-      {/* Add Application Modal */}
       <AddApplicationModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
