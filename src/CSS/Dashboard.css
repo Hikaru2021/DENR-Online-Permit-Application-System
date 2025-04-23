@@ -4,8 +4,8 @@
     height: 100vh;
     width: calc(100vw - 250px);
     margin-left: 250px;
-    background-color: #F4F2F2;
-    padding: 1.5rem;
+    background-color: #FAFAFA;
+    padding: 2rem;
     overflow-x: hidden;
     overflow-y: auto;
 }
@@ -431,4 +431,19 @@
     font-weight: 600;
     color: #333;
     margin: 0;
+}
+
+.stats-card {
+    background-color: #FAFAFA;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container {
+    background-color: #FAFAFA;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

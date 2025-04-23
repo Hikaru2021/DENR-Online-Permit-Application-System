@@ -3,14 +3,18 @@
 
 /* Container based on your provided measurements with new class names */
 .content-container {
-    background-color: #F4F2F2; /* Light gray background */
+    background-color: #FAFAFA;
     min-height: calc(100vh - 60px); /* Adjust for navbar height */
     min-width: calc(100vw - 250px); /* Adjust for sidebar width */
     margin-left: 250px; /* Push content to the right of the sidebar */
     margin-top: 60px; /* Push content down below the navbar */
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 1.5rem;
+    height: 100vh;
+    width: calc(100vw - 250px);
+    overflow-x: hidden;
+    overflow-y: auto;
   }
   
   /* Header styles */
@@ -111,11 +115,12 @@
   
   /* Application Card Styles */
   .content-card {
-  background-color: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -633,8 +638,8 @@
 }
 
 .edit-modal-container {
-  background-color: white;
-  border-radius: 12px;
+  background-color: #FAFAFA;
+  border-radius: 8px;
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
@@ -874,8 +879,8 @@
 }
 
 .application-modal-container {
-  background-color: white;
-  border-radius: 12px;
+  background-color: #FAFAFA;
+  border-radius: 8px;
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
@@ -1006,8 +1011,8 @@
   width: calc(100vw - 250px);
   margin-left: 250px;
   transition: margin-left 0.3s ease, width 0.3s ease;
-  background-color: #F4F2F2;
-  padding: 20px;
+  background-color: #FAFAFA;
+  padding: 1.5rem;
   overflow-y: auto;
 }
 

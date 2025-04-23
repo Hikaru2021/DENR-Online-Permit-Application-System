@@ -5,8 +5,8 @@
   width: calc(100vw - 250px);
   margin-left: 250px;
   transition: margin-left 0.3s ease, width 0.3s ease;
-  background-color: #F4F2F2;
-  padding: 20px;
+  background-color: #FAFAFA;
+  padding: 2rem;
   overflow-y: auto;
 }
 
@@ -439,4 +439,20 @@ th {
     flex-direction: column;
     width: 100%;
   }
+}
+
+.report-card {
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filter-panel {
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }

@@ -195,7 +195,7 @@
   padding: 1rem;
   margin-left: 250px;
   min-height: 100vh;
-  background: #f4f6f8;
+  background: #FAFAFA;
   transition: margin-left 0.3s ease;
 }
 
@@ -259,7 +259,7 @@
 .tracking-page-content {
   max-width: 1200px;
   margin: 0 auto;
-  background: white;
+  background: #FAFAFA;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
@@ -813,7 +813,7 @@
 .comments-section {
   margin-top: 2rem;
   padding: 2rem;
-  background-color: white;
+  background-color: #FAFAFA;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -834,7 +834,7 @@
 .comment-item {
   padding: 1.5rem;
   border-radius: 8px;
-  background-color: #f8f9fa;
+  background-color: #FAFAFA;
   border-left: 4px solid #2196f3;
   transition: all 0.3s ease;
 }
@@ -888,7 +888,7 @@
 .no-comments {
   padding: 2rem;
   text-align: center;
-  background-color: #f8f9fa;
+  background-color: #FAFAFA;
   border-radius: 8px;
   color: #666;
 }

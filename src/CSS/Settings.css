@@ -21,10 +21,24 @@
 }
 
 .settings-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 2rem;
+  background-color: #FAFAFA;
+}
+
+.settings-card {
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settings-section {
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .settings-header {
@@ -47,12 +61,6 @@
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 2rem;
-}
-
-.settings-section {
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #eee;
 }
 
 .settings-section:last-child {

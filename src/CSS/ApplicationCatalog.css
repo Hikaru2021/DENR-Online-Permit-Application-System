@@ -34,8 +34,8 @@
   height: 100vh;
   width: calc(100vw - 250px);
   margin-left: 250px;
-  background-color: var(--background-color);
-  padding: var(--spacing-lg);
+  padding: 2rem;
+  background-color: #FAFAFA;
   overflow-y: auto;
 }
 
@@ -183,10 +183,11 @@
 
 /* Card Styles */
 .catalog-card {
-  background: var(--surface-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--spacing-md);
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
   border: 1px solid var(--border-color);
@@ -547,4 +548,12 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+.filter-section {
+  background-color: #FAFAFA;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 } 

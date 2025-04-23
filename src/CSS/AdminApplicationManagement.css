@@ -12,7 +12,7 @@
 }
 
 .admin-modal {
-  background-color: white;
+  background-color: #FAFAFA;
   border-radius: 8px;
   width: 90%;
   max-width: 600px;
@@ -119,6 +119,13 @@
 
 .submit-button:hover {
   background-color: #388e3c;
+}
+
+.application-info {
+  background-color: #FAFAFA;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
 }
 
 /* Responsive Design */
