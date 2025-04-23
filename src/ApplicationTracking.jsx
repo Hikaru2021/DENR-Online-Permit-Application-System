@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaDownload, FaCheckCircle, FaClock, FaFileAlt, FaPaperPlane, FaUpload, FaCog, FaTimes, FaFile } from 'react-icons/fa';
 import { supabase } from './library/supabaseClient';
-import AdminApplicationManagement from './AdminApplicationManagement';
+import ManageApplicationModal from './Modals/ManageApplicationModal';
 import './CSS/ApplicationTracking.css';
 
 function ApplicationTracking() {
@@ -541,9 +541,10 @@ function ApplicationTracking() {
 
       {/* Admin Management Modal */}
       {showAdminManagement && application && (
-        <AdminApplicationManagement
-          application={application}
+        <ManageApplicationModal
+          isOpen={showAdminManagement}
           onClose={() => setShowAdminManagement(false)}
+          application={application}
           onUpdateStatus={handleUpdateStatus}
         />
       )}
