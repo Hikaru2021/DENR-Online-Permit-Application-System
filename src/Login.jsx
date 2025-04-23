@@ -128,7 +128,7 @@ const Login = () => {
 
           <button 
             type="submit" 
-            className={isLoading ? 'loading' : ''}
+            className={`auth-submit-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}
           >
             {isLoading ? 'Logging in' : 'Login'}

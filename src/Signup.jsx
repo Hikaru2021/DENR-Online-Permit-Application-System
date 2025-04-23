@@ -85,12 +85,16 @@ const Signup = () => {
           className="back-button"
           onClick={() => navigate('/')}
         >
-          <FaArrowLeft /> Back
+          <FaArrowLeft />
         </button>
         <div className="auth-header">
-          <h2>Sign Up</h2>
+          <h1>Create Account</h1>
+          <p>Please fill in your details to sign up</p>
         </div>
-        <form className="auth-form" onSubmit={handleSubmit}>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="username">Username</label>
             <div className="input-group">
@@ -164,15 +168,20 @@ const Signup = () => {
 
           <button 
             type="submit" 
-            className={isLoading ? 'loading' : ''}
+            className={`auth-submit-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}
           >
             {isLoading ? 'Signing up' : 'Sign Up'}
           </button>
-          {error && <div className="error-message">{error}</div>}
-          <p>
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
+
+          <div className="auth-footer">
+            <p>
+              Already have an account?{' '}
+              <Link to="/login" className="auth-link">
+                Login
+              </Link>
+            </p>
+          </div>
         </form>
       </div>
 

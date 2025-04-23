@@ -364,53 +364,19 @@ function ApplicationTracking() {
         {/* Progress Bar */}
         <div className="progress-section">
           <div className="progress-bar">
-            <div className="progress-track"></div>
-            {/* Static progress for completed steps */}
+            <div className="progress-line"></div>
             <div 
-              className="progress-fill static"
+              className="progress-line-fill"
               style={{ 
                 width: `${
-                  application.status === 'Under Review' ? '60%' :
-                  application.status === 'Document Verification' ? '30%' :
-                  application.status === 'Submitted' ? '20%' :
+                  application.status === 'Rejected' ? '100%' :
+                  application.status === 'Approved' ? '100%' :
+                  application.status === 'Under Review' ? '50%' :
+                  application.status === 'Document Verification' ? '25%' :
                   '0%'
-                }`,
-                right: 'auto'
+                }`
               }}
             ></div>
-            
-            {/* Animated progress for current step */}
-            {application.status !== 'Approved' && application.status !== 'Rejected' && (
-              <div 
-                className="progress-fill animated"
-                style={{ 
-                  left: `${
-                    application.status === 'Under Review' ? '60%' :
-                    application.status === 'Document Verification' ? '30%' :
-                    application.status === 'Submitted' ? '20%' :
-                    '40px'
-                  }`,
-                  width: `${
-                    application.status === 'Under Review' ? '40%' :
-                    application.status === 'Document Verification' ? '30%' :
-                    application.status === 'Submitted' ? '10%' :
-                    '20%'
-                  }`,
-                  right: 'auto'
-                }}
-              ></div>
-            )}
-
-            {/* Final state progress */}
-            {(application.status === 'Approved' || application.status === 'Rejected') && (
-              <div 
-                className={`progress-fill ${application.status.toLowerCase()}`}
-                style={{ 
-                  width: '100%',
-                  right: 'auto'
-                }}
-              ></div>
-            )}
             
             <div className={`progress-step ${application.timeline[0].isDone ? 'completed' : ''}`}>
               <div className="step-circle">
