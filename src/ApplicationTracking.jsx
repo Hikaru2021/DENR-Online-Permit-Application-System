@@ -17,6 +17,46 @@ function ApplicationTracking() {
   const [showAdminManagement, setShowAdminManagement] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true); // This would come from auth context
 
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleResubmit = async () => {
+    if (selectedFiles.length === 0) {
+      alert('Please select files to upload');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // In a real app, you would upload files and update application status
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
+      
+      setApplication(prev => ({
+        ...prev,
+        status: 'Under Review',
+        needsRevision: false,
+        comments: [
+          ...prev.comments,
+          {
+            id: prev.comments.length + 1,
+            user: "System",
+            role: "system",
+            message: "Application has been resubmitted with revised documents.",
+            timestamp: new Date().toLocaleString(),
+            isOfficial: true
+          }
+        ]
+      }));
+      setSelectedFiles([]);
+    } catch (err) {
+      alert('Error resubmitting application: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     const fetchApplication = async () => {
       try {
@@ -132,46 +172,6 @@ function ApplicationTracking() {
     setNewComment('');
   };
 
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    setSelectedFiles(prev => [...prev, ...files]);
-  };
-
-  const handleResubmit = async () => {
-    if (selectedFiles.length === 0) {
-      alert('Please select files to upload');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // In a real app, you would upload files and update application status
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      setApplication(prev => ({
-        ...prev,
-        status: 'Under Review',
-        needsRevision: false,
-        comments: [
-          ...prev.comments,
-          {
-            id: prev.comments.length + 1,
-            user: "System",
-            role: "system",
-            message: "Application has been resubmitted with revised documents.",
-            timestamp: new Date().toLocaleString(),
-            isOfficial: true
-          }
-        ]
-      }));
-      setSelectedFiles([]);
-    } catch (err) {
-      alert('Error resubmitting application: ' + err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleUpdateStatus = async (statusUpdate) => {
     try {
       const statusOrder = [
@@ -189,15 +189,17 @@ function ApplicationTracking() {
         const stepStatusIndex = statusOrder.indexOf(step.status);
         
         // Special case: If status is "Needs Revision", mark "Under Review" as incomplete
-        if (statusUpdate.status === 'Needs Revision' && step.status === 'On Review') {
-          return {
-            ...step,
-            isDone: false,
-            current: false,
-            date: null,
-            time: null,
-            description: step.description
-          };
+        if (statusUpdate.status === 'Needs Revision') {
+          if (step.status === 'On Review') {
+            return {
+              ...step,
+              isDone: false,
+              current: false,
+              date: null,
+              time: null,
+              description: `Revision required: ${statusUpdate.revisionInstructions}`
+            };
+          }
         }
 
         // Special case: If status is "Rejected", mark all steps as incomplete except the current
@@ -242,7 +244,9 @@ function ApplicationTracking() {
             current: true,
             date: new Date().toLocaleDateString(),
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            description: statusUpdate.comment.message
+            description: statusUpdate.status === 'Needs Revision' 
+              ? `Revision required: ${statusUpdate.revisionInstructions}`
+              : statusUpdate.comment.message
           };
         }
         
@@ -257,10 +261,24 @@ function ApplicationTracking() {
         };
       });
 
+      // Add revision instructions to comments if status is "Needs Revision"
+      const updatedComments = [...application.comments];
+      if (statusUpdate.status === 'Needs Revision') {
+        updatedComments.push({
+          id: application.comments.length + 1,
+          user: "Admin",
+          role: "admin",
+          message: statusUpdate.revisionInstructions,
+          timestamp: new Date().toLocaleString(),
+          isOfficial: true,
+          type: "revision-request"
+        });
+      }
+
       setApplication(prev => ({
         ...prev,
         status: statusUpdate.status,
-        comments: [...prev.comments, statusUpdate.comment],
+        comments: updatedComments,
         needsRevision: statusUpdate.status === 'Needs Revision',
         revisionInstructions: statusUpdate.revisionInstructions,
         timeline: updatedTimeline,
@@ -343,11 +361,12 @@ function ApplicationTracking() {
           </div>
         </div>
 
-        {/* Horizontal Progress Bar */}
-        <section className="progress-bar-container">
+        {/* Progress Bar */}
+        <div className="progress-section">
           <div className="progress-bar">
+            <div className="progress-line"></div>
             <div 
-              className="progress-bar-fill" 
+              className="progress-line-fill"
               style={{ 
                 width: `${
                   application.status === 'Rejected' ? '100%' :
@@ -357,186 +376,167 @@ function ApplicationTracking() {
                   '0%'
                 }`
               }}
-            />
+            ></div>
+            
             <div className={`progress-step ${application.timeline[0].isDone ? 'completed' : ''}`}>
-              <div className="step-icon">
+              <div className="step-circle">
                 {application.timeline[0].isDone ? <FaCheckCircle /> : <FaClock />}
               </div>
-              <span className="step-label">Submitted</span>
+              <div className="step-label">Submitted</div>
             </div>
+
             <div className={`progress-step ${
               application.timeline[1].isDone ? 'completed' : 
               application.timeline[1].current ? 'active' : ''
             }`}>
-              <div className="step-icon">
+              <div className="step-circle">
                 {application.timeline[1].isDone ? <FaCheckCircle /> : 
                  application.timeline[1].current ? <FaClock /> : <FaFile />}
               </div>
-              <span className="step-label">Document Verification</span>
+              <div className="step-label">Document Verification</div>
             </div>
+
             <div className={`progress-step ${
               application.timeline[2].isDone ? 'completed' : 
               application.timeline[2].current ? 'active' : ''
             }`}>
-              <div className="step-icon">
+              <div className="step-circle">
                 {application.timeline[2].isDone ? <FaCheckCircle /> : 
                  application.timeline[2].current ? <FaClock /> : <FaFile />}
               </div>
-              <span className="step-label">Under Review</span>
+              <div className="step-label">Under Review</div>
             </div>
+
             <div className={`progress-step ${
               application.status === 'Approved' ? 'completed' : 
               application.status === 'Rejected' ? 'rejected' : ''
             }`}>
-              <div className="step-icon">
+              <div className="step-circle">
                 {application.status === 'Approved' ? <FaCheckCircle /> :
                  application.status === 'Rejected' ? <FaTimes /> : <FaFile />}
               </div>
-              <span className="step-label">
+              <div className="step-label">
                 {application.status === 'Rejected' ? 'Rejected' : 'Approved'}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Vertical Timeline */}
-        <section className="vertical-timeline">
-          {application.timeline.map((event, index) => (
-            <div key={index} className="timeline-event">
-              <div className="timeline-date">
-                {event.date ? event.date : 'Pending'}
               </div>
-              <div className={`timeline-marker ${
-                event.isDone ? 'completed' :
-                event.current ? 'review' :
-                'pending'
-              }`} />
-              <div className="timeline-content">
-                <h3 className="timeline-title">{event.status}</h3>
-                <p className="timeline-description">
-                  {event.description}
-                  {event.time && <span className="timeline-time"> at {event.time}</span>}
-                </p>
-              </div>
-            </div>
-          ))}
-        </section>
-
-        {/* Revision Notice */}
-        {application?.needsRevision && (
-          <section className="revision-section">
-            <div className="revision-notice">
-              <h2>Revision Required</h2>
-              <div className="revision-instructions">
-                <h3>Instructions from Administrator:</h3>
-                <pre>{application.revisionInstructions}</pre>
-              </div>
-              <div className="resubmission-form">
-                <h3>Resubmit Documents</h3>
-                <div className="file-upload-area">
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileSelect}
-                    id="file-upload"
-                    className="file-input"
-                  />
-                  <label htmlFor="file-upload" className="file-upload-label">
-                    <FaUpload /> Choose Files
-                  </label>
-                  {selectedFiles.length > 0 && (
-                    <div className="selected-files">
-                      <h4>Selected Files:</h4>
-                      <ul>
-                        {selectedFiles.map((file, index) => (
-                          <li key={index}>{file.name}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  <button
-                    className="resubmit-button"
-                    onClick={handleResubmit}
-                    disabled={isSubmitting || selectedFiles.length === 0}
-                  >
-                    {isSubmitting ? 'Resubmitting...' : 'Resubmit Application'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Comments Section */}
-        <section className="comments-section">
-          <h2>Comments</h2>
-          <div className="comments-list">
-            {application?.comments.map(comment => (
-              <div 
-                key={comment.id} 
-                className={`comment-item ${comment.role} ${comment.isOfficial ? 'official' : ''}`}
-              >
-                <div className="comment-header">
-                  <span className="comment-user">{comment.user}</span>
-                  <span className="comment-timestamp">{comment.timestamp}</span>
-                </div>
-                <div className="comment-content">
-                  {comment.message}
-                </div>
-              </div>
-            ))}
-          </div>
-          <form className="comment-form" onSubmit={handleCommentSubmit}>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Write a comment..."
-              rows={3}
-            />
-            <button type="submit" className="submit-comment" disabled={!newComment.trim()}>
-              <FaPaperPlane /> Send Comment
-            </button>
-          </form>
-        </section>
-
-        {/* Application Details Section */}
-        <section className="details-section">
-          <h2>Application Details</h2>
-          <div className="details-grid">
-            <div className="detail-item">
-              <h3>Type</h3>
-              <p>{application.type}</p>
-            </div>
-            <div className="detail-item">
-              <h3>Submission Date</h3>
-              <p>{application.submissionDate}</p>
-            </div>
-            <div className="detail-item">
-              <h3>Last Updated</h3>
-              <p>{application.lastUpdated}</p>
             </div>
           </div>
 
-          <div className="detail-description">
-            <h3>Description</h3>
-            <p>{application.description}</p>
-          </div>
-
-          <div className="detail-attachments">
-            <h3>Attachments</h3>
-            <div className="attachments-list">
-              {application.attachments.map((attachment, index) => (
-                <div key={index} className="attachment-item">
-                  <FaFileAlt className="attachment-icon" />
-                  <span>{attachment}</span>
-                  <button className="download-button">
-                    <FaDownload /> Download
-                  </button>
+          {/* Progress Timeline */}
+          <div className="progress-timeline">
+            <div className="timeline-list">
+              {application.timeline.map((item, index) => (
+                <div key={index} className="timeline-item">
+                  <div className="timeline-date">
+                    <div className="date">{item.date}</div>
+                    <div className="time">{item.time}</div>
+                  </div>
+                  <div className="timeline-marker"></div>
+                  <div className="timeline-content">
+                    <p>{item.description}</p>
+                    {item.status === 'Approved' && (
+                      <div className="additional-info">
+                        <p>Recipient: {item.additionalInfo?.recipient}</p>
+                        <p>Approved Date: {item.additionalInfo?.approvedDate}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
+
+        {/* Comments Section */}
+        <div className="comments-section">
+          <h2>Official Comments</h2>
+          <div className="comments-list">
+            {application.comments
+              .filter(comment => comment.role === 'admin' && comment.isOfficial)
+              .map((comment, index) => (
+                <div 
+                  key={index} 
+                  className={`comment-item admin ${
+                    comment.type === 'revision-request' ? 'revision' : 
+                    application.status === 'Rejected' ? 'rejected' : ''
+                  }`}
+                >
+                  <div className="comment-header">
+                    <span className="comment-user">DENR Admin</span>
+                    <span className="comment-timestamp">{comment.timestamp}</span>
+                  </div>
+                  <div className="comment-content">
+                    {comment.type === 'revision-request' ? (
+                      <>
+                        <h4>Revision Instructions:</h4>
+                        <p>{comment.message}</p>
+                      </>
+                    ) : (
+                      <p>{comment.message}</p>
+                    )}
+                  </div>
+                </div>
+            ))}
+            {application.comments.filter(comment => comment.role === 'admin' && comment.isOfficial).length === 0 && (
+              <div className="no-comments">
+                <p>No official comments yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Add resubmission area when status is "needs-revision" */}
+        {application.status === "Needs Revision" && (
+          <div className="resubmission-area">
+            <div className="resubmission-header">
+              <h3>Revision Required</h3>
+              <p>Please review the comments above and resubmit your application with the necessary changes.</p>
+            </div>
+            <div className="resubmission-form">
+              <div 
+                className="file-upload-container"
+                onClick={() => document.getElementById('file-upload').click()}
+              >
+                <p>Click to upload files or drag and drop</p>
+                <p>Supported formats: PDF, DOC, DOCX, JPG, PNG</p>
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="file-upload-input"
+                  multiple
+                  onChange={handleFileSelect}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+              </div>
+              {selectedFiles.length > 0 && (
+                <div className="selected-files-list">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="selected-file-item">
+                      <span className="file-name">{file.name}</span>
+                      <button
+                        className="remove-file-btn"
+                        onClick={() => {
+                          const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
+                          setSelectedFiles(newSelectedFiles);
+                        }}
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                className="resubmit-button"
+                disabled={selectedFiles.length === 0}
+                onClick={handleResubmit}
+              >
+                Resubmit Application
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Admin Management Modal */}
