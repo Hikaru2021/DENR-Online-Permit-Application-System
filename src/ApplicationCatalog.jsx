@@ -22,6 +22,7 @@ function ApplicationCatalog() {
   const [editApplication, setEditApplication] = useState(null);
   const [showSubmissionForm, setShowSubmissionForm] = useState(false);
   const [selectedApplicationForSubmission, setSelectedApplicationForSubmission] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   // Fetch applications from Supabase
   const fetchApplications = async () => {
@@ -44,8 +45,30 @@ function ApplicationCatalog() {
     }
   };
   
+  // Fetch user role
+  const fetchUserRole = async () => {
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+
+      if (user) {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('role_id')
+          .eq('id', user.id)
+          .single();
+
+        if (userError) throw userError;
+        setUserRole(userData.role_id);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
+
   useEffect(() => {
     fetchApplications();
+    fetchUserRole();
   }, []);
 
   // Handle search input change
@@ -171,9 +194,12 @@ function ApplicationCatalog() {
               </select>
             </div>
           </div>
-          <button className="add-button" onClick={() => setShowAddModal(true)}>
-            <FaPlus /> Add New Application
-          </button>
+          {/* Only show Add New Application button if user is not role 3 */}
+          {userRole !== 3 && (
+            <button className="add-button" onClick={() => setShowAddModal(true)}>
+              <FaPlus /> Add New Application
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -202,13 +228,16 @@ function ApplicationCatalog() {
                   className="catalog-card"
                   onClick={() => handleViewClick(application)}
                 >
-                  <button 
-                    className="edit-button"
-                    onClick={(e) => handleEditClick(application, e)}
-                    title="Edit Application"
-                  >
-                    <FaEdit />
-                  </button>
+                  {/* Only show edit button if user is not role 3 */}
+                  {userRole !== 3 && (
+                    <button 
+                      className="edit-button"
+                      onClick={(e) => handleEditClick(application, e)}
+                      title="Edit Application"
+                    >
+                      <FaEdit />
+                    </button>
+                  )}
                   <div className="card-header">
                     <h3 className="card-title">{application.title}</h3>
                     <span className={`card-type ${application.type.toLowerCase()}`}>

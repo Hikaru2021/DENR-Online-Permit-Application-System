@@ -4,6 +4,7 @@ import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload } f
 import "./CSS/ApplicationList.css";
 import "./CSS/SharedTable.css";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
+import { supabase } from "./library/supabaseClient";
 
 function ApplicationList() {
   const navigate = useNavigate();
@@ -21,150 +22,86 @@ function ApplicationList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Dummy data for applications
-  const dummyApplications = [
-    {
-      id: 1,
-      application_id: "APP-2023-001",
-      applicant_name: "John Doe",
-      title: "Building Permit",
-      type: "Construction",
-      submitted_at: "2023-06-15T10:30:00",
-      status: "pending",
-      description: "Application for a new commercial building construction permit.",
-      notes: "Awaiting review by the zoning department.",
-      // User submitted details
-      fullName: "John Doe",
-      email: "john.doe@example.com",
-      contactNumber: "09123456789",
-      address: "123 Main St, City, Province",
-      purpose: "Construction of a new commercial building",
-      documents: [
-        { name: "Building Plan.pdf", size: "2.5MB" },
-        { name: "Business Permit.pdf", size: "1.2MB" }
-      ],
-      fees: {
-        application: 1000,
-        processing: 500,
-        total: 1500
-      }
-    },
-    {
-      id: 2,
-      application_id: "APP-2023-002",
-      applicant_name: "Jane Smith",
-      title: "Environmental Compliance Certificate",
-      type: "Environmental",
-      submitted_at: "2023-06-10T14:45:00",
-      status: "in review",
-      description: "Application for environmental compliance certification for manufacturing facility.",
-      notes: "Under review by environmental assessment team."
-    },
-    {
-      id: 3,
-      application_id: "APP-2023-003",
-      applicant_name: "Robert Johnson",
-      title: "Business Permit",
-      type: "Business",
-      submitted_at: "2023-05-20T09:15:00",
-      status: "approved",
-      description: "Application for a new business permit for retail establishment.",
-      notes: "Application approved. Permit valid for one year."
-    },
-    {
-      id: 4,
-      application_id: "APP-2023-004",
-      applicant_name: "Emily Davis",
-      title: "Waste Management Permit",
-      type: "Environmental",
-      submitted_at: "2023-05-05T11:20:00",
-      status: "rejected",
-      description: "Application for waste management permit for industrial facility.",
-      notes: "Application denied due to incomplete waste management plan. Please resubmit with updated documentation."
-    },
-    {
-      id: 5,
-      application_id: "APP-2023-005",
-      applicant_name: "Michael Wilson",
-      title: "Renovation Permit",
-      type: "Construction",
-      submitted_at: "2023-07-01T13:10:00",
-      status: "pending",
-      description: "Application for renovation of an existing residential property.",
-      notes: "Awaiting initial review."
-    },
-    {
-      id: 6,
-      application_id: "APP-2023-006",
-      applicant_name: "Sarah Brown",
-      title: "Water Usage Permit",
-      type: "Environmental",
-      submitted_at: "2023-06-25T15:30:00",
-      status: "in review",
-      description: "Application for increased water usage permit for agricultural purposes.",
-      notes: "Under review by water resources department."
-    },
-    {
-      id: 7,
-      application_id: "APP-2023-007",
-      applicant_name: "David Miller",
-      title: "Signage Permit",
-      type: "Business",
-      submitted_at: "2023-07-05T10:00:00",
-      status: "approved",
-      description: "Application for outdoor signage for retail business.",
-      notes: "Application approved with standard conditions."
-    },
-    {
-      id: 8,
-      application_id: "APP-2023-008",
-      applicant_name: "Lisa Anderson",
-      title: "Hazardous Materials Permit",
-      type: "Environmental",
-      submitted_at: "2023-06-20T09:45:00",
-      status: "rejected",
-      description: "Application for storage of hazardous materials in industrial facility.",
-      notes: "Application rejected due to insufficient safety protocols. Please revise and resubmit."
-    },
-    {
-      id: 9,
-      application_id: "APP-2023-009",
-      applicant_name: "James Taylor",
-      title: "Zoning Variance",
-      type: "Construction",
-      submitted_at: "2023-07-10T14:20:00",
-      status: "pending",
-      description: "Application for zoning variance to allow mixed-use development.",
-      notes: "Awaiting review by planning commission."
-    },
-    {
-      id: 10,
-      application_id: "APP-2023-010",
-      applicant_name: "Patricia Martinez",
-      title: "Air Quality Permit",
-      type: "Environmental",
-      submitted_at: "2023-06-30T11:15:00",
-      status: "in review",
-      description: "Application for air quality permit for manufacturing facility.",
-      notes: "Under review by environmental protection agency."
+  // Status mapping function
+  const getStatusName = (statusId) => {
+    switch (statusId) {
+      case 1: return "Submitted";
+      case 2: return "Under Review";
+      case 3: return "Needs Revision";
+      case 4: return "Approved";
+      case 5: return "Rejected";
+      default: return "Unknown";
     }
-  ];
+  };
 
-  // Fetch applications (using dummy data)
+  // Fetch all user applications
   const fetchApplications = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      setTimeout(() => {
-        setApplications(dummyApplications);
-        setIsLoading(false);
-      }, 1000);
+      const { data: user_applications, error } = await supabase
+        .from('user_applications')
+        .select(`
+          id,
+          created_at,
+          status,
+          approved_date,
+          full_name,
+          contact_number,
+          address,
+          purpose,
+          applications (
+            id,
+            title,
+            type,
+            description,
+            application_fee,
+            processing_fee
+          ),
+          users (
+            id,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform the data to match our component's expected format
+      const transformedApplications = user_applications.map(app => ({
+        id: app.id,
+        application_id: `APP-${app.id.toString().padStart(6, '0')}`,
+        applicant_name: app.full_name,
+        title: app.applications.title,
+        type: app.applications.type,
+        submitted_at: app.created_at,
+        status: getStatusName(app.status),
+        statusId: app.status,
+        description: app.applications.description,
+        notes: "",
+        // User details
+        fullName: app.full_name,
+        email: app.users?.email,
+        contactNumber: app.contact_number,
+        address: app.address,
+        purpose: app.purpose,
+        // Fees
+        fees: {
+          application: app.applications.application_fee || 0,
+          processing: app.applications.processing_fee || 0,
+          total: (app.applications.application_fee || 0) + (app.applications.processing_fee || 0)
+        }
+      }));
+
+      setApplications(transformedApplications);
+      setError(null);
     } catch (err) {
       setError(`Error fetching applications: ${err.message}`);
+      console.error('Error fetching applications:', err);
+    } finally {
       setIsLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchApplications();
   }, []);
@@ -205,17 +142,16 @@ function ApplicationList() {
       let comparison = 0;
       
       if (sortBy === "date") {
-        comparison = new Date(a.submitted_at) - new Date(b.submitted_at);
+        comparison = new Date(b.submitted_at) - new Date(a.submitted_at);
       } else if (sortBy === "applicant") {
         comparison = a.applicant_name.localeCompare(b.applicant_name);
       } else if (sortBy === "status") {
-        comparison = a.status.localeCompare(b.status);
+        comparison = a.statusId - b.statusId;
       } else {
-        // Default sort by ID
-        comparison = a.application_id.localeCompare(b.application_id);
+        comparison = b.id - a.id; // Default sort by ID descending
       }
       
-      return sortOrder === "asc" ? comparison : -comparison;
+      return sortOrder === "asc" ? -comparison : comparison;
     });
 
   // Calculate pagination values
@@ -274,17 +210,19 @@ function ApplicationList() {
 
   // Get status badge class
   const getStatusBadgeClass = (status) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'status-badge pending';
-      case 'approved':
-        return 'status-badge approved';
-      case 'rejected':
-        return 'status-badge rejected';
-      case 'in review':
-        return 'status-badge in-review';
+    switch (status) {
+      case "Submitted":
+        return "status-badge pending";
+      case "Under Review":
+        return "status-badge in-review";
+      case "Needs Revision":
+        return "status-badge revision";
+      case "Approved":
+        return "status-badge approved";
+      case "Rejected":
+        return "status-badge rejected";
       default:
-        return 'status-badge';
+        return "status-badge";
     }
   };
 
@@ -378,10 +316,11 @@ function ApplicationList() {
             onChange={handleStatusFilterChange}
           >
             <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in review">In Review</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Needs Revision">Needs Revision</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
           </select>
         </div>
       </div>
@@ -599,10 +538,11 @@ function ApplicationList() {
                       status: e.target.value
                     })}
                   >
-                    <option value="pending">Pending</option>
-                    <option value="in review">In Review</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Needs Revision">Needs Revision</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
                   </select>
                 </div>
                 <div className="form-group">

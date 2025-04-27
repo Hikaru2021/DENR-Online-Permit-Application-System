@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { FaTimes, FaCloudUploadAlt } from "react-icons/fa";
+import { FaTimes, FaCloudUploadAlt, FaPlus, FaTrash } from "react-icons/fa";
 import { supabase } from "../library/supabaseClient";
 import "../CSS/ApplicationSubmissionList.css";
 import ReactQuill from 'react-quill';
@@ -12,9 +12,13 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
     title: "",
     type: "",
     description: "",
+    application_fee: "",
+    processing_fee: "",
+    requirements: [],
     guidelinesFile: null,
     applicationFormFile: null
   });
+  const [newRequirement, setNewRequirement] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState({
@@ -64,6 +68,11 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
         ...prev,
         guidelinesFile: file
       }));
+      // Reset progress when new file is uploaded
+      setUploadProgress(prev => ({
+        ...prev,
+        guidelines: 0
+      }));
     }
   }, []);
 
@@ -85,6 +94,11 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
         ...prev,
         applicationFormFile: file
       }));
+      // Reset progress when new file is uploaded
+      setUploadProgress(prev => ({
+        ...prev,
+        applicationForm: 0
+      }));
     }
   }, []);
 
@@ -98,49 +112,21 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
     maxFiles: 1
   });
 
-  const uploadFile = async (file, applicationId, documentType) => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${applicationId}/${documentType}.${fileExt}`;
-      const filePath = `applications/${fileName}`;
-
-      // Upload file to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('applications')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-          onUploadProgress: (progress) => {
-            const percent = (progress.loaded / progress.total) * 100;
-            setUploadProgress(prev => ({
-              ...prev,
-              [documentType]: percent
-            }));
-          }
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Insert document record in documents table
-      const { data: docData, error: docError } = await supabase
-        .from('documents')
-        .insert([{
-          application_id: applicationId,
-          file_name: file.name,
-          file_path: filePath,
-          file_type: file.type,
-          file_size: file.size,
-          document_type: documentType
-        }])
-        .select();
-
-      if (docError) throw docError;
-
-      return docData[0];
-    } catch (err) {
-      console.error(`Error uploading ${documentType}:`, err);
-      throw err;
+  const handleAddRequirement = () => {
+    if (newRequirement.trim()) {
+      setNewApplication(prev => ({
+        ...prev,
+        requirements: [...prev.requirements, newRequirement.trim()]
+      }));
+      setNewRequirement("");
     }
+  };
+
+  const handleRemoveRequirement = (index) => {
+    setNewApplication(prev => ({
+      ...prev,
+      requirements: prev.requirements.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -150,47 +136,53 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
 
     try {
       // Validate required fields
-      if (!newApplication.title || !newApplication.type || !newApplication.description) {
+      if (!newApplication.title || !newApplication.type || !newApplication.description || 
+          !newApplication.application_fee || !newApplication.processing_fee) {
         throw new Error('Please fill in all required fields');
       }
 
-      if (!newApplication.guidelinesFile || !newApplication.applicationFormFile) {
-        throw new Error('Please upload both guidelines and application form files');
-      }
-
-      // Convert HTML to plain text
+      // Convert HTML to plain text for description
       const plainTextDescription = convert(newApplication.description, {
         wordwrap: false,
         preserveNewlines: true
       });
 
-      // Insert application record
+      // Insert application into database
       const { data: applicationData, error: applicationError } = await supabase
         .from('applications')
         .insert([{
           title: newApplication.title,
           type: newApplication.type,
-          description: plainTextDescription
+          description: plainTextDescription,
+          application_fee: newApplication.application_fee,
+          processing_fee: newApplication.processing_fee,
+          requirements: newApplication.requirements
         }])
         .select();
 
-      if (applicationError) throw applicationError;
+      if (applicationError) {
+        throw applicationError;
+      }
 
-      const applicationId = applicationData[0].id;
-
-      // Upload both files
-      const [guidelinesDoc, applicationFormDoc] = await Promise.all([
-        uploadFile(newApplication.guidelinesFile, applicationId, 'guidelines'),
-        uploadFile(newApplication.applicationFormFile, applicationId, 'application_form')
-      ]);
-
-      // Combine all data
-      const newApplicationData = {
+      // Add file metadata to the response object
+      const completeApplicationData = {
         ...applicationData[0],
-        documents: [guidelinesDoc, applicationFormDoc]
+        files: {
+          guidelines: newApplication.guidelinesFile ? {
+            name: newApplication.guidelinesFile.name,
+            type: newApplication.guidelinesFile.type,
+            size: newApplication.guidelinesFile.size
+          } : null,
+          applicationForm: newApplication.applicationFormFile ? {
+            name: newApplication.applicationFormFile.name,
+            type: newApplication.applicationFormFile.type,
+            size: newApplication.applicationFormFile.size
+          } : null
+        }
       };
 
-      onApplicationAdded(newApplicationData);
+      // Pass the complete data to parent component
+      onApplicationAdded(completeApplicationData);
       onClose();
     } catch (err) {
       setFormError(err.message);
@@ -257,6 +249,75 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                   formats={formats}
                   placeholder="Provide a detailed description"
                 />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="applicationFee">Application Fee (₱)</label>
+              <input
+                type="number"
+                id="application_fee"
+                name="application_fee"
+                value={newApplication.application_fee}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                placeholder="Enter application fee"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="processingFee">Processing Fee (₱)</label>
+              <input
+                type="number"
+                id="processing_fee"
+                name="processing_fee"
+                value={newApplication.processing_fee}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                placeholder="Enter processing fee"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Requirements</label>
+              <div className="requirements-container">
+                <div className="requirement-input-group">
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={newRequirement}
+                    onChange={(e) => setNewRequirement(e.target.value)}
+                    placeholder="Enter a requirement"
+                  />
+                  <button
+                    type="button"
+                    className="add-requirement-button"
+                    onClick={handleAddRequirement}
+                    disabled={!newRequirement.trim()}
+                  >
+                    <FaPlus />
+                  </button>
+                </div>
+                <div className="requirements-list">
+                  {newApplication.requirements.map((requirement, index) => (
+                    <div key={index} className="requirement-item">
+                      <span>{requirement}</span>
+                      <button
+                        type="button"
+                        className="remove-requirement-button"
+                        onClick={() => handleRemoveRequirement(index)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 

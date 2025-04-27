@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaDownload, FaCheckCircle, FaClock, FaFileAlt, FaPaperPlane, FaUpload, FaCog, FaTimes, FaFile } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaClock, FaFileAlt, FaCog, FaTimes, FaFile } from 'react-icons/fa';
 import { supabase } from './library/supabaseClient';
 import ManageApplicationModal from './Modals/ManageApplicationModal';
 import './CSS/ApplicationTracking.css';
@@ -12,132 +12,137 @@ function ApplicationTracking() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newComment, setNewComment] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAdminManagement, setShowAdminManagement] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(true); // This would come from auth context
+  const [userRole, setUserRole] = useState(null);
 
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    setSelectedFiles(prev => [...prev, ...files]);
-  };
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
 
-  const handleResubmit = async () => {
-    if (selectedFiles.length === 0) {
-      alert('Please select files to upload');
-      return;
-    }
+        if (user) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single();
 
-    setIsSubmitting(true);
-    try {
-      // In a real app, you would upload files and update application status
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      setApplication(prev => ({
-        ...prev,
-        status: 'Under Review',
-        needsRevision: false,
-        comments: [
-          ...prev.comments,
-          {
-            id: prev.comments.length + 1,
-            user: "System",
-            role: "system",
-            message: "Application has been resubmitted with revised documents.",
-            timestamp: new Date().toLocaleString(),
-            isOfficial: true
-          }
-        ]
-      }));
-      setSelectedFiles([]);
-    } catch (err) {
-      alert('Error resubmitting application: ' + err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+          if (userError) throw userError;
+          setUserRole(userData.role);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
 
   useEffect(() => {
     const fetchApplication = async () => {
       try {
         setIsLoading(true);
-        // Mock data for demonstration
-        const mockApplication = {
-          id: id,
-          title: "Building Permit Application",
-          referenceNumber: `REF-2023-${id}`,
-          type: "Permit",
-          status: "Needs Revision",
-          submissionDate: "2024-03-15",
-          submissionTime: "09:30 AM",
-          lastUpdated: "2024-03-18",
-          description: "Application for a new commercial building construction permit.",
-          comments: [
-            {
-              id: 1,
-              user: "Admin",
-              role: "admin",
-              message: "Please provide updated building plans with proper measurements.",
-              timestamp: "2024-03-18 14:30",
-              isOfficial: true
-            },
-            {
-              id: 2,
-              user: "John Doe",
-              role: "client",
-              message: "I will submit the revised plans by tomorrow.",
-              timestamp: "2024-03-18 15:45",
-              isOfficial: false
-            }
-          ],
-          attachments: ["building_plan.pdf", "site_plan.pdf", "requirements.pdf"],
+        
+        // Fetch the application details with only applications join
+        const { data: applicationData, error: applicationError } = await supabase
+          .from('user_applications')
+          .select(`
+            *,
+            applications (
+              id,
+              title,
+              type,
+              description,
+              requirements,
+              application_fee,
+              processing_fee
+            )
+          `)
+          .eq('id', id)
+          .single();
+
+        if (applicationError) throw applicationError;
+        if (!applicationData) throw new Error('Application not found');
+
+        // Get status name based on status ID
+        const getStatusName = (statusId) => {
+          switch (statusId) {
+            case 1: return 'Submitted';
+            case 2: return 'Under Review';
+            case 3: return 'Needs Revision';
+            case 4: return 'Approved';
+            case 5: return 'Rejected';
+            default: return 'Unknown';
+          }
+        };
+
+        // Format the application data
+        const formattedApplication = {
+          id: applicationData.id,
+          title: applicationData.applications.title,
+          referenceNumber: `REF-${applicationData.created_at.split('T')[0]}-${applicationData.id}`,
+          type: applicationData.applications.type,
+          status: getStatusName(applicationData.status),
+          submissionDate: new Date(applicationData.created_at).toLocaleDateString(),
+          submissionTime: new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          lastUpdated: new Date(applicationData.created_at).toLocaleDateString(),
+          description: applicationData.applications.description,
+          comments: [], // We'll keep this empty for now as it's not in the DB
           timeline: [
             {
               status: "Submitted",
-              date: "2024-03-15",
-              time: "09:30 AM",
+              date: new Date(applicationData.created_at).toLocaleDateString(),
+              time: new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               description: "Application has been successfully submitted",
-              isDone: true
-            },
-            {
-              status: "Document Verification",
-              date: "2024-03-16",
-              time: "10:15 AM",
-              description: "Documents are being verified by the administrative staff",
-              isDone: true
+              isDone: true,
+              current: applicationData.status === 1
             },
             {
               status: "Under Review",
-              date: "2024-03-18",
-              time: "02:45 PM",
+              date: applicationData.status >= 2 ? new Date(applicationData.created_at).toLocaleDateString() : null,
+              time: applicationData.status >= 2 ? new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
               description: "Application is being reviewed by the DENR technical team",
-              isDone: true,
-              current: true
+              isDone: applicationData.status >= 2,
+              current: applicationData.status === 2
             },
             {
-              status: "Final Assessment",
-              date: null,
-              time: null,
-              description: "Technical assessment and evaluation",
-              isDone: false
+              status: "Needs Revision",
+              date: applicationData.status >= 3 ? new Date(applicationData.created_at).toLocaleDateString() : null,
+              time: applicationData.status >= 3 ? new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+              description: "Application requires revisions",
+              isDone: applicationData.status >= 3,
+              current: applicationData.status === 3
             },
             {
-              status: "Approved",
-              date: null,
-              time: null,
-              description: "Application is approved and ready for certificate claiming",
-              isDone: false
+              status: applicationData.status === 5 ? "Rejected" : "Approved",
+              date: (applicationData.status === 4 || applicationData.status === 5) ? new Date(applicationData.approved_date || applicationData.created_at).toLocaleDateString() : null,
+              time: (applicationData.status === 4 || applicationData.status === 5) ? new Date(applicationData.approved_date || applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+              description: applicationData.status === 5 
+                ? "Application has been rejected"
+                : "Application has been approved and ready for certificate claiming",
+              isDone: applicationData.status === 4 || applicationData.status === 5,
+              current: applicationData.status === 4 || applicationData.status === 5,
+              additionalInfo: applicationData.status === 4 ? {
+                recipient: applicationData.full_name,
+                approvedDate: new Date(applicationData.approved_date || applicationData.created_at).toLocaleDateString()
+              } : null
             }
           ],
-          needsRevision: true,
-          revisionInstructions: "Please update the following documents:\n1. Building plans with proper measurements\n2. Environmental compliance certificate"
+          needsRevision: applicationData.status === 3,
+          revisionInstructions: applicationData.status === 3 ? "Please update the required documents" : "",
+          // Add application details
+          full_name: applicationData.full_name,
+          contact_number: applicationData.contact_number,
+          address: applicationData.address,
+          purpose: applicationData.purpose,
+          application_fee: applicationData.applications.application_fee,
+          processing_fee: applicationData.applications.processing_fee
         };
 
-        setTimeout(() => {
-          setApplication(mockApplication);
-          setIsLoading(false);
-        }, 1000);
-
+        setApplication(formattedApplication);
+        setIsLoading(false);
       } catch (err) {
         setError(err.message);
         setIsLoading(false);
@@ -155,10 +160,9 @@ function ApplicationTracking() {
     e.preventDefault();
     if (!newComment.trim()) return;
 
-    // In a real app, you would send this to your backend
     const newCommentObj = {
       id: application.comments.length + 1,
-      user: "John Doe", // This would come from auth context
+      user: "John Doe",
       role: "client",
       message: newComment,
       timestamp: new Date().toLocaleString(),
@@ -174,114 +178,19 @@ function ApplicationTracking() {
 
   const handleUpdateStatus = async (statusUpdate) => {
     try {
-      const statusOrder = [
-        'Pending',
-        'Document Verification',
-        'On Review',
-        'Final Assessment',
-        'Needs Revision',
-        'Approved',
-        'Rejected'
-      ];
-
-      const currentStatusIndex = statusOrder.indexOf(statusUpdate.status);
-      const updatedTimeline = application.timeline.map(step => {
-        const stepStatusIndex = statusOrder.indexOf(step.status);
-        
-        // Special case: If status is "Needs Revision", mark "Under Review" as incomplete
-        if (statusUpdate.status === 'Needs Revision') {
-          if (step.status === 'On Review') {
-            return {
-              ...step,
-              isDone: false,
-              current: false,
-              date: null,
-              time: null,
-              description: `Revision required: ${statusUpdate.revisionInstructions}`
-            };
-          }
-        }
-
-        // Special case: If status is "Rejected", mark all steps as incomplete except the current
-        if (statusUpdate.status === 'Rejected') {
-          if (stepStatusIndex === currentStatusIndex) {
-            return {
-              ...step,
-              isDone: true,
-              current: true,
-              date: new Date().toLocaleDateString(),
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              description: statusUpdate.comment.message
-            };
-          }
-          return {
-            ...step,
-            isDone: false,
-            current: false,
-            date: null,
-            time: null,
-            description: step.description
-          };
-        }
-        
-        // If the step's status comes before the current status, mark it as done
-        if (stepStatusIndex < currentStatusIndex) {
-          return {
-            ...step,
-            isDone: true,
-            current: false,
-            date: step.date,
-            time: step.time,
-            description: step.description
-          };
-        }
-        
-        // If this is the current status step
-        if (stepStatusIndex === currentStatusIndex) {
-          return {
-            ...step,
-            isDone: true,
-            current: true,
-            date: new Date().toLocaleDateString(),
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            description: statusUpdate.status === 'Needs Revision' 
-              ? `Revision required: ${statusUpdate.revisionInstructions}`
-              : statusUpdate.comment.message
-          };
-        }
-        
-        // For any steps after the current status, uncheck them
-        return {
-          ...step,
-          isDone: false,
-          current: false,
-          date: null,
-          time: null,
-          description: step.description
-        };
-      });
-
-      // Add revision instructions to comments if status is "Needs Revision"
-      const updatedComments = [...application.comments];
-      if (statusUpdate.status === 'Needs Revision') {
-        updatedComments.push({
-          id: application.comments.length + 1,
-          user: "Admin",
-          role: "admin",
-          message: statusUpdate.revisionInstructions,
-          timestamp: new Date().toLocaleString(),
-          isOfficial: true,
-          type: "revision-request"
-        });
-      }
-
       setApplication(prev => ({
         ...prev,
         status: statusUpdate.status,
-        comments: updatedComments,
-        needsRevision: statusUpdate.status === 'Needs Revision',
-        revisionInstructions: statusUpdate.revisionInstructions,
-        timeline: updatedTimeline,
+        comments: [...prev.comments, {
+          id: prev.comments.length + 1,
+          user: "Admin",
+          role: "admin",
+          message: statusUpdate.comment.message,
+          timestamp: new Date().toLocaleString(),
+          isOfficial: true
+        }],
+        needsRevision: statusUpdate.status === "Needs Revision",
+        revisionInstructions: statusUpdate.revisionInstructions || "",
         lastUpdated: new Date().toLocaleDateString()
       }));
     } catch (error) {
@@ -332,7 +241,7 @@ function ApplicationTracking() {
             <FaArrowLeft /> Back to Applications
           </button>
         </div>
-        {isAdmin && (
+        {userRole && userRole !== 3 && (
           <div className="header-right">
             <button 
               className="admin-manage-button"
@@ -345,7 +254,6 @@ function ApplicationTracking() {
       </div>
 
       <div className="tracking-page-content">
-        {/* Application Header */}
         <div className="application-header">
           <div className="header-main">
             <h1>{application.title}</h1>
@@ -361,7 +269,6 @@ function ApplicationTracking() {
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="progress-section">
           <div className="progress-bar">
             <div className="progress-line"></div>
@@ -378,50 +285,23 @@ function ApplicationTracking() {
               }}
             ></div>
             
-            <div className={`progress-step ${application.timeline[0].isDone ? 'completed' : ''}`}>
-              <div className="step-circle">
-                {application.timeline[0].isDone ? <FaCheckCircle /> : <FaClock />}
+            {application.timeline.map((step, index) => (
+              <div 
+                key={index} 
+                className={`progress-step ${
+                  step.isDone ? 'completed' : 
+                  step.current ? 'active' : ''
+                }`}
+              >
+                <div className="step-circle">
+                  {step.isDone ? <FaCheckCircle /> : 
+                   step.current ? <FaClock /> : <FaFile />}
+                </div>
+                <div className="step-label">{step.status}</div>
               </div>
-              <div className="step-label">Submitted</div>
-            </div>
-
-            <div className={`progress-step ${
-              application.timeline[1].isDone ? 'completed' : 
-              application.timeline[1].current ? 'active' : ''
-            }`}>
-              <div className="step-circle">
-                {application.timeline[1].isDone ? <FaCheckCircle /> : 
-                 application.timeline[1].current ? <FaClock /> : <FaFile />}
-              </div>
-              <div className="step-label">Document Verification</div>
-            </div>
-
-            <div className={`progress-step ${
-              application.timeline[2].isDone ? 'completed' : 
-              application.timeline[2].current ? 'active' : ''
-            }`}>
-              <div className="step-circle">
-                {application.timeline[2].isDone ? <FaCheckCircle /> : 
-                 application.timeline[2].current ? <FaClock /> : <FaFile />}
-              </div>
-              <div className="step-label">Under Review</div>
-            </div>
-
-            <div className={`progress-step ${
-              application.status === 'Approved' ? 'completed' : 
-              application.status === 'Rejected' ? 'rejected' : ''
-            }`}>
-              <div className="step-circle">
-                {application.status === 'Approved' ? <FaCheckCircle /> :
-                 application.status === 'Rejected' ? <FaTimes /> : <FaFile />}
-              </div>
-              <div className="step-label">
-                {application.status === 'Rejected' ? 'Rejected' : 'Approved'}
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Progress Timeline */}
           <div className="progress-timeline">
             <div className="timeline-list">
               {application.timeline.map((item, index) => (
@@ -433,10 +313,10 @@ function ApplicationTracking() {
                   <div className="timeline-marker"></div>
                   <div className="timeline-content">
                     <p>{item.description}</p>
-                    {item.status === 'Approved' && (
+                    {item.additionalInfo && (
                       <div className="additional-info">
-                        <p>Recipient: {item.additionalInfo?.recipient}</p>
-                        <p>Approved Date: {item.additionalInfo?.approvedDate}</p>
+                        <p>Recipient: {item.additionalInfo.recipient}</p>
+                        <p>Approved Date: {item.additionalInfo.approvedDate}</p>
                       </div>
                     )}
                   </div>
@@ -446,7 +326,6 @@ function ApplicationTracking() {
           </div>
         </div>
 
-        {/* Comments Section */}
         <div className="comments-section">
           <h2>Official Comments</h2>
           <div className="comments-list">
@@ -484,62 +363,16 @@ function ApplicationTracking() {
           </div>
         </div>
 
-        {/* Add resubmission area when status is "needs-revision" */}
-        {application.status === "Needs Revision" && (
+        {application.needsRevision && (
           <div className="resubmission-area">
             <div className="resubmission-header">
               <h3>Revision Required</h3>
               <p>Please review the comments above and resubmit your application with the necessary changes.</p>
             </div>
-            <div className="resubmission-form">
-              <div 
-                className="file-upload-container"
-                onClick={() => document.getElementById('file-upload').click()}
-              >
-                <p>Click to upload files or drag and drop</p>
-                <p>Supported formats: PDF, DOC, DOCX, JPG, PNG</p>
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="file-upload-input"
-                  multiple
-                  onChange={handleFileSelect}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                />
-              </div>
-              {selectedFiles.length > 0 && (
-                <div className="selected-files-list">
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} className="selected-file-item">
-                      <span className="file-name">{file.name}</span>
-                      <button
-                        className="remove-file-btn"
-                        onClick={() => {
-                          const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
-                          setSelectedFiles(newSelectedFiles);
-                        }}
-                        aria-label={`Remove ${file.name}`}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <button
-                className="resubmit-button"
-                disabled={selectedFiles.length === 0}
-                onClick={handleResubmit}
-              >
-                Resubmit Application
-              </button>
-            </div>
           </div>
         )}
-
       </div>
 
-      {/* Admin Management Modal */}
       {showAdminManagement && application && (
         <ManageApplicationModal
           isOpen={showAdminManagement}

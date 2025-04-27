@@ -15,18 +15,25 @@ const Sidebar = () => {
 
   const getUserProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get the authenticated user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) throw authError;
+
       if (user) {
-        const { data: profile, error } = await supabase
-          .from('profiles')
+        // Fetch user data from public.users table
+        const { data: userData, error: userError } = await supabase
+          .from('users')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (userError) throw userError;
+
         setUserProfile({
-          email: user.email,
-          ...profile
+          email: userData.email,
+          user_name: userData.user_name,
+          role_id: userData.role_id
         });
       }
     } catch (error) {
@@ -101,29 +108,32 @@ const Sidebar = () => {
         </ul>
       </div>
 
-      <div className="sidebar-section">
-        <p className="sidebar-section-title">MANAGE</p>
-        <ul className="sidebar-menu">
-          <li>
-            <NavLink to="/User">
-              <FaUsers className="sidebar-icon" />
-              <span>Users</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/ApplicationList">
-              <FaClipboardList className="sidebar-icon" />
-              <span>Application List</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/Reports">
-              <FaChartBar className="sidebar-icon" />
-              <span>Reports</span>
-            </NavLink>
-          </li>
-        </ul>
-      </div>
+      {/* Only show Manage section if user's role is not 3 */}
+      {userProfile?.role_id !== 3 && (
+        <div className="sidebar-section">
+          <p className="sidebar-section-title">MANAGE</p>
+          <ul className="sidebar-menu">
+            <li>
+              <NavLink to="/User">
+                <FaUsers className="sidebar-icon" />
+                <span>Users</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/ApplicationList">
+                <FaClipboardList className="sidebar-icon" />
+                <span>Application List</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/Reports">
+                <FaChartBar className="sidebar-icon" />
+                <span>Reports</span>
+              </NavLink>
+            </li>
+          </ul>
+        </div>
+      )}
 
       {/* User Profile Section at Bottom */}
       <div className="sidebar-profile">
@@ -132,7 +142,7 @@ const Sidebar = () => {
             <FaUser className="avatar-icon" />
           </div>
           <div className="profile-details">
-            <p className="profile-name">{userProfile?.full_name || 'User'}</p>
+            <p className="profile-name">{userProfile?.user_name || 'User'}</p>
             <p className="profile-email">{userProfile?.email || 'user@example.com'}</p>
           </div>
         </div>

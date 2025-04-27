@@ -24,79 +24,73 @@ function MyApplication() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Mock data for demonstration
-  const mockApplications = [
-    {
-      id: 1,
-      title: "Building Permit",
-      type: "Permit",
-      status: "Pending",
-      submissionDate: "2023-06-15",
-      lastUpdated: "2023-06-15",
-      referenceNumber: "REF-2023-001",
-      description: "Application for a new commercial building construction permit.",
-      attachments: ["building_plan.pdf", "site_plan.pdf"],
-      comments: "Awaiting review by the zoning department."
-    },
-    {
-      id: 2,
-      title: "Environmental Compliance Certificate",
-      type: "Certificate",
-      status: "On Review",
-      submissionDate: "2023-06-10",
-      lastUpdated: "2023-06-12",
-      referenceNumber: "REF-2023-002",
-      description: "Application for environmental compliance certification for manufacturing facility.",
-      attachments: ["environmental_assessment.pdf", "impact_study.pdf"],
-      comments: "Under review by environmental assessment team."
-    },
-    {
-      id: 3,
-      title: "Business Permit",
-      type: "Permit",
-      status: "Approved",
-      submissionDate: "2023-05-20",
-      lastUpdated: "2023-05-25",
-      referenceNumber: "REF-2023-003",
-      description: "Application for a new business permit for retail establishment.",
-      attachments: ["business_registration.pdf", "tax_clearance.pdf"],
-      comments: "Application approved. Permit valid for one year."
-    },
-    {
-      id: 4,
-      title: "Waste Management Permit",
-      type: "Permit",
-      status: "Denied",
-      submissionDate: "2023-05-05",
-      lastUpdated: "2023-05-10",
-      referenceNumber: "REF-2023-004",
-      description: "Application for waste management permit for industrial facility.",
-      attachments: ["waste_management_plan.pdf", "facility_layout.pdf"],
-      comments: "Application denied due to incomplete waste management plan. Please resubmit with updated documentation."
+  // Status mapping function
+  const getStatusName = (statusId) => {
+    switch (statusId) {
+      case 1: return "Submitted";
+      case 2: return "Under Review";
+      case 3: return "Needs Revision";
+      case 4: return "Approved";
+      case 5: return "Rejected";
+      default: return "Unknown";
     }
-  ];
+  };
 
   // Fetch user's applications
   useEffect(() => {
     const fetchApplications = async () => {
       setIsLoading(true);
       try {
-        // In a real application, you would fetch from Supabase
-        // const { data, error } = await supabase
-        //   .from('applications')
-        //   .select('*')
-        //   .eq('user_id', currentUser.id);
+        const { data: { user } } = await supabase.auth.getUser();
         
-        // if (error) throw error;
-        
-        // For now, use mock data
-        setTimeout(() => {
-          setApplications(mockApplications);
-          setFilteredApplications(mockApplications);
-          setIsLoading(false);
-        }, 1000);
+        if (!user) throw new Error('No authenticated user found');
+
+        const { data: user_applications, error } = await supabase
+          .from('user_applications')
+          .select(`
+            id,
+            created_at,
+            status,
+            applications (
+              id,
+              title,
+              type,
+              description
+            ),
+            full_name,
+            contact_number,
+            address,
+            purpose,
+            approved_date
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Transform the data to match our component's expected format
+        const transformedApplications = user_applications.map(app => ({
+          id: app.id,
+          title: app.applications.title,
+          type: app.applications.type,
+          status: getStatusName(app.status),
+          statusId: app.status,
+          submissionDate: new Date(app.created_at).toISOString(),
+          lastUpdated: app.approved_date ? new Date(app.approved_date).toISOString() : new Date(app.created_at).toISOString(),
+          referenceNumber: `REF-${app.id.toString().padStart(6, '0')}`,
+          description: app.applications.description,
+          fullName: app.full_name,
+          contactNumber: app.contact_number,
+          address: app.address,
+          purpose: app.purpose
+        }));
+
+        setApplications(transformedApplications);
+        setFilteredApplications(transformedApplications);
       } catch (err) {
         setError(`Error fetching applications: ${err.message}`);
+        console.error('Error fetching applications:', err);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -113,7 +107,8 @@ function MyApplication() {
       result = result.filter(app => 
         app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.description.toLowerCase().includes(searchTerm.toLowerCase())
+        app.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.fullName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -128,8 +123,7 @@ function MyApplication() {
     } else if (sortBy === "oldest") {
       result.sort((a, b) => new Date(a.submissionDate) - new Date(b.submissionDate));
     } else if (sortBy === "status") {
-      const statusOrder = { "Pending": 0, "On Review": 1, "Approved": 2, "Denied": 3 };
-      result.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+      result.sort((a, b) => a.statusId - b.statusId);
     }
     
     setFilteredApplications(result);
@@ -176,15 +170,13 @@ function MyApplication() {
   const handleDeleteApplication = async (id) => {
     if (window.confirm("Are you sure you want to delete this application?")) {
       try {
-        // In a real application, you would delete from Supabase
-        // const { error } = await supabase
-        //   .from('applications')
-        //   .delete()
-        //   .eq('id', id);
+        const { error } = await supabase
+          .from('user_applications')
+          .delete()
+          .eq('id', id);
         
-        // if (error) throw error;
+        if (error) throw error;
         
-        // For now, just update the state
         setApplications(applications.filter(app => app.id !== id));
       } catch (err) {
         setError(`Error deleting application: ${err.message}`);
@@ -235,13 +227,15 @@ function MyApplication() {
   // Get status badge class
   const getStatusBadgeClass = (status) => {
     switch (status) {
-      case "Pending":
+      case "Submitted":
         return "status-pending";
-      case "On Review":
+      case "Under Review":
         return "status-review";
+      case "Needs Revision":
+        return "status-revision";
       case "Approved":
         return "status-approved";
-      case "Denied":
+      case "Rejected":
         return "status-denied";
       default:
         return "";
@@ -251,13 +245,12 @@ function MyApplication() {
   // Add function to get action text based on status
   const getActionText = (status) => {
     switch (status) {
-      case "Pending":
-        return "Track";
-      case "On Review":
+      case "Submitted":
+      case "Under Review":
+      case "Needs Revision":
         return "Track";
       case "Approved":
-        return "View";
-      case "Denied":
+      case "Rejected":
         return "View";
       default:
         return "Track";
@@ -327,10 +320,11 @@ function MyApplication() {
                 className="filter-select"
               >
                 <option value="all">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="On Review">On Review</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Needs Revision">Needs Revision</option>
                 <option value="Approved">Approved</option>
-                <option value="Denied">Denied</option>
+                <option value="Rejected">Rejected</option>
               </select>
             </div>
 

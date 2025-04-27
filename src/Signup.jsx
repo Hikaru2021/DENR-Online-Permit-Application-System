@@ -47,18 +47,24 @@ const Signup = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Insert only username into users table
+        // 2. Insert user data into public.users table
         const { error: dbError } = await supabase
           .from('users')
           .insert([
             {
               id: authData.user.id,
               user_name: formData.username,
-              email: formData.email
+              email: formData.email,
+              role_id: 3, // Default role_id for new signups
+              status: 'active' // Default status for new users
             }
           ]);
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          // If there's an error inserting into public.users, we should handle it
+          console.error('Error inserting into public.users:', dbError);
+          throw new Error('Failed to create user profile');
+        }
 
         // Show loading for 1 second before showing checkmark
         setTimeout(() => {
@@ -72,7 +78,8 @@ const Signup = () => {
         }, 1000);
       }
     } catch (error) {
-      setError('An error occurred during signup');
+      console.error('Signup error:', error);
+      setError(error.message || 'An error occurred during signup');
       setIsLoading(false);
       setShowSuccessModal(false);
     }

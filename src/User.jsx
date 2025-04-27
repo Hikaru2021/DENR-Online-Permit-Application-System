@@ -4,6 +4,11 @@ import "./CSS/SharedTable.css";
 import { FaSearch, FaEdit, FaTimes, FaFilter, FaSort, FaTrash } from "react-icons/fa";
 import { supabase } from "./library/supabaseClient";
 
+const STATUS_MAPPING = {
+  1: { label: 'Active', class: 'status-active' },
+  2: { label: 'Blocked', class: 'status-blocked' }
+};
+
 const User = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
@@ -20,23 +25,52 @@ const User = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingUser, setDeletingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [statusOptions, setStatusOptions] = useState([]);
   const [formData, setFormData] = useState({
     user_name: '',
     email: '',
     role_id: '',
     status: ''
   });
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [roleChangeData, setRoleChangeData] = useState(null);
+  const [isRoleUpdating, setIsRoleUpdating] = useState(false);
 
   useEffect(() => {
     fetchUsers();
+    fetchStatusOptions();
   }, [currentPage]);
+
+  async function fetchStatusOptions() {
+    try {
+      const { data: user_status, error } = await supabase
+        .from('user_status')
+        .select('*');
+
+      if (error) throw error;
+      setStatusOptions(user_status || []);
+    } catch (error) {
+      console.error('Error fetching status options:', error);
+    }
+  }
 
   async function fetchUsers() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, created_at, user_name, email, role_id, status')
+        .select(`
+          id,
+          created_at,
+          user_name,
+          email,
+          role_id,
+          status,
+          user_status (
+            id,
+            user_status
+          )
+        `)
         .order('created_at', { ascending: false })
         .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
 
@@ -91,14 +125,13 @@ const User = () => {
           user_name: formData.user_name,
           email: formData.email,
           role_id: formData.role_id,
-          status: formData.status,
+          status: parseInt(formData.status)
         })
         .eq("id", selectedUser.id)
         .select();
 
       if (error) throw error;
 
-      console.log("User updated:", data);
       setShowEditModal(false);
       fetchUsers();
     } catch (err) {
@@ -117,17 +150,12 @@ const User = () => {
     setSortBy(e.target.value);
   };
 
-  const getStatusBadgeClass = (status) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return "status-active";
-      case "inactive":
-        return "status-inactive";
-      case "pending":
-        return "status-pending";
-      default:
-        return "status-pending";
-    }
+  const getStatusBadgeClass = (statusId) => {
+    return STATUS_MAPPING[statusId]?.class || 'status-pending';
+  };
+
+  const getStatusText = (statusId) => {
+    return STATUS_MAPPING[statusId]?.label || 'Pending';
   };
 
   const getRolePermission = (roleId) => {
@@ -154,7 +182,7 @@ const User = () => {
     (user) =>
       (user.user_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.email || "").toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (statusFilter === 'all' || user.status?.toLowerCase() === statusFilter.toLowerCase())
+      (statusFilter === 'all' || user.status === parseInt(statusFilter))
   );
 
   const handleDeleteClick = (user) => {
@@ -182,6 +210,43 @@ const User = () => {
       console.error("Error deleting user:", err);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleRoleChangeClick = (userId, currentRole, newRole) => {
+    setRoleChangeData({
+      userId,
+      currentRole: getRolePermission(currentRole),
+      newRole: getRolePermission(parseInt(newRole)),
+      newRoleId: parseInt(newRole)
+    });
+    setShowRoleModal(true);
+  };
+
+  const handleRoleChangeConfirm = async () => {
+    if (!roleChangeData) return;
+    
+    setIsRoleUpdating(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ role_id: roleChangeData.newRoleId })
+        .eq('id', roleChangeData.userId)
+        .select();
+
+      if (error) throw error;
+
+      // Update the local state to reflect the change
+      setUsers(users.map(user => 
+        user.id === roleChangeData.userId ? { ...user, role_id: roleChangeData.newRoleId } : user
+      ));
+      setShowRoleModal(false);
+    } catch (err) {
+      setError(`Error updating role: ${err.message}`);
+      console.error('Error updating role:', err);
+    } finally {
+      setIsRoleUpdating(false);
+      setRoleChangeData(null);
     }
   };
 
@@ -214,9 +279,11 @@ const User = () => {
               className="filter-select"
             >
               <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="pending">Pending</option>
+              {Object.entries(STATUS_MAPPING).map(([id, { label }]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -267,11 +334,21 @@ const User = () => {
                   <tr key={user.id}>
                     <td>{user.user_name || "N/A"}</td>
                     <td>{user.email || "N/A"}</td>
-                    <td>{getRolePermission(user.role_id)}</td>
+                    <td>
+                      <select
+                        value={user.role_id || ""}
+                        onChange={(e) => handleRoleChangeClick(user.id, user.role_id, e.target.value)}
+                        className="role-select"
+                      >
+                        <option value="1">Admin</option>
+                        <option value="2">Manager</option>
+                        <option value="3">User</option>
+                      </select>
+                    </td>
                     <td>{formatDate(user.created_at)}</td>
                     <td>
                       <span className={`status-badge ${getStatusBadgeClass(user.status)}`}>
-                        {user.status || "Pending"}
+                        {getStatusText(user.status)}
                       </span>
                     </td>
                     <td>
@@ -296,7 +373,7 @@ const User = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="empty-state">
+                  <td colSpan="6" className="empty-state">
                     No users found. {searchTerm ? "Try adjusting your search." : ""}
                   </td>
                 </tr>
@@ -394,9 +471,11 @@ const User = () => {
                     className="form-input"
                   >
                     <option value="">Select Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
+                    {Object.entries(STATUS_MAPPING).map(([id, { label }]) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -426,28 +505,38 @@ const User = () => {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deletingUser && (
         <div className="modal-overlay">
-          <div className="modal-container delete-modal">
+          <div className="modal-container role-modal">
             <div className="modal-header">
               <h2>Delete User</h2>
               <button
                 className="modal-close"
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletingUser(null);
+                }}
               >
                 <FaTimes />
               </button>
             </div>
 
             <div className="modal-body">
-              <p className="delete-confirmation-message">
-                Are you sure you want to delete the user "{deletingUser.user_name}"? 
-                This action cannot be undone.
+              <p className="confirmation-message">
+                Are you sure you want to delete user{' '}
+                <strong>{deletingUser.user_name}</strong> with email{' '}
+                <strong>{deletingUser.email}</strong>?
+              </p>
+              <p className="warning-message">
+                This action cannot be undone. The user will lose all access to the system.
               </p>
 
               <div className="form-actions">
                 <button
                   type="button"
                   className="cancel-button"
-                  onClick={() => setShowDeleteModal(false)}
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeletingUser(null);
+                  }}
                   disabled={isDeleting}
                 >
                   Cancel
@@ -459,6 +548,59 @@ const User = () => {
                   disabled={isDeleting}
                 >
                   {isDeleting ? "Deleting..." : "Delete User"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role Change Confirmation Modal */}
+      {showRoleModal && roleChangeData && (
+        <div className="modal-overlay">
+          <div className="modal-container role-modal">
+            <div className="modal-header">
+              <h2>Change Role Permission</h2>
+              <button
+                className="modal-close"
+                onClick={() => {
+                  setShowRoleModal(false);
+                  setRoleChangeData(null);
+                }}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p className="confirmation-message">
+                Are you sure you want to change this user's role from{' '}
+                <strong>{roleChangeData.currentRole}</strong> to{' '}
+                <strong>{roleChangeData.newRole}</strong>?
+              </p>
+              <p className="warning-message">
+                This will modify the user's permissions and access levels.
+              </p>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={() => {
+                    setShowRoleModal(false);
+                    setRoleChangeData(null);
+                  }}
+                  disabled={isRoleUpdating}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="submit-button"
+                  onClick={handleRoleChangeConfirm}
+                  disabled={isRoleUpdating}
+                >
+                  {isRoleUpdating ? "Updating..." : "Confirm Change"}
                 </button>
               </div>
             </div>
