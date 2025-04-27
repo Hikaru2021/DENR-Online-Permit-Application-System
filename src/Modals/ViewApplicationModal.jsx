@@ -1,8 +1,73 @@
-import { FaTimes, FaFileAlt, FaMoneyBillWave, FaListUl, FaInfoCircle } from "react-icons/fa";
+import { FaTimes, FaFileAlt, FaMoneyBillWave, FaListUl, FaInfoCircle, FaDownload, FaFilePdf, FaFileWord } from "react-icons/fa";
 import DOMPurify from 'dompurify';
 import "../CSS/ApplicationSubmissionList.css";
+import { useState, useEffect } from "react";
+import { supabase } from "../library/supabaseClient";
+import PropTypes from 'prop-types';
 
 const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication }) => {
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Fetch documents for the application when modal opens and application data is available
+    if (isOpen && application?.id) {
+      fetchDocuments(application.id);
+    }
+  }, [isOpen, application]);
+
+  const fetchDocuments = async (applicationId) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('application_id', applicationId);
+        
+      if (error) {
+        console.error('Error fetching documents:', error);
+        return;
+      }
+      
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error in fetchDocuments:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getFileIcon = (fileType) => {
+    if (fileType?.includes('pdf')) {
+      return <FaFilePdf className="file-icon pdf" />;
+    } else if (fileType?.includes('word') || fileType?.includes('doc')) {
+      return <FaFileWord className="file-icon doc" />;
+    } else {
+      return <FaFileAlt className="file-icon" />;
+    }
+  };
+
+  const getDocumentType = (doc) => {
+    // Check if the file link contains the Forms folder
+    if (doc.file_link?.includes('/Forms/')) {
+      return 'application-form';
+    } else {
+      // If not in Forms folder, it's a guidelines document
+      return 'guidelines';
+    }
+  };
+
+  const getDocumentLabel = (docType) => {
+    switch(docType) {
+      case 'guidelines':
+        return 'Guidelines';
+      case 'application-form':
+        return 'Application Form';
+      default:
+        return 'Document';
+    }
+  };
+
   if (!isOpen || !application) return null;
 
   const formatCurrency = (amount) => {
@@ -43,6 +108,48 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
               className="section-content description-content"
               dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
             />
+          </div>
+
+          {/* Documents Section */}
+          <div className="content-section">
+            <div className="section-header">
+              <FaFileAlt className="section-icon" />
+              <h3>Documents</h3>
+            </div>
+            <div className="section-content">
+              {isLoading ? (
+                <div className="loading-indicator">Loading documents...</div>
+              ) : documents.length === 0 ? (
+                <div className="no-documents">No documents available</div>
+              ) : (
+                <div className="documents-grid">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="document-card">
+                      <div className="document-icon">
+                        {getFileIcon(doc.file_type)}
+                      </div>
+                      <div className="document-info">
+                        <div className="document-name">{doc.file_name}</div>
+                        <div className="document-type">{doc.file_type}</div>
+                        <div className={`document-type-label ${getDocumentType(doc)}`}>
+                          {getDocumentLabel(getDocumentType(doc))}
+                        </div>
+                      </div>
+                      <a 
+                        href={doc.file_link} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="download-button"
+                        download
+                      >
+                        <FaDownload />
+                        <span className="download-text">Download</span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Requirements Section */}
@@ -120,6 +227,21 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
       </div>
     </div>
   );
+};
+
+ViewApplicationModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  application: PropTypes.shape({
+    id: PropTypes.number,
+    title: PropTypes.string,
+    type: PropTypes.string,
+    description: PropTypes.string,
+    application_fee: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    processing_fee: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    requirements: PropTypes.arrayOf(PropTypes.string)
+  }),
+  onStartApplication: PropTypes.func.isRequired
 };
 
 export default ViewApplicationModal; 

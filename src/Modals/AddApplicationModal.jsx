@@ -6,6 +6,11 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useDropzone } from 'react-dropzone';
 import { convert } from 'html-to-text';
+import PropTypes from 'prop-types';
+
+const STORAGE_BUCKET = 'guidelines';
+const PRIVATE_FOLDER = 'private';
+const FORMS_FOLDER = 'Forms';
 
 const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
   const [newApplication, setNewApplication] = useState({
@@ -25,6 +30,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
     guidelines: 0,
     applicationForm: 0
   });
+  const [uploadedGuidelinesUrl, setUploadedGuidelinesUrl] = useState(null);
 
   // Rich text editor modules configuration
   const modules = {
@@ -73,6 +79,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
         ...prev,
         guidelines: 0
       }));
+      setUploadedGuidelinesUrl(null);
     }
   }, []);
 
@@ -129,6 +136,136 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
     }));
   };
 
+  const uploadGuidelinesFile = async (applicationId) => {
+    if (!newApplication.guidelinesFile) return null;
+    
+    try {
+      const file = newApplication.guidelinesFile;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${applicationId}_guidelines.${fileExt}`;
+      // Store in private folder to match the storage policy
+      const filePath = `${PRIVATE_FOLDER}/${fileName}`;
+      
+      // Upload file to Supabase Storage
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          onUploadProgress: (progress) => {
+            const calculatedProgress = (progress.loaded / progress.total) * 100;
+            setUploadProgress(prev => ({
+              ...prev,
+              guidelines: calculatedProgress
+            }));
+          },
+        });
+      
+      if (error) throw error;
+      
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+      
+      setUploadedGuidelinesUrl(publicUrl);
+      
+      // Insert document reference into the documents table
+      const { data: documentData, error: documentError } = await supabase
+        .from('documents')
+        .insert([
+          { 
+            file_name: file.name,
+            file_type: file.type,
+            file_link: publicUrl,
+            application_id: applicationId
+          }
+        ])
+        .select();
+      
+      if (documentError) {
+        console.error('Error inserting document record:', documentError);
+        throw documentError;
+      }
+      
+      return {
+        path: filePath,
+        url: publicUrl,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        document_id: documentData[0].id
+      };
+    } catch (error) {
+      console.error('Error uploading guidelines file:', error);
+      throw error;
+    }
+  };
+
+  const uploadApplicationFormFile = async (applicationId) => {
+    if (!newApplication.applicationFormFile) return null;
+    
+    try {
+      const file = newApplication.applicationFormFile;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${applicationId}_application_form.${fileExt}`;
+      // Store in Forms folder 
+      const filePath = `${PRIVATE_FOLDER}/${FORMS_FOLDER}/${fileName}`;
+      
+      // Upload file to Supabase Storage (same bucket, different folder)
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          onUploadProgress: (progress) => {
+            const calculatedProgress = (progress.loaded / progress.total) * 100;
+            setUploadProgress(prev => ({
+              ...prev,
+              applicationForm: calculatedProgress
+            }));
+          },
+        });
+      
+      if (error) throw error;
+      
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+      
+      // Insert document reference into the documents table
+      const { data: documentData, error: documentError } = await supabase
+        .from('documents')
+        .insert([
+          { 
+            file_name: file.name,
+            file_type: file.type,
+            file_link: publicUrl,
+            application_id: applicationId
+          }
+        ])
+        .select();
+      
+      if (documentError) {
+        console.error('Error inserting document record:', documentError);
+        throw documentError;
+      }
+      
+      return {
+        path: filePath,
+        url: publicUrl,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        document_id: documentData[0].id
+      };
+    } catch (error) {
+      console.error('Error uploading application form file:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -164,20 +301,26 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
         throw applicationError;
       }
 
+      const applicationId = applicationData[0].id;
+      
+      // Upload guidelines file if provided
+      let guidelinesFileData = null;
+      if (newApplication.guidelinesFile) {
+        guidelinesFileData = await uploadGuidelinesFile(applicationId);
+      }
+      
+      // Upload application form file if provided
+      let applicationFormData = null;
+      if (newApplication.applicationFormFile) {
+        applicationFormData = await uploadApplicationFormFile(applicationId);
+      }
+
       // Add file metadata to the response object
       const completeApplicationData = {
         ...applicationData[0],
         files: {
-          guidelines: newApplication.guidelinesFile ? {
-            name: newApplication.guidelinesFile.name,
-            type: newApplication.guidelinesFile.type,
-            size: newApplication.guidelinesFile.size
-          } : null,
-          applicationForm: newApplication.applicationFormFile ? {
-            name: newApplication.applicationFormFile.name,
-            type: newApplication.applicationFormFile.type,
-            size: newApplication.applicationFormFile.size
-          } : null
+          guidelines: guidelinesFileData,
+          applicationForm: applicationFormData
         }
       };
 
@@ -339,6 +482,11 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
                           />
                         </div>
                       )}
+                      {uploadedGuidelinesUrl && (
+                        <div className="upload-success">
+                          File ready for upload
+                        </div>
+                      )}
                     </>
                   ) : (
                     "Supported formats: PDF, DOC, DOCX"
@@ -398,4 +546,10 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
   );
 };
 
-export default AddApplicationModal; 
+AddApplicationModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onApplicationAdded: PropTypes.func.isRequired
+};
+
+export default AddApplicationModal;
