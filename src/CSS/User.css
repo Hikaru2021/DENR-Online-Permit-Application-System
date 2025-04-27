@@ -212,36 +212,56 @@ tr:hover {
 
 .action-buttons {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
 }
 
 .action-button {
-    padding: 6px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0;
 }
 
-.edit-button {
-    background-color: #e3f2fd;
-    color: #1976d2;
+.action-button svg {
+    width: 16px;
+    height: 16px;
+    transition: all 0.2s ease;
 }
 
-.edit-button:hover {
-    background-color: #bbdefb;
+.action-button.edit-button {
+    color: #2196F3;
 }
 
-.delete-button {
-    background-color: #ffebee;
-    color: #d32f2f;
+.action-button.edit-button:hover {
+    background-color: #2196F3;
+    color: white;
+    transform: rotate(15deg);
 }
 
-.delete-button:hover {
-    background-color: #ffcdd2;
+.action-button.delete-button {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.action-button.delete-button:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+}
+
+/* Add subtle shadow on hover */
+.action-button:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .pagination {

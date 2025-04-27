@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaCheckCircle, FaClock, FaFileAlt, FaCog, FaTimes, FaFile } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaClock, FaFileAlt, FaCog, FaTimes, FaFile, FaTimesCircle } from 'react-icons/fa';
 import { supabase } from './library/supabaseClient';
 import ManageApplicationModal from './Modals/ManageApplicationModal';
 import './CSS/ApplicationTracking.css';
@@ -25,12 +25,12 @@ function ApplicationTracking() {
         if (user) {
           const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('role')
+            .select('role_id')
             .eq('id', user.id)
             .single();
 
           if (userError) throw userError;
-          setUserRole(userData.role);
+          setUserRole(userData.role_id);
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
@@ -106,14 +106,6 @@ function ApplicationTracking() {
               description: "Application is being reviewed by the DENR technical team",
               isDone: applicationData.status >= 2,
               current: applicationData.status === 2
-            },
-            {
-              status: "Needs Revision",
-              date: applicationData.status >= 3 ? new Date(applicationData.created_at).toLocaleDateString() : null,
-              time: applicationData.status >= 3 ? new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
-              description: "Application requires revisions",
-              isDone: applicationData.status >= 3,
-              current: applicationData.status === 3
             },
             {
               status: applicationData.status === 5 ? "Rejected" : "Approved",
@@ -241,7 +233,7 @@ function ApplicationTracking() {
             <FaArrowLeft /> Back to Applications
           </button>
         </div>
-        {userRole && userRole !== 3 && (
+        {userRole !== 3 && (
           <div className="header-right">
             <button 
               className="admin-manage-button"
@@ -272,29 +264,30 @@ function ApplicationTracking() {
         <div className="progress-section">
           <div className="progress-bar">
             <div className="progress-line"></div>
+            {/* Progress line fill based on status */}
             <div 
               className="progress-line-fill"
               style={{ 
-                width: `${
-                  application.status === 'Rejected' ? '100%' :
-                  application.status === 'Approved' ? '100%' :
-                  application.status === 'Under Review' ? '50%' :
-                  application.status === 'Document Verification' ? '25%' :
-                  '0%'
-                }`
+                width: application.status === 'Submitted' ? '33%' : 
+                       application.status === 'Under Review' ? '66%' : 
+                       '100%',
+                backgroundColor: application.status === 'Rejected' ? '#dc3545' : '#4CAF50'
               }}
             ></div>
-            
+
             {application.timeline.map((step, index) => (
               <div 
                 key={index} 
-                className={`progress-step ${
-                  step.isDone ? 'completed' : 
-                  step.current ? 'active' : ''
-                }`}
+                className={`progress-step 
+                  ${step.isDone && step.status !== 'Rejected' ? 'completed' : ''}
+                  ${step.current ? 'current' : ''} 
+                  ${step.status === 'Rejected' ? 'rejected' : ''}
+                  ${step.status === 'Approved' && step.current ? 'completed current' : ''}
+                `}
               >
                 <div className="step-circle">
-                  {step.isDone ? <FaCheckCircle /> : 
+                  {step.isDone && step.status !== 'Rejected' ? <FaCheckCircle /> : 
+                   step.status === 'Rejected' ? <FaTimesCircle /> :
                    step.current ? <FaClock /> : <FaFile />}
                 </div>
                 <div className="step-label">{step.status}</div>

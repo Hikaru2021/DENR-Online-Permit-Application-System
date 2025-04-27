@@ -12,6 +12,8 @@ import ApplicationList from "./ApplicationList";
 import ApplicationTracking from "./ApplicationTracking";
 import Settings from "./Components/Settings";
 import ApplicationCatalog from "./ApplicationCatalog";
+import ErrorPage from "./Components/ErrorPage";
+import RoleProtectedRoute from "./Components/RoleProtectedRoute";
 
 function App() {
   return (
@@ -27,15 +29,43 @@ function App() {
           <Route path="Dashboard" element={<Dashboard />} />
           <Route path="ApplicationCatalog" element={<ApplicationCatalog />} />
           <Route path="MyApplication" element={<MyApplication />} />
-          <Route path="User" element={<User />} />
-          <Route path="ApplicationList" element={<ApplicationList />} />
-          <Route path="Reports" element={<Reports />} />
+          
+          {/* Admin/Manager only routes */}
+          <Route path="User" element={
+            <RoleProtectedRoute 
+              element={<User />} 
+              allowedRoles={[1, 2]} 
+              errorMessage="Only Admin and Manager roles can access user management"
+            />
+          } />
+          <Route path="ApplicationList" element={
+            <RoleProtectedRoute 
+              element={<ApplicationList />} 
+              allowedRoles={[1, 2]} 
+              errorMessage="Only Admin and Manager roles can access the application list"
+            />
+          } />
+          <Route path="Reports" element={
+            <RoleProtectedRoute 
+              element={<Reports />} 
+              allowedRoles={[1, 2]} 
+              errorMessage="Only Admin and Manager roles can access reports"
+            />
+          } />
+          
           <Route path="Settings" element={<Settings />} />
           <Route path="application/:id" element={<ApplicationTracking />} />
           
+          {/* Error pages */}
+          <Route path="forbidden" element={<ErrorPage statusCode={403} />} />
+          <Route path="not-found" element={<ErrorPage statusCode={404} />} />
+          
           {/* Redirect to Dashboard if no route matches */}
-          <Route path="*" element={<Navigate to="/Dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/not-found" replace />} />
         </Route>
+
+        {/* Catch-all route outside the layout */}
+        <Route path="*" element={<ErrorPage statusCode={404} />} />
       </Routes>
     </Router>
   );

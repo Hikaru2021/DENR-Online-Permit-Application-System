@@ -171,7 +171,7 @@ function Reports() {
     },
   };
 
-  const reportsPerPage = 5;
+  const reportsPerPage = 4;
   const indexOfLastReport = currentPage * reportsPerPage;
   const indexOfFirstReport = indexOfLastReport - reportsPerPage;
   
@@ -540,22 +540,75 @@ function Reports() {
       </div>
 
       {activeTab === 'table' && (
-        <div className="pagination">
-          <button
-            className="prev-btn"
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-          >
-            ❮ Prev
-          </button>
-          <span className="page-info">Page {currentPage} of {totalPages}</span>
-          <button
-            className="next-btn"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            Next ❯
-          </button>
+        <div className="pagination-container">
+          <div className="pagination">
+            <button
+              className="pagination-button nav-button"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
+              ❮ Prev
+            </button>
+            <div className="pagination-pages">
+              {(() => {
+                const pageNumbers = [];
+                
+                if (totalPages <= 5) {
+                  // If 5 or fewer pages, show all page numbers
+                  for (let i = 1; i <= Math.max(1, totalPages); i++) {
+                    pageNumbers.push(i);
+                  }
+                } else {
+                  // Always show first page
+                  pageNumbers.push(1);
+                  
+                  // For current pages near the start
+                  if (currentPage <= 3) {
+                    pageNumbers.push(2, 3, 4);
+                    pageNumbers.push('ellipsis');
+                    pageNumbers.push(totalPages);
+                  } 
+                  // For current pages near the end
+                  else if (currentPage >= totalPages - 2) {
+                    pageNumbers.push('ellipsis');
+                    pageNumbers.push(totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                  } 
+                  // For current pages in the middle
+                  else {
+                    pageNumbers.push('ellipsis');
+                    pageNumbers.push(currentPage - 1, currentPage, currentPage + 1);
+                    pageNumbers.push('ellipsis2');
+                    pageNumbers.push(totalPages);
+                  }
+                }
+                
+                return pageNumbers.map((pageNumber, index) => {
+                  if (pageNumber === 'ellipsis' || pageNumber === 'ellipsis2') {
+                    return (
+                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    );
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNumber}
+                      className={`pagination-button ${currentPage === pageNumber ? 'active' : ''}`}
+                      onClick={() => setCurrentPage(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+            <button
+              className="pagination-button nav-button"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            >
+              Next ❯
+            </button>
+          </div>
         </div>
       )}
         </div>

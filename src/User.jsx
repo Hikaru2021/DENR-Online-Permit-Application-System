@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CSS/User.css";
 import "./CSS/SharedTable.css";
-import { FaSearch, FaEdit, FaTimes, FaFilter, FaSort, FaTrash } from "react-icons/fa";
+import { FaSearch, FaTimes, FaFilter, FaSort, FaTrash } from "react-icons/fa";
 import { supabase } from "./library/supabaseClient";
 
 const STATUS_MAPPING = {
@@ -13,46 +13,22 @@ const User = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(6);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingUser, setDeletingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [statusOptions, setStatusOptions] = useState([]);
-  const [formData, setFormData] = useState({
-    user_name: '',
-    email: '',
-    role_id: '',
-    status: ''
-  });
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleChangeData, setRoleChangeData] = useState(null);
   const [isRoleUpdating, setIsRoleUpdating] = useState(false);
+  const [totalPages, setTotalPages] = useState(null);
 
   useEffect(() => {
     fetchUsers();
-    fetchStatusOptions();
   }, [currentPage]);
-
-  async function fetchStatusOptions() {
-    try {
-      const { data: user_status, error } = await supabase
-        .from('user_status')
-        .select('*');
-
-      if (error) throw error;
-      setStatusOptions(user_status || []);
-    } catch (error) {
-      console.error('Error fetching status options:', error);
-    }
-  }
 
   async function fetchUsers() {
     setIsLoading(true);
@@ -76,6 +52,7 @@ const User = () => {
 
       if (error) throw error;
       setUsers(data || []);
+      setTotalPages(Math.ceil(data.length / itemsPerPage));
     } catch (error) {
       setError(`Error fetching users: ${error.message}`);
       console.error('Error fetching users:', error);
@@ -92,54 +69,6 @@ const User = () => {
 
   const handleNextPage = () => {
     setCurrentPage(currentPage + 1);
-  };
-
-  const handleEditClick = (user) => {
-    setSelectedUser(user);
-    setFormData({
-      user_name: user.user_name,
-      email: user.email,
-      role_id: user.role_id,
-      status: user.status
-    });
-    setShowEditModal(true);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setFormError(null);
-
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .update({
-          user_name: formData.user_name,
-          email: formData.email,
-          role_id: formData.role_id,
-          status: parseInt(formData.status)
-        })
-        .eq("id", selectedUser.id)
-        .select();
-
-      if (error) throw error;
-
-      setShowEditModal(false);
-      fetchUsers();
-    } catch (err) {
-      setFormError(`Error updating user: ${err.message}`);
-      console.error("Error updating user:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleStatusFilterChange = (e) => {
@@ -354,13 +283,6 @@ const User = () => {
                     <td>
                       <div className="action-buttons">
                         <button
-                          className="action-button edit-button"
-                          onClick={() => handleEditClick(user)}
-                          title="Edit User"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
                           className="action-button delete-button"
                           onClick={() => handleDeleteClick(user)}
                           title="Delete User"
@@ -383,124 +305,50 @@ const User = () => {
         </div>
       )}
 
-      <div className="pagination">
-        <button
-          className="prev-btn"
-          onClick={handlePrevPage}
-          disabled={currentPage === 1}
-        >
-          ❮ Prev
-        </button>
-        <span className="page-info">Page {currentPage}</span>
-        <button
-          className="next-btn"
-          onClick={handleNextPage}
-          disabled={filteredUsers.length < itemsPerPage}
-        >
-          Next ❯
-        </button>
-      </div>
-
-      {/* Edit User Modal */}
-      {showEditModal && selectedUser && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h2>Edit User</h2>
-              <button
-                className="modal-close"
-                onClick={() => setShowEditModal(false)}
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="modal-body">
-              {formError && (
-                <div className="form-error">{formError}</div>
-              )}
-
-              <form onSubmit={handleEditSubmit}>
-                <div className="form-group">
-                  <label htmlFor="username">Full Name</label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="user_name"
-                    value={formData.user_name || ""}
-                    onChange={handleInputChange}
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="email">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email || ""}
-                    onChange={handleInputChange}
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="role_id">Role Permission</label>
-                  <select
-                    id="role_id"
-                    name="role_id"
-                    value={formData.role_id || ""}
-                    onChange={handleInputChange}
-                    className="form-input"
-                  >
-                    <option value="">Select Role</option>
-                    <option value="1">Admin</option>
-                    <option value="2">Manager</option>
-                    <option value="3">User</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="status">Status</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formData.status || ""}
-                    onChange={handleInputChange}
-                    className="form-input"
-                  >
-                    <option value="">Select Status</option>
-                    {Object.entries(STATUS_MAPPING).map(([id, { label }]) => (
-                      <option key={id} value={id}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="cancel-button"
-                    onClick={() => setShowEditModal(false)}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="submit-button"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Updating..." : "Update User"}
-                  </button>
-                </div>
-              </form>
-            </div>
+      <div className="pagination-container">
+        <div className="pagination">
+          <button
+            className="pagination-button nav-button"
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+          >
+            ❮ Prev
+          </button>
+          <div className="pagination-pages">
+            {/* Add page numbers */}
+            {Array.from({ length: Math.min(5, Math.max(1, totalPages || 1)) }, (_, i) => {
+              // Display current page and two pages before/after when possible
+              let pageToShow;
+              if (totalPages <= 5) {
+                pageToShow = i + 1;
+              } else if (currentPage <= 3) {
+                pageToShow = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageToShow = totalPages - 4 + i;
+              } else {
+                pageToShow = currentPage - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageToShow}
+                  className={`pagination-button ${currentPage === pageToShow ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(pageToShow)}
+                >
+                  {pageToShow}
+                </button>
+              );
+            })}
           </div>
+          <button
+            className="pagination-button nav-button"
+            onClick={handleNextPage}
+            disabled={filteredUsers.length < itemsPerPage}
+          >
+            Next ❯
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deletingUser && (

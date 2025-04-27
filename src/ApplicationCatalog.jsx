@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaSearch, FaFilter, FaPlus, FaSort, FaEdit } from "react-icons/fa";
+import { FaSearch, FaFilter, FaPlus, FaSort, FaEdit, FaTrash, FaCheck, FaTimes } from "react-icons/fa";
 import "./CSS/ApplicationCatalog.css";
 import { supabase } from "./library/supabaseClient";
 import AddApplicationModal from "./Modals/AddApplicationModal";
@@ -23,6 +23,10 @@ function ApplicationCatalog() {
   const [showSubmissionForm, setShowSubmissionForm] = useState(false);
   const [selectedApplicationForSubmission, setSelectedApplicationForSubmission] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [selectedApplications, setSelectedApplications] = useState([]);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [visibleModal, setVisibleModal] = useState(null);
+  const [sorting, setSorting] = useState("latest");
 
   // Fetch applications from Supabase
   const fetchApplications = async () => {
@@ -147,6 +151,50 @@ function ApplicationCatalog() {
     setShowSubmissionForm(true);
   };
 
+  // Handle selection of all applications
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedApplications(applications.map(app => app.id));
+    } else {
+      setSelectedApplications([]);
+    }
+  };
+
+  // Handle selection of single application
+  const handleSelectApplication = (id) => {
+    if (selectedApplications.includes(id)) {
+      setSelectedApplications(selectedApplications.filter(appId => appId !== id));
+    } else {
+      setSelectedApplications([...selectedApplications, id]);
+    }
+  };
+
+  // Handle delete applications
+  const handleDeleteApplications = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase
+        .from('applications')
+        .delete()
+        .in('id', selectedApplications);
+
+      if (error) throw error;
+      
+      // Refresh applications list
+      await fetchApplications();
+      setSelectedApplications([]);
+      setShowDeleteConfirmModal(false);
+      
+      // Show success message
+      alert("Selected applications have been deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting applications:", error.message);
+      alert("Error deleting applications: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="catalog-container">
       <div className="catalog-wrapper">
@@ -194,12 +242,23 @@ function ApplicationCatalog() {
               </select>
             </div>
           </div>
-          {/* Only show Add New Application button if user is not role 3 */}
-          {userRole !== 3 && (
-            <button className="add-button" onClick={() => setShowAddModal(true)}>
-              <FaPlus /> Add New Application
-            </button>
-          )}
+          <div className="action-buttons">
+            {userRole === 1 && (
+              <>
+                <button className="add-button" onClick={() => setShowAddModal(true)}>
+                  <FaPlus /> Add New Application
+                </button>
+                {selectedApplications.length > 0 && (
+                  <button 
+                    className="delete-button"
+                    onClick={() => setShowDeleteConfirmModal(true)}
+                  >
+                    <FaTrash /> Delete Selected ({selectedApplications.length})
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -218,25 +277,52 @@ function ApplicationCatalog() {
           </div>
         ) : (
           <>
-            <div className="applications-count">
-              {filteredAndSortedApplications.length} available applications
+            <div className="applications-header">
+              <div className="applications-count">
+                {filteredAndSortedApplications.length} available applications
+              </div>
+              {userRole === 1 && filteredAndSortedApplications.length > 0 && (
+                <div className="select-all">
+                  <label className="checkbox-container">
+                    <input
+                      type="checkbox"
+                      checked={selectedApplications.length === filteredAndSortedApplications.length}
+                      onChange={handleSelectAll}
+                    />
+                    <span className="checkmark"></span>
+                    Select All
+                  </label>
+                </div>
+              )}
             </div>
             <div className="catalog-grid">
               {filteredAndSortedApplications.map((application) => (
                 <div
                   key={application.id}
-                  className="catalog-card"
+                  className={`catalog-card ${selectedApplications.includes(application.id) ? 'selected' : ''}`}
                   onClick={() => handleViewClick(application)}
                 >
-                  {/* Only show edit button if user is not role 3 */}
-                  {userRole !== 3 && (
-                    <button 
-                      className="edit-button"
-                      onClick={(e) => handleEditClick(application, e)}
-                      title="Edit Application"
-                    >
-                      <FaEdit />
-                    </button>
+                  {userRole === 1 && (
+                    <div className="card-actions">
+                      <label 
+                        className="checkbox-container"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedApplications.includes(application.id)}
+                          onChange={(e) => handleSelectApplication(application.id)}
+                        />
+                        <span className="checkmark"></span>
+                      </label>
+                      <button 
+                        className="edit-button"
+                        onClick={(e) => handleEditClick(application, e)}
+                        title="Edit Application"
+                      >
+                        <FaEdit />
+                      </button>
+                    </div>
                   )}
                   <div className="card-header">
                     <h3 className="card-title">{application.title}</h3>
@@ -297,6 +383,38 @@ function ApplicationCatalog() {
           }}
           application={selectedApplicationForSubmission}
         />
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirmModal && (
+          <div className="modal-overlay">
+            <div className="modal-container delete-confirm-modal">
+              <div className="modal-header">
+                <h2>Confirm Delete</h2>
+                <button className="modal-close" onClick={() => setShowDeleteConfirmModal(false)}>
+                  <FaTimes />
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to delete {selectedApplications.length} selected application(s)?</p>
+                <p className="warning-text">This action cannot be undone.</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="cancel-button"
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="delete-button"
+                  onClick={handleDeleteApplications}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

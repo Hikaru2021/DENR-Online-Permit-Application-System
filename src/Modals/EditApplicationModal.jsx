@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { FaTimes, FaCloudUploadAlt } from "react-icons/fa";
+import { useState, useCallback, useEffect } from "react";
+import { FaTimes, FaCloudUploadAlt, FaPlus, FaTrash } from "react-icons/fa";
 import { supabase } from "../library/supabaseClient";
 import "../CSS/ApplicationSubmissionList.css";
 import ReactQuill from 'react-quill';
@@ -9,23 +9,39 @@ import { convert } from 'html-to-text';
 
 const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, application }) => {
   const [editedApplication, setEditedApplication] = useState({
-    title: application?.title || "",
-    type: application?.type || "",
-    description: application?.description || "",
+    id: null,
+    application_date: null,
+    title: "",
+    type: "",
+    description: "",
+    application_fee: "0",
+    processing_fee: "0",
+    requirements: [],
     guidelinesFile: null,
     applicationFormFile: null
   });
 
+  const [newRequirement, setNewRequirement] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState({
+    guidelines: 0,
+    applicationForm: 0
+  });
 
   // Update form when application prop changes
-  useState(() => {
+  useEffect(() => {
     if (application) {
+      console.log('Received application data:', application); // Debug log
       setEditedApplication({
+        id: application.id,
+        application_date: application.application_date,
         title: application.title || "",
         type: application.type || "",
         description: application.description || "",
+        application_fee: application.application_fee ? application.application_fee.toString() : "0",
+        processing_fee: application.processing_fee ? application.processing_fee.toString() : "0",
+        requirements: application.requirements || [],
         guidelinesFile: null,
         applicationFormFile: null
       });
@@ -53,16 +69,44 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedApplication(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    // For fee fields, ensure we store as string but validate as number
+    if (name === 'application_fee' || name === 'processing_fee') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue >= 0) {
+        setEditedApplication(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    } else {
+      setEditedApplication(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleDescriptionChange = (content) => {
     setEditedApplication(prev => ({
       ...prev,
       description: content
+    }));
+  };
+
+  const handleAddRequirement = () => {
+    if (newRequirement.trim()) {
+      setEditedApplication(prev => ({
+        ...prev,
+        requirements: [...prev.requirements, newRequirement.trim()]
+      }));
+      setNewRequirement("");
+    }
+  };
+
+  const handleRemoveRequirement = (index) => {
+    setEditedApplication(prev => ({
+      ...prev,
+      requirements: prev.requirements.filter((_, i) => i !== index)
     }));
   };
 
@@ -73,6 +117,10 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
       setEditedApplication(prev => ({
         ...prev,
         guidelinesFile: file
+      }));
+      setUploadProgress(prev => ({
+        ...prev,
+        guidelines: 0
       }));
     }
   }, []);
@@ -95,6 +143,10 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
         ...prev,
         applicationFormFile: file
       }));
+      setUploadProgress(prev => ({
+        ...prev,
+        applicationForm: 0
+      }));
     }
   }, []);
 
@@ -116,34 +168,66 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
     setFormError(null);
     
     try {
+      // Validate required fields
+      if (!editedApplication.title || !editedApplication.type || !editedApplication.description) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Validate fees
+      const appFee = parseFloat(editedApplication.application_fee);
+      const procFee = parseFloat(editedApplication.processing_fee);
+      if (isNaN(appFee) || isNaN(procFee) || appFee < 0 || procFee < 0) {
+        throw new Error('Please enter valid fees');
+      }
+
       // Convert HTML to plain text
       const plainTextDescription = convert(editedApplication.description, {
         wordwrap: false,
         preserveNewlines: true
       });
 
+      // Prepare update data
+      const updateData = {
+        title: editedApplication.title,
+        type: editedApplication.type,
+        description: plainTextDescription,
+        application_fee: editedApplication.application_fee,
+        processing_fee: editedApplication.processing_fee,
+        requirements: editedApplication.requirements || [] // Ensure requirements is always an array
+      };
+
+      console.log('Updating with data:', updateData); // Debug log
+
       const { data, error } = await supabase
         .from('applications')
-        .update({
-          title: editedApplication.title,
-          type: editedApplication.type,
-          description: plainTextDescription
-        })
+        .update(updateData)
         .eq('id', application.id)
         .select();
       
       if (error) throw error;
+
+      // Add file metadata to the response object
+      const completeApplicationData = {
+        ...data[0],
+        files: {
+          guidelines: editedApplication.guidelinesFile ? {
+            name: editedApplication.guidelinesFile.name,
+            type: editedApplication.guidelinesFile.type,
+            size: editedApplication.guidelinesFile.size
+          } : null,
+          applicationForm: editedApplication.applicationFormFile ? {
+            name: editedApplication.applicationFormFile.name,
+            type: editedApplication.applicationFormFile.type,
+            size: editedApplication.applicationFormFile.size
+          } : null
+        }
+      };
       
-      // Handle file uploads if needed
-      if (editedApplication.guidelinesFile || editedApplication.applicationFormFile) {
-        // Implement file upload logic here
-      }
-      
-      onApplicationUpdated(data[0]);
+      onApplicationUpdated(completeApplicationData);
       onClose();
       
     } catch (err) {
-      setFormError(`Error updating application: ${err.message}`);
+      setFormError(err.message);
       console.error('Error updating application:', err);
     } finally {
       setIsSubmitting(false);
@@ -157,6 +241,12 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
       <div className="modal-container">
         <div className="modal-header">
           <h2>Edit Application</h2>
+          <div className="application-meta">
+            <span className="application-id">ID: {editedApplication.id}</span>
+            <span className="application-date">
+              Created: {editedApplication.application_date ? new Date(editedApplication.application_date).toLocaleDateString() : 'N/A'}
+            </span>
+          </div>
           <button className="modal-close" onClick={onClose}>
             <FaTimes />
           </button>
@@ -190,6 +280,7 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
                 required
                 className="form-input"
               >
+                <option value="">Select application type</option>
                 <option value="Permit">Permit</option>
                 <option value="Certificate">Certificate</option>
               </select>
@@ -210,6 +301,75 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
             </div>
 
             <div className="form-group">
+              <label htmlFor="edit-applicationFee">Application Fee (₱)</label>
+              <input
+                type="number"
+                id="edit-application_fee"
+                name="application_fee"
+                value={editedApplication.application_fee}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                placeholder="Enter application fee"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="edit-processingFee">Processing Fee (₱)</label>
+              <input
+                type="number"
+                id="edit-processing_fee"
+                name="processing_fee"
+                value={editedApplication.processing_fee}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                placeholder="Enter processing fee"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Requirements</label>
+              <div className="requirements-container">
+                <div className="requirement-input-group">
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={newRequirement}
+                    onChange={(e) => setNewRequirement(e.target.value)}
+                    placeholder="Enter a requirement"
+                  />
+                  <button
+                    type="button"
+                    className="add-requirement-button"
+                    onClick={handleAddRequirement}
+                    disabled={!newRequirement.trim()}
+                  >
+                    <FaPlus />
+                  </button>
+                </div>
+                <div className="requirements-list">
+                  {editedApplication.requirements.map((requirement, index) => (
+                    <div key={index} className="requirement-item">
+                      <span>{requirement}</span>
+                      <button
+                        type="button"
+                        className="remove-requirement-button"
+                        onClick={() => handleRemoveRequirement(index)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="form-group">
               <label>Upload Guidelines</label>
               <div {...getGuidelinesRootProps()} className="file-upload-area">
                 <input {...getGuidelinesInputProps()} />
@@ -217,7 +377,17 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
                 <p>Drag & drop guidelines file here, or click to select</p>
                 <span className="file-info">
                   {editedApplication.guidelinesFile ? (
-                    editedApplication.guidelinesFile.name
+                    <>
+                      {editedApplication.guidelinesFile.name}
+                      {uploadProgress.guidelines > 0 && uploadProgress.guidelines < 100 && (
+                        <div className="upload-progress">
+                          <div 
+                            className="progress-bar" 
+                            style={{ width: `${uploadProgress.guidelines}%` }}
+                          />
+                        </div>
+                      )}
+                    </>
                   ) : (
                     "Supported formats: PDF, DOC, DOCX"
                   )}
@@ -233,7 +403,17 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
                 <p>Drag & drop application form here, or click to select</p>
                 <span className="file-info">
                   {editedApplication.applicationFormFile ? (
-                    editedApplication.applicationFormFile.name
+                    <>
+                      {editedApplication.applicationFormFile.name}
+                      {uploadProgress.applicationForm > 0 && uploadProgress.applicationForm < 100 && (
+                        <div className="upload-progress">
+                          <div 
+                            className="progress-bar" 
+                            style={{ width: `${uploadProgress.applicationForm}%` }}
+                          />
+                        </div>
+                      )}
+                    </>
                   ) : (
                     "Supported formats: PDF, DOC, DOCX"
                   )}
