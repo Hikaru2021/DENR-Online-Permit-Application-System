@@ -56,7 +56,7 @@ const Signup = () => {
               user_name: formData.username,
               email: formData.email,
               role_id: 3, // Default role_id for new signups
-              status: 'active' // Default status for new users
+              status: 1 // Status 1 = active (numeric value instead of string)
             }
           ]);
 

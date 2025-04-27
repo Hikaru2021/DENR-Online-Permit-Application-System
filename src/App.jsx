@@ -14,6 +14,8 @@ import Settings from "./Components/Settings";
 import ApplicationCatalog from "./ApplicationCatalog";
 import ErrorPage from "./Components/ErrorPage";
 import RoleProtectedRoute from "./Components/RoleProtectedRoute";
+import NotFound from "./NotFound";
+import AccessDenied from "./Components/AccessDenied";
 
 function App() {
   return (
@@ -57,15 +59,15 @@ function App() {
           <Route path="application/:id" element={<ApplicationTracking />} />
           
           {/* Error pages */}
-          <Route path="forbidden" element={<ErrorPage statusCode={403} />} />
+          <Route path="forbidden" element={<AccessDenied requiredRoles={[1, 2]} />} />
           <Route path="not-found" element={<ErrorPage statusCode={404} />} />
           
-          {/* Redirect to Dashboard if no route matches */}
+          {/* Redirect to not-found if no route matches within layout */}
           <Route path="*" element={<Navigate to="/not-found" replace />} />
         </Route>
 
         {/* Catch-all route outside the layout */}
-        <Route path="*" element={<ErrorPage statusCode={404} />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

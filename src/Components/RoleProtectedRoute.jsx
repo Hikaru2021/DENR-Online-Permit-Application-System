@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import ErrorPage from "./ErrorPage";
 import LoadingSpinner from "./LoadingSpinner";
-import { checkAuthentication, getUserRole, hasRequiredRole, getAllowedRolesString } from "./AuthUtils";
+import AccessDenied from "./AccessDenied";
+import { checkAuthentication, getUserRole, hasRequiredRole } from "./AuthUtils";
 
 const RoleProtectedRoute = ({ 
   element, 
   allowedRoles = [], 
   redirectTo = "/login",
-  statusCode = 403,
   errorMessage 
 }) => {
   const [loading, setLoading] = useState(true);
@@ -63,12 +62,7 @@ const RoleProtectedRoute = ({
   }
 
   // If user doesn't have required role
-  return (
-    <ErrorPage 
-      statusCode={statusCode} 
-      message={errorMessage || `This page requires ${getAllowedRolesString(allowedRoles)} privileges`} 
-    />
-  );
+  return <AccessDenied requiredRoles={allowedRoles} customMessage={errorMessage} />;
 };
 
 export default RoleProtectedRoute; 
