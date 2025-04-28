@@ -22,7 +22,7 @@
 .dashboard-body {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1 rem;
     width: 100%;
     padding-right: 0.5rem;
 }
@@ -115,7 +115,6 @@
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 2rem;
-    margin-bottom: 2rem;
     min-height: 450px;
 }
 

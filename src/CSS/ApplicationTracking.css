@@ -79,15 +79,6 @@
   margin: 2rem 0;
 }
 
-@keyframes progressFlow {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
 .progress-bar {
   position: relative;
   display: flex;
@@ -95,6 +86,8 @@
   align-items: center;
   margin-bottom: 3rem;
   padding: 0 2rem;
+  min-height: 120px;
+  background: none !important;
 }
 
 .progress-line {
@@ -102,21 +95,33 @@
   top: 50%;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 4px;
   background: #e0e0e0;
   transform: translateY(-50%);
   z-index: 1;
+  border-radius: 2px;
 }
 
 .progress-line-fill {
   position: absolute;
   top: 50%;
   left: 0;
-  height: 3px;
+  height: 4px;
   background: #4CAF50;
   transform: translateY(-50%);
-  transition: width 0.3s ease;
+  transition: width 0.5s ease-in-out;
   z-index: 2;
+  border-radius: 2px;
+  animation: progressFill 1s ease-out forwards;
+}
+
+@keyframes progressFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--progress-width);
+  }
 }
 
 .progress-step {
@@ -126,24 +131,26 @@
   flex-direction: column;
   align-items: center;
   flex: 1;
+  transition: all 0.3s ease;
 }
 
 .step-circle {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   background: white;
   border: 3px solid #e0e0e0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .step-circle svg {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: #757575;
   transition: all 0.3s ease;
 }
@@ -155,27 +162,34 @@
   font-weight: 500;
   transition: all 0.3s ease;
   white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.03);
 }
 
 /* Active step */
-.progress-step.active .step-circle {
+.progress-step.current .step-circle {
   border-color: #2196F3;
   background: #E3F2FD;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
 }
 
-.progress-step.active .step-circle svg {
+.progress-step.current .step-circle svg {
   color: #2196F3;
 }
 
-.progress-step.active .step-label {
+.progress-step.current .step-label {
   color: #2196F3;
   font-weight: 600;
+  background: rgba(33, 150, 243, 0.1);
 }
 
 /* Completed step */
 .progress-step.completed .step-circle {
   border-color: #4CAF50;
   background: #4CAF50;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
 }
 
 .progress-step.completed .step-circle svg {
@@ -184,12 +198,14 @@
 
 .progress-step.completed .step-label {
   color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
 }
 
 /* Rejected step */
 .progress-step.rejected .step-circle {
   border-color: #f44336;
   background: #f44336;
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.2);
 }
 
 .progress-step.rejected .step-circle svg {
@@ -199,28 +215,43 @@
 .progress-step.rejected .step-label {
   color: #f44336;
   font-weight: 600;
+  background: rgba(244, 67, 54, 0.1);
 }
 
 /* Timeline section */
 .timeline-list {
   padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .timeline-item {
   display: flex;
   gap: 2rem;
-  padding: 1rem 0;
+  padding: 1rem;
   position: relative;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  transform: translateX(4px);
 }
 
 .timeline-date {
   min-width: 120px;
   text-align: right;
+  padding-right: 1rem;
+  border-right: 2px solid #e0e0e0;
 }
 
 .timeline-date .date {
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
+  margin-bottom: 0.25rem;
 }
 
 .timeline-date .time {
@@ -235,6 +266,7 @@
   background: #4CAF50;
   border-radius: 50%;
   margin-top: 6px;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
 }
 
 .timeline-marker::before {
@@ -251,6 +283,7 @@
 
 .timeline-content {
   flex: 1;
+  padding: 0.5rem 0;
 }
 
 .timeline-content p {
@@ -260,10 +293,10 @@
 }
 
 .additional-info {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   padding: 0.75rem;
-  background: #f5f5f5;
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
 }
 
 .additional-info p {
@@ -920,12 +953,6 @@
   100% {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes progressFill {
-  0% {
-    width: 0;
   }
 }
 

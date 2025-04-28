@@ -268,9 +268,9 @@ function ApplicationTracking() {
             <div 
               className="progress-line-fill"
               style={{ 
-                width: application.status === 'Submitted' ? '33%' : 
-                       application.status === 'Under Review' ? '66%' : 
-                       '100%',
+                '--progress-width': application.status === 'Submitted' ? '33%' : 
+                                  application.status === 'Under Review' ? '66%' : 
+                                  '100%',
                 backgroundColor: application.status === 'Rejected' ? '#dc3545' : '#4CAF50'
               }}
             ></div>
