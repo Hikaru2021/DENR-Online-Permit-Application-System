@@ -13,7 +13,6 @@
 .dashboard-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
     width: 100%;
     height: 100%;
 }
@@ -22,7 +21,7 @@
 .dashboard-body {
     display: flex;
     flex-direction: column;
-    gap: 1 rem;
+    gap: 1.5rem;
     width: 100%;
     padding-right: 0.5rem;
 }

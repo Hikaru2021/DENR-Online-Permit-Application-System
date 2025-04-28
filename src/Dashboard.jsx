@@ -63,7 +63,7 @@ function Dashboard() {
     const fetchApplicationAnalytics = async () => {
       if (userRole === null) return;
 
-      setIsLoading(true);
+        setIsLoading(true);
       try {
         // Setup query based on user role
         let query = supabase

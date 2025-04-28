@@ -75,7 +75,7 @@
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin: 2rem 0;
 }
 
@@ -87,7 +87,7 @@
   margin-bottom: 3rem;
   padding: 0 2rem;
   min-height: 120px;
-  background: none !important;
+  background: transparent;
 }
 
 .progress-line {
@@ -99,7 +99,6 @@
   background: #e0e0e0;
   transform: translateY(-50%);
   z-index: 1;
-  border-radius: 2px;
 }
 
 .progress-line-fill {
@@ -111,17 +110,6 @@
   transform: translateY(-50%);
   transition: width 0.5s ease-in-out;
   z-index: 2;
-  border-radius: 2px;
-  animation: progressFill 1s ease-out forwards;
-}
-
-@keyframes progressFill {
-  from {
-    width: 0;
-  }
-  to {
-    width: var(--progress-width);
-  }
 }
 
 .progress-step {
@@ -130,66 +118,53 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1;
-  transition: all 0.3s ease;
+  gap: 0.5rem;
 }
 
 .step-circle {
-  width: 48px;
-  height: 48px;
-  background: white;
-  border: 3px solid #e0e0e0;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
+  background: white;
+  border: 2px solid #e0e0e0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.75rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .step-circle svg {
-  width: 24px;
-  height: 24px;
-  color: #757575;
-  transition: all 0.3s ease;
+  width: 20px;
+  height: 20px;
+  color: #666;
 }
 
 .step-label {
   font-size: 0.875rem;
-  color: #757575;
-  text-align: center;
+  color: #666;
   font-weight: 500;
-  transition: all 0.3s ease;
+  text-align: center;
   white-space: nowrap;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.03);
 }
 
-/* Active step */
 .progress-step.current .step-circle {
-  border-color: #2196F3;
-  background: #E3F2FD;
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+  border-color: #4CAF50;
+  background: #4CAF50;
+  box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
 }
 
 .progress-step.current .step-circle svg {
-  color: #2196F3;
+  color: white;
 }
 
 .progress-step.current .step-label {
-  color: #2196F3;
+  color: #4CAF50;
   font-weight: 600;
-  background: rgba(33, 150, 243, 0.1);
 }
 
-/* Completed step */
 .progress-step.completed .step-circle {
   border-color: #4CAF50;
   background: #4CAF50;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
 }
 
 .progress-step.completed .step-circle svg {
@@ -198,14 +173,11 @@
 
 .progress-step.completed .step-label {
   color: #4CAF50;
-  background: rgba(76, 175, 80, 0.1);
 }
 
-/* Rejected step */
 .progress-step.rejected .step-circle {
-  border-color: #f44336;
-  background: #f44336;
-  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.2);
+  border-color: #dc3545;
+  background: #dc3545;
 }
 
 .progress-step.rejected .step-circle svg {
@@ -213,9 +185,96 @@
 }
 
 .progress-step.rejected .step-label {
-  color: #f44336;
-  font-weight: 600;
-  background: rgba(244, 67, 54, 0.1);
+  color: #dc3545;
+}
+
+.timeline-list {
+  margin-top: 2rem;
+  padding: 0 1rem;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 120px 30px 1fr;
+  gap: 1rem;
+  padding: 1rem 0;
+  position: relative;
+}
+
+.timeline-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.timeline-date {
+  text-align: right;
+}
+
+.timeline-date .date {
+  font-weight: 500;
+  color: #333;
+}
+
+.timeline-date .time {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.timeline-marker {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  background: #4CAF50;
+  border-radius: 50%;
+  margin: 6px auto;
+}
+
+.timeline-marker::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  bottom: -24px;
+  width: 2px;
+  background: #e0e0e0;
+  transform: translateX(-50%);
+}
+
+.timeline-item:last-child .timeline-marker::before {
+  display: none;
+}
+
+.timeline-content {
+  padding-right: 1rem;
+}
+
+.timeline-content p {
+  margin: 0;
+  color: #333;
+}
+
+.additional-info {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+
+.additional-info p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.progress-fill.rejected {
+  background: #dc3545;
+}
+
+.progress-fill.approved {
+  background: #4CAF50;
+}
+
+.progress-fill.needs-revision {
+  background: #ffc107;
 }
 
 /* Timeline section */
@@ -306,18 +365,6 @@
 }
 
 /* Different states */
-.progress-fill.rejected {
-  background-color: #F44336;
-}
-
-.progress-fill.approved {
-  background-color: #4CAF50;
-}
-
-.progress-fill.needs-revision {
-  background-color: #4CAF50;
-}
-
 .progress-steps {
   display: flex;
   justify-content: space-between;
@@ -429,7 +476,7 @@
 .tracking-page {
   margin-left: 250px;
   min-height: 100vh;
-  background-color: #FAFAFA;
+  background-color: white;
   padding: 2rem;
   transition: margin-left 0.3s ease;
 }
