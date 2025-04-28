@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CSS/User.css";
 import "./CSS/SharedTable.css";
-import { FaSearch, FaTimes, FaFilter, FaSort, FaTrash } from "react-icons/fa";
+import { FaSearch, FaTimes, FaFilter, FaSort, FaTrash, FaUser } from "react-icons/fa";
 import { supabase } from "./library/supabaseClient";
 
 const STATUS_MAPPING = {
@@ -42,6 +42,7 @@ const User = () => {
           email,
           role_id,
           status,
+          profile_link,
           user_status (
             id,
             user_status
@@ -220,7 +221,7 @@ const User = () => {
               onChange={handleStatusFilterChange}
               className="filter-select"
             >
-              <option value="all">All Statuses</option>
+              <option value="all">All Status</option>
               {Object.entries(STATUS_MAPPING).map(([id, { label }]) => (
                 <option key={id} value={id}>
                   {label}
@@ -263,6 +264,7 @@ const User = () => {
           <table className="shared-table">
             <thead>
               <tr>
+                <th></th>
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role Permission</th>
@@ -275,6 +277,26 @@ const User = () => {
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
                   <tr key={user.id}>
+                    <td>
+                      <div className="profile-picture-container">
+                        {user.profile_link ? (
+                          <img 
+                            src={user.profile_link} 
+                            alt={`${user.user_name}'s profile`} 
+                            className="profile-picture"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '';
+                              e.target.parentElement.innerHTML = '<div class="profile-picture-placeholder"><FaUser /></div>';
+                            }}
+                          />
+                        ) : (
+                          <div className="profile-picture-placeholder">
+                            <FaUser />
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td>{user.user_name || "N/A"}</td>
                     <td>{user.email || "N/A"}</td>
                     <td>
@@ -309,7 +331,7 @@ const User = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="empty-state">
+                  <td colSpan="7" className="empty-state">
                     No users found. {searchTerm ? "Try adjusting your search." : ""}
                   </td>
                 </tr>

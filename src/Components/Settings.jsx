@@ -180,6 +180,9 @@ const Settings = () => {
       await fetchUserProfile();
 
       alert('Settings updated successfully!');
+      
+      // Reload the page after successful save
+      window.location.reload();
     } catch (error) {
       console.error('Error updating settings:', error.message);
       alert(error.message);

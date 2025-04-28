@@ -80,6 +80,8 @@
     font-size: 1.75rem;
     font-weight: 600;
     margin: 0.5rem 0;
+    text-align: center;
+    width: 100%;
 }
 
 .box span {

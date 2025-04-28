@@ -136,7 +136,14 @@ function Dashboard() {
   }, [userRole, currentUser]);
 
   const handleCardClick = (status) => {
-    navigate('/ApplicationSubmittion', { state: { statusFilter: status } });
+    // Determine destination based on user role
+    if (userRole === 1 || userRole === 2) {
+      // Admin or Staff: Navigate to ApplicationList with status filter
+      navigate('/ApplicationList', { state: { statusFilter: status } });
+    } else {
+      // Regular User: Navigate to MyApplication with status filter
+      navigate('/MyApplication', { state: { statusFilter: status } });
+    }
   };
 
   // Chart data configuration
@@ -495,12 +502,12 @@ function Dashboard() {
               <p className="count">{totalApplications}</p>
               <span>from this month</span>
             </div>
-            <div className="box pending" onClick={() => handleCardClick('Pending')}>
+            <div className="box pending" onClick={() => handleCardClick('Submitted')}>
               <h3>Pending Applications</h3>
               <p className="count">{statusCounts.submitted}</p>
               <span>from this month</span>
             </div>
-            <div className="box review" onClick={() => handleCardClick('On Review')}>
+            <div className="box review" onClick={() => handleCardClick('Under Review')}>
               <h3>Under Review</h3>
               <p className="count">{statusCounts.underReview}</p>
               <span>from this month</span>
@@ -510,7 +517,7 @@ function Dashboard() {
               <p className="count">{statusCounts.approved}</p>
               <span>from this month</span>
             </div>
-            <div className="box rejected" onClick={() => handleCardClick('Denied')}>
+            <div className="box rejected" onClick={() => handleCardClick('Rejected')}>
               <h3>Rejected Applications</h3>
               <p className="count">{statusCounts.rejected}</p>
               <span>from this month</span>

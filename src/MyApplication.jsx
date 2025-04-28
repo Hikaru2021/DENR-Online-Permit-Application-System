@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaSearch, FaFilter, FaSort, FaChartLine, FaDownload, FaTrash, FaTimes, FaClock, FaEye } from "react-icons/fa";
 import "./CSS/MyApplication.css"; 
 import "./CSS/SharedTable.css";
@@ -8,10 +8,11 @@ import ApplicationTracking from './ApplicationTracking';
 
 function MyApplication() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(location.state?.statusFilter || "all");
   const [sortBy, setSortBy] = useState("newest");
   const [sortOrder, setSortOrder] = useState("desc");
   const [isLoading, setIsLoading] = useState(true);
@@ -360,6 +361,13 @@ function MyApplication() {
       );
     });
   };
+
+  // Update status filter when location state changes
+  useEffect(() => {
+    if (location.state?.statusFilter) {
+      setStatusFilter(location.state.statusFilter);
+    }
+  }, [location.state]);
 
   return (
     <div className="my-application-container">
