@@ -301,9 +301,10 @@ th {
 
 .progress-bar {
   height: 8px;
-  background: #e9ecef;
+  background: transparent;
   border-radius: 4px;
   overflow: hidden;
+  margin-bottom: 1rem;
 }
 
 .progress {
@@ -860,7 +861,7 @@ th {
 
 .progress-bar {
   height: 8px;
-  background: #e9ecef;
+  background: transparent;
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 1rem;
