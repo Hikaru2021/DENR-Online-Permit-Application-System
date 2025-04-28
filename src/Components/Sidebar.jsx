@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../library/supabaseClient";
 import "../CSS/Sidebar.css";
+import "../CSS/SidebarProfile.css";
 import { FaChevronDown, FaTachometerAlt, FaUsers, FaClipboardList, FaChartBar, FaSignOutAlt, FaFolderOpen, FaList, FaUser, FaBook } from "react-icons/fa";
+
+const STORAGE_BUCKET = 'guidelines';
 
 const Sidebar = () => {
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,8 +37,14 @@ const Sidebar = () => {
         setUserProfile({
           email: userData.email,
           user_name: userData.user_name,
-          role_id: userData.role_id
+          role_id: userData.role_id,
+          profile_link: userData.profile_link
         });
+
+        // Set profile image URL if available
+        if (userData.profile_link) {
+          setProfileImageUrl(userData.profile_link);
+        }
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -139,7 +149,15 @@ const Sidebar = () => {
       <div className="sidebar-profile">
         <div className="profile-info" onClick={handleProfileClick}>
           <div className="profile-avatar">
-            <FaUser className="avatar-icon" />
+            {profileImageUrl ? (
+              <img 
+                src={profileImageUrl} 
+                alt="Profile" 
+                className="profile-image" 
+              />
+            ) : (
+              <FaUser className="avatar-icon" />
+            )}
           </div>
           <div className="profile-details">
             <p className="profile-name">{userProfile?.user_name || 'User'}</p>

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../library/supabaseClient';
 import '../CSS/Settings.css';
-import { FaUser, FaEnvelope, FaLock, FaBell, FaCamera, FaSave } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaCamera, FaSave } from 'react-icons/fa';
+
+const STORAGE_BUCKET = 'guidelines';
+const PROFILE_PICS_FOLDER = 'private/profile-pictures';
 
 const Settings = () => {
   const [user, setUser] = useState(null);
@@ -9,14 +12,13 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     current_password: '',
     new_password: '',
     confirm_password: '',
-    notifications_enabled: true,
-    email_notifications: true
   });
 
   useEffect(() => {
@@ -30,23 +32,24 @@ const Settings = () => {
       if (authError) throw authError;
 
       if (authUser) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+        const { data: userData, error: userError } = await supabase
+          .from('users')
           .select('*')
           .eq('id', authUser.id)
           .single();
 
-        if (profileError) throw profileError;
+        if (userError) throw userError;
 
-        setUser(profile);
+        setUser(userData);
         setFormData(prev => ({
           ...prev,
-          full_name: profile.full_name || '',
-          email: profile.email || '',
-          notifications_enabled: profile.notifications_enabled ?? true,
-          email_notifications: profile.email_notifications ?? true
+          full_name: userData.user_name || '',
+          email: userData.email || '',
         }));
-        setPreviewUrl(profile.avatar_url);
+        
+        if (userData.profile_link) {
+          setPreviewUrl(userData.profile_link);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error.message);
@@ -55,11 +58,69 @@ const Settings = () => {
     }
   };
 
+  const uploadProfileImage = async (userId, file) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}_${Date.now()}.${fileExt}`;
+      const filePath = `${PROFILE_PICS_FOLDER}/${fileName}`;
+      
+      // Check if there's a previous profile image to delete
+      if (user.profile_link) {
+        try {
+          // Extract the file path from the URL
+          const previousUrl = user.profile_link;
+          const previousPath = previousUrl.split('/storage/v1/object/public/guidelines/')[1];
+          
+          if (previousPath) {
+            // Delete the previous profile image
+            const { error: deleteError } = await supabase.storage
+              .from(STORAGE_BUCKET)
+              .remove([decodeURIComponent(previousPath)]);
+            
+            if (deleteError) {
+              console.error('Error deleting previous profile image:', deleteError);
+            } else {
+              console.log('Previous profile image deleted successfully');
+            }
+          }
+        } catch (deleteError) {
+          console.error('Error processing previous image deletion:', deleteError);
+          // Continue with upload even if deletion fails
+        }
+      }
+      
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const calculatedProgress = (progress.loaded / progress.total) * 100;
+            setUploadProgress(calculatedProgress);
+          },
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      throw error;
+    }
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setProfileImage(file);
       setPreviewUrl(URL.createObjectURL(file));
+      setUploadProgress(0);
     }
   };
 
@@ -76,29 +137,19 @@ const Settings = () => {
     setSaving(true);
 
     try {
-      let avatarUrl = user?.avatar_url;
+      let profileLink = user?.profile_link;
 
       // Upload new profile image if selected
       if (profileImage) {
-        const fileExt = profileImage.name.split('.').pop();
-        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(fileName, profileImage);
-
-        if (uploadError) throw uploadError;
-
-        avatarUrl = `${process.env.REACT_APP_SUPABASE_URL}/storage/v1/object/public/avatars/${fileName}`;
+        profileLink = await uploadProfileImage(user.id, profileImage);
       }
 
-      // Update profile in database
+      // Update user profile in users table
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from('users')
         .update({
-          full_name: formData.full_name,
-          avatar_url: avatarUrl,
-          notifications_enabled: formData.notifications_enabled,
-          email_notifications: formData.email_notifications
+          user_name: formData.full_name,
+          profile_link: profileLink
         })
         .eq('id', user.id);
 
@@ -124,6 +175,9 @@ const Settings = () => {
         new_password: '',
         confirm_password: ''
       }));
+
+      // Refresh user data
+      await fetchUserProfile();
 
       alert('Settings updated successfully!');
     } catch (error) {
@@ -151,11 +205,21 @@ const Settings = () => {
           <div className="profile-image-section">
             <div className="profile-image-container">
               {previewUrl ? (
-                <img 
-                  src={previewUrl} 
-                  alt="Profile" 
-                  className="profile-image"
-                />
+                <>
+                  <img 
+                    src={previewUrl} 
+                    alt="Profile" 
+                    className="profile-image"
+                  />
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <div className="upload-progress-overlay">
+                      <div 
+                        className="progress-circle" 
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
                 <FaUser className="default-avatar" />
               )}
@@ -239,33 +303,6 @@ const Settings = () => {
               onChange={handleInputChange}
               placeholder="Confirm new password"
             />
-          </div>
-        </div>
-
-        <div className="settings-section">
-          <h2>Notifications</h2>
-          <div className="form-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                name="notifications_enabled"
-                checked={formData.notifications_enabled}
-                onChange={handleInputChange}
-              />
-              <FaBell /> Enable Notifications
-            </label>
-          </div>
-
-          <div className="form-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                name="email_notifications"
-                checked={formData.email_notifications}
-                onChange={handleInputChange}
-              />
-              <FaEnvelope /> Email Notifications
-            </label>
           </div>
         </div>
 

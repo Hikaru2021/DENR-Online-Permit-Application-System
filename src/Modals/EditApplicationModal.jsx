@@ -7,6 +7,10 @@ import 'react-quill/dist/quill.snow.css';
 import { useDropzone } from 'react-dropzone';
 import { convert } from 'html-to-text';
 
+const STORAGE_BUCKET = 'guidelines';
+const PRIVATE_FOLDER = 'private';
+const FORMS_FOLDER = 'Forms';
+
 const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, application }) => {
   const [editedApplication, setEditedApplication] = useState({
     id: null,
@@ -28,6 +32,9 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
     guidelines: 0,
     applicationForm: 0
   });
+  const [documents, setDocuments] = useState([]);
+  const [existingGuidelineDoc, setExistingGuidelineDoc] = useState(null);
+  const [existingFormDoc, setExistingFormDoc] = useState(null);
 
   // Update form when application prop changes
   useEffect(() => {
@@ -45,8 +52,36 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
         guidelinesFile: null,
         applicationFormFile: null
       });
+      
+      // Fetch existing documents for this application
+      fetchApplicationDocuments(application.id);
     }
   }, [application]);
+  
+  // Fetch application documents
+  const fetchApplicationDocuments = async (applicationId) => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('application_id', applicationId);
+        
+      if (error) throw error;
+      
+      setDocuments(data || []);
+      
+      // Identify guidelines and form documents
+      const guidelineDoc = data?.find(doc => doc.file_link && !doc.file_link.includes('/Forms/'));
+      const formDoc = data?.find(doc => doc.file_link && doc.file_link.includes('/Forms/'));
+      
+      setExistingGuidelineDoc(guidelineDoc);
+      setExistingFormDoc(formDoc);
+      
+      console.log('Existing documents:', { guidelineDoc, formDoc });
+    } catch (error) {
+      console.error('Error fetching application documents:', error);
+    }
+  };
 
   // Rich text editor modules configuration
   const modules = {
@@ -110,6 +145,48 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
     }));
   };
 
+  // Function to delete a document from storage
+  const deleteDocumentFromStorage = async (doc) => {
+    if (!doc || !doc.file_link) return;
+    
+    try {
+      // Extract the file path from the URL
+      const fileUrl = doc.file_link;
+      const filePath = fileUrl.split('/storage/v1/object/public/guidelines/')[1];
+      
+      if (filePath) {
+        console.log('Deleting file:', filePath);
+        // Delete the file from storage
+        const { error } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .remove([decodeURIComponent(filePath)]);
+        
+        if (error) {
+          console.error('Error deleting file from storage:', error);
+          return false;
+        }
+        
+        // Delete the document record
+        const { error: deleteError } = await supabase
+          .from('documents')
+          .delete()
+          .eq('id', doc.id);
+          
+        if (deleteError) {
+          console.error('Error deleting document record:', deleteError);
+          return false;
+        }
+        
+        return true;
+      }
+    } catch (error) {
+      console.error('Error in deleteDocumentFromStorage:', error);
+      return false;
+    }
+    
+    return false;
+  };
+
   // Guidelines file upload
   const onGuidelinesDrop = useCallback((acceptedFiles) => {
     const file = acceptedFiles[0];
@@ -160,6 +237,144 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
     maxFiles: 1
   });
 
+  // Upload guidelines file
+  const uploadGuidelinesFile = async (applicationId) => {
+    if (!editedApplication.guidelinesFile) return null;
+    
+    try {
+      // Delete existing guideline file if it exists
+      if (existingGuidelineDoc) {
+        await deleteDocumentFromStorage(existingGuidelineDoc);
+      }
+      
+      const file = editedApplication.guidelinesFile;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${applicationId}_guidelines.${fileExt}`;
+      const filePath = `${PRIVATE_FOLDER}/${fileName}`;
+      
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const calculatedProgress = (progress.loaded / progress.total) * 100;
+            setUploadProgress(prev => ({
+              ...prev,
+              guidelines: calculatedProgress
+            }));
+          },
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+      
+      // Insert document reference into the documents table
+      const { data: documentData, error: documentError } = await supabase
+        .from('documents')
+        .insert([
+          { 
+            file_name: file.name,
+            file_type: file.type,
+            file_link: publicUrl,
+            application_id: applicationId
+          }
+        ])
+        .select();
+      
+      if (documentError) {
+        console.error('Error inserting document record:', documentError);
+        throw documentError;
+      }
+      
+      return {
+        path: filePath,
+        url: publicUrl,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        document_id: documentData[0].id
+      };
+    } catch (error) {
+      console.error('Error uploading guidelines file:', error);
+      throw error;
+    }
+  };
+
+  // Upload application form file
+  const uploadApplicationFormFile = async (applicationId) => {
+    if (!editedApplication.applicationFormFile) return null;
+    
+    try {
+      // Delete existing application form file if it exists
+      if (existingFormDoc) {
+        await deleteDocumentFromStorage(existingFormDoc);
+      }
+      
+      const file = editedApplication.applicationFormFile;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${applicationId}_application_form.${fileExt}`;
+      const filePath = `${PRIVATE_FOLDER}/${FORMS_FOLDER}/${fileName}`;
+      
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const calculatedProgress = (progress.loaded / progress.total) * 100;
+            setUploadProgress(prev => ({
+              ...prev,
+              applicationForm: calculatedProgress
+            }));
+          },
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+      
+      // Insert document reference into the documents table
+      const { data: documentData, error: documentError } = await supabase
+        .from('documents')
+        .insert([
+          { 
+            file_name: file.name,
+            file_type: file.type,
+            file_link: publicUrl,
+            application_id: applicationId
+          }
+        ])
+        .select();
+      
+      if (documentError) {
+        console.error('Error inserting document record:', documentError);
+        throw documentError;
+      }
+      
+      return {
+        path: filePath,
+        url: publicUrl,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        document_id: documentData[0].id
+      };
+    } catch (error) {
+      console.error('Error uploading application form file:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!application?.id) return;
@@ -205,21 +420,36 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
         .select();
       
       if (error) throw error;
+      
+      let guidelinesFileData = null;
+      let applicationFormData = null;
+      
+      // Upload guidelines file if provided
+      if (editedApplication.guidelinesFile) {
+        guidelinesFileData = await uploadGuidelinesFile(application.id);
+      }
+      
+      // Upload application form file if provided
+      if (editedApplication.applicationFormFile) {
+        applicationFormData = await uploadApplicationFormFile(application.id);
+      }
 
       // Add file metadata to the response object
       const completeApplicationData = {
         ...data[0],
         files: {
-          guidelines: editedApplication.guidelinesFile ? {
-            name: editedApplication.guidelinesFile.name,
-            type: editedApplication.guidelinesFile.type,
-            size: editedApplication.guidelinesFile.size
-          } : null,
-          applicationForm: editedApplication.applicationFormFile ? {
-            name: editedApplication.applicationFormFile.name,
-            type: editedApplication.applicationFormFile.type,
-            size: editedApplication.applicationFormFile.size
-          } : null
+          guidelines: guidelinesFileData || (existingGuidelineDoc ? {
+            name: existingGuidelineDoc.file_name,
+            type: existingGuidelineDoc.file_type,
+            url: existingGuidelineDoc.file_link,
+            document_id: existingGuidelineDoc.id
+          } : null),
+          applicationForm: applicationFormData || (existingFormDoc ? {
+            name: existingFormDoc.file_name,
+            type: existingFormDoc.file_type,
+            url: existingFormDoc.file_link,
+            document_id: existingFormDoc.id
+          } : null)
         }
       };
       
@@ -374,7 +604,12 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
               <div {...getGuidelinesRootProps()} className="file-upload-area">
                 <input {...getGuidelinesInputProps()} />
                 <FaCloudUploadAlt className="upload-icon" />
-                <p>Drag & drop guidelines file here, or click to select</p>
+                <p>
+                  {existingGuidelineDoc 
+                    ? "Current file: " + existingGuidelineDoc.file_name + ". Drop new file to replace it." 
+                    : "Drag & drop guidelines file here, or click to select"
+                  }
+                </p>
                 <span className="file-info">
                   {editedApplication.guidelinesFile ? (
                     <>
@@ -400,7 +635,12 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
               <div {...getApplicationFormRootProps()} className="file-upload-area">
                 <input {...getApplicationFormInputProps()} />
                 <FaCloudUploadAlt className="upload-icon" />
-                <p>Drag & drop application form here, or click to select</p>
+                <p>
+                  {existingFormDoc 
+                    ? "Current file: " + existingFormDoc.file_name + ". Drop new file to replace it." 
+                    : "Drag & drop application form here, or click to select"
+                  }
+                </p>
                 <span className="file-info">
                   {editedApplication.applicationFormFile ? (
                     <>

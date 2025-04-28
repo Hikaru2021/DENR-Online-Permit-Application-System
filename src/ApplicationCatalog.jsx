@@ -173,6 +173,49 @@ function ApplicationCatalog() {
   const handleDeleteApplications = async () => {
     try {
       setIsLoading(true);
+      
+      // For each application being deleted, fetch related documents
+      for (const appId of selectedApplications) {
+        // 1. Fetch documents related to this application
+        const { data: documents, error: docFetchError } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('application_id', appId);
+        
+        if (docFetchError) throw docFetchError;
+        
+        // 2. Delete files from storage for each document
+        if (documents && documents.length > 0) {
+          for (const doc of documents) {
+            // Extract the file path from the URL
+            const fileUrl = doc.file_link;
+            if (fileUrl) {
+              // Get the path by removing the base storage URL
+              const filePath = fileUrl.split('/storage/v1/object/public/guidelines/')[1];
+              if (filePath) {
+                // Delete the file from storage
+                const { error: storageError } = await supabase.storage
+                  .from('guidelines')
+                  .remove([decodeURIComponent(filePath)]);
+                
+                if (storageError) {
+                  console.error(`Error deleting file from storage: ${storageError.message}`);
+                }
+              }
+            }
+          }
+          
+          // 3. Delete document records from the documents table
+          const { error: docDeleteError } = await supabase
+            .from('documents')
+            .delete()
+            .eq('application_id', appId);
+          
+          if (docDeleteError) throw docDeleteError;
+        }
+      }
+      
+      // 4. Finally delete the applications
       const { error } = await supabase
         .from('applications')
         .delete()
@@ -186,7 +229,7 @@ function ApplicationCatalog() {
       setShowDeleteConfirmModal(false);
       
       // Show success message
-      alert("Selected applications have been deleted successfully!");
+      alert("Selected applications and related documents have been deleted successfully!");
     } catch (error) {
       console.error("Error deleting applications:", error.message);
       alert("Error deleting applications: " + error.message);

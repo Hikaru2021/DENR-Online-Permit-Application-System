@@ -299,12 +299,20 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(46, 125, 50, 0.1);
+  background-color: #e9ecef;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: 10px;
   flex-shrink: 0;
+  overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profile-avatar-collapsed {
@@ -349,7 +357,7 @@
 }
 
 .avatar-icon {
-  font-size: 1.25rem;
+  font-size: 20px;
   color: #2e7d32;
 }
 
@@ -455,12 +463,20 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(46, 125, 50, 0.1);
+  background-color: #e9ecef;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: 10px;
   flex-shrink: 0;
+  overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profile-avatar-collapsed {
@@ -505,7 +521,7 @@
 }
 
 .avatar-icon {
-  font-size: 1.25rem;
+  font-size: 20px;
   color: #2e7d32;
 }
 
