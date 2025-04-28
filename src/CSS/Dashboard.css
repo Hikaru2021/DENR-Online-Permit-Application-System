@@ -456,14 +456,16 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Chart Styles */
 .chart-container {
     position: relative;
-    flex: 1;
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 250px;
-    padding-bottom: 0;
 }
 
 /* Center text in donut chart */
@@ -473,6 +475,55 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+}
+
+.dashboard-chart-legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+}
+
+.dashboard-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dashboard-legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.dashboard-legend-label {
+    font-size: 0.875rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.dashboard-legend-submitted {
+    background-color: #FFB74D;
+}
+
+.dashboard-legend-under-review {
+    background-color: #4FC3F7;
+}
+
+.dashboard-legend-needs-revision {
+    background-color: #FF9800;
+}
+
+.dashboard-legend-approved {
+    background-color: #81C784;
+}
+
+.dashboard-legend-rejected {
+    background-color: #E57373;
 }
 
 .total-count {
@@ -791,47 +842,47 @@
     margin-left: 1rem;
 }
 
-.status-badge {
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+.dashboard-status-badge {
     display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
-.status-pending {
-    background-color: #FFF8E1;
-    color: #FFB74D;
+.dashboard-status-pending {
+    background-color: #fff3cd;
+    color: #856404;
 }
 
-.status-review {
-    background-color: #E3F2FD;
-    color: #4FC3F7;
+.dashboard-status-review {
+    background-color: #cff4fc;
+    color: #055160;
 }
 
-.status-approved {
-    background-color: #E8F5E9;
-    color: #81C784;
+.dashboard-status-approved {
+    background-color: #d1e7dd;
+    color: #0f5132;
 }
 
-.status-rejected {
-    background-color: #FFEBEE;
-    color: #E57373;
+.dashboard-status-rejected {
+    background-color: #f8d7da;
+    color: #842029;
 }
 
-.status-revision {
-    background-color: #FFF3E0;
-    color: #FF9800;
+.dashboard-status-revision {
+    background-color: #fff3cd;
+    color: #856404;
 }
 
-.status-submitted {
-    background-color: #FFF8E1;
-    color: #FFB74D;
+.dashboard-status-submitted {
+    background-color: #fff3cd;
+    color: #856404;
 }
 
-.status-under-review {
-    background-color: #E3F2FD;
-    color: #4FC3F7;
+.dashboard-status-under-review {
+    background-color: #cff4fc;
+    color: #055160;
 }
 
 .no-applications {
@@ -863,87 +914,88 @@
 }
 
 /* Application Status Analytics Styles */
-.dashboard-card.analytics {
+.dashboard-card.dashboard-analytics {
     display: flex;
     flex-direction: column;
     padding-bottom: 1rem;
 }
 
-.analytics-container {
+.dashboard-analytics-container {
     display: flex;
     flex-direction: column;
     flex: 1;
-    height: 100%;
+    gap: 1rem;
+    align-items: center;
 }
 
-.analytics-status-breakdown {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-}
-
-.status-item {
+.dashboard-analytics-status-breakdown {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.dashboard-status-item {
+    display: flex;
     align-items: center;
-    padding: 8px 5px;
-    border-radius: 6px;
-    background-color: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
 }
 
-.status-color {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-bottom: 4px;
+.dashboard-status-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
 }
 
-.status-item.submitted .status-color {
+.dashboard-status-item.submitted .dashboard-status-color {
     background-color: #FFB74D;
 }
 
-.status-item.under-review .status-color {
+.dashboard-status-item.under-review .dashboard-status-color {
     background-color: #4FC3F7;
 }
 
-.status-item.needs-revision .status-color {
+.dashboard-status-item.needs-revision .dashboard-status-color {
     background-color: #FF9800;
 }
 
-.status-item.approved .status-color {
+.dashboard-status-item.approved .dashboard-status-color {
     background-color: #81C784;
 }
 
-.status-item.rejected .status-color {
+.dashboard-status-item.rejected .dashboard-status-color {
     background-color: #E57373;
 }
 
-.status-label {
-    font-size: 0.75rem;
-    color: #666;
-    text-align: center;
-    margin-bottom: 3px;
+.dashboard-status-label {
+    font-size: 0.875rem;
+    color: #333;
+    font-weight: 500;
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
 }
 
-.status-count {
-    font-size: 1rem;
+.dashboard-status-count {
     font-weight: 600;
     color: #333;
+    padding: 0.25rem 0.5rem;
+    background: #eee;
+    border-radius: 4px;
 }
 
 @media (max-width: 768px) {
-    .analytics-status-breakdown {
-        grid-template-columns: repeat(3, 1fr);
+    .dashboard-analytics-status-breakdown {
+        flex-direction: column;
     }
 }
 
 @media (max-width: 480px) {
-    .analytics-status-breakdown {
-        grid-template-columns: repeat(2, 1fr);
+    .dashboard-analytics-status-breakdown {
+        gap: 0.75rem;
     }
 }

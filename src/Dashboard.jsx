@@ -383,15 +383,15 @@ function Dashboard() {
   const getStatusClass = (statusId) => {
     switch (statusId) {
       case 1:
-        return "status-pending";
+        return "dashboard-status-pending";
       case 2:
-        return "status-review";
+        return "dashboard-status-review";
       case 3:
-        return "status-revision";
+        return "dashboard-status-revision";
       case 4:
-        return "status-approved";
+        return "dashboard-status-approved";
       case 5:
-        return "status-rejected";
+        return "dashboard-status-rejected";
       default:
         return "";
     }
@@ -527,7 +527,7 @@ function Dashboard() {
           {/* Dashboard Grid Layout */}
           <div className="dashboard-grid">
             {/* Application Status Analytics Section */}
-            <div className="dashboard-card analytics">
+            <div className="dashboard-card dashboard-analytics">
               <div className="card-header">
                 <h3>{getAnalyticsTitle()}</h3>
                 <button 
@@ -537,7 +537,7 @@ function Dashboard() {
                   View All <FaChevronRight />
                 </button>
               </div>
-              <div className="analytics-container">
+              <div className="dashboard-analytics-container">
                 <div className="chart-container">
                   <Doughnut data={chartData} options={chartOptions} />
                   <div className="chart-center-text">
@@ -545,33 +545,27 @@ function Dashboard() {
                     <div className="total-label">Total</div>
                   </div>
                 </div>
-                <div className="analytics-summary">
-                  <div className="analytics-status-breakdown">
-                    <div className="status-item submitted">
-                      <div className="status-color"></div>
-                      <div className="status-label">Submitted</div>
-                      <div className="status-count">{statusCounts.submitted}</div>
-                    </div>
-                    <div className="status-item under-review">
-                      <div className="status-color"></div>
-                      <div className="status-label">Under Review</div>
-                      <div className="status-count">{statusCounts.underReview}</div>
-                    </div>
-                    <div className="status-item needs-revision">
-                      <div className="status-color"></div>
-                      <div className="status-label">Needs Rev.</div>
-                      <div className="status-count">{statusCounts.needsRevision}</div>
-                    </div>
-                    <div className="status-item approved">
-                      <div className="status-color"></div>
-                      <div className="status-label">Approved</div>
-                      <div className="status-count">{statusCounts.approved}</div>
-                    </div>
-                    <div className="status-item rejected">
-                      <div className="status-color"></div>
-                      <div className="status-label">Rejected</div>
-                      <div className="status-count">{statusCounts.rejected}</div>
-                    </div>
+                
+                <div className="dashboard-chart-legend">
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-submitted"></div>
+                    <div className="dashboard-legend-label">Submitted</div>
+                  </div>
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-under-review"></div>
+                    <div className="dashboard-legend-label">Under Review</div>
+                  </div>
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-needs-revision"></div>
+                    <div className="dashboard-legend-label">Needs Rev.</div>
+                  </div>
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-approved"></div>
+                    <div className="dashboard-legend-label">Approved</div>
+                  </div>
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-rejected"></div>
+                    <div className="dashboard-legend-label">Rejected</div>
                   </div>
                 </div>
               </div>
@@ -666,7 +660,7 @@ function Dashboard() {
                         <p><strong>Submitted:</strong> {new Date(app.created_at).toLocaleTimeString()}</p>
                       </div>
                       <div className="application-status">
-                        <span className={`status-badge ${getStatusClass(app.status)}`}>
+                        <span className={`dashboard-status-badge ${getStatusClass(app.status)}`}>
                           {getStatusText(app.status)}
                         </span>
                       </div>
