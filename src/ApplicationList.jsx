@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload } from "react-icons/fa";
+import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
 import "./CSS/SharedTable.css";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
@@ -17,10 +17,11 @@ function ApplicationList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
-  const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
+  const [applicationTypes, setApplicationTypes] = useState([]);
 
   // Status mapping function
   const getStatusName = (statusId) => {
@@ -93,6 +94,11 @@ function ApplicationList() {
       }));
 
       setApplications(transformedApplications);
+      
+      // Extract unique application types
+      const types = [...new Set(transformedApplications.map(app => app.type))];
+      setApplicationTypes(types);
+      
       setError(null);
     } catch (err) {
       setError(`Error fetching applications: ${err.message}`);
@@ -118,40 +124,56 @@ function ApplicationList() {
     setCurrentPage(1); // Reset to first page when filtering
   };
 
+  // Handle type filter change
+  const handleTypeFilterChange = (e) => {
+    setTypeFilter(e.target.value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
   // Handle sort change
-  const handleSortChange = (field) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortOrder("asc");
-    }
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+    setCurrentPage(1); // Reset to first page when sorting
   };
 
   // Filter and sort applications
   const filteredAndSortedApplications = applications
     .filter(app => {
+      // Search filter
       const matchesSearch = 
         app.title.toLowerCase().includes(search.toLowerCase()) ||
         app.applicant_name.toLowerCase().includes(search.toLowerCase()) ||
         app.application_id.toLowerCase().includes(search.toLowerCase());
+      
+      // Status filter
       const matchesStatus = statusFilter === "all" || app.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      
+      // Type filter
+      const matchesType = typeFilter === "all" || app.type === typeFilter;
+      
+      return matchesSearch && matchesStatus && matchesType;
     })
     .sort((a, b) => {
       let comparison = 0;
       
-      if (sortBy === "date") {
-        comparison = new Date(b.submitted_at) - new Date(a.submitted_at);
-      } else if (sortBy === "applicant") {
-        comparison = a.applicant_name.localeCompare(b.applicant_name);
-      } else if (sortBy === "status") {
-        comparison = a.statusId - b.statusId;
-      } else {
-        comparison = b.id - a.id; // Default sort by ID descending
+      switch(sortBy) {
+        case "newest":
+          comparison = new Date(b.submitted_at) - new Date(a.submitted_at);
+          break;
+        case "oldest":
+          comparison = new Date(a.submitted_at) - new Date(b.submitted_at);
+          break;
+        case "applicant":
+          comparison = a.applicant_name.localeCompare(b.applicant_name);
+          break;
+        case "status":
+          comparison = a.statusId - b.statusId;
+          break;
+        default:
+          comparison = b.id - a.id; // Default sort by ID descending
       }
       
-      return sortOrder === "asc" ? -comparison : comparison;
+      return comparison;
     });
 
   // Calculate pagination values
@@ -301,27 +323,58 @@ function ApplicationList() {
       <div className="application-list-filters">
         <div className="search-container">
           <FaSearch className="search-icon" />
-        <input
-          type="text"
+          <input
+            type="text"
             className="search-input"
             placeholder="Search by ID, applicant name, or title..."
-          value={search}
+            value={search}
             onChange={handleSearchChange}
           />
         </div>
         <div className="filter-container">
-          <select
-            className="filter-select"
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-          >
-            <option value="all">All Statuses</option>
-            <option value="Submitted">Submitted</option>
-            <option value="Under Review">Under Review</option>
-            <option value="Needs Revision">Needs Revision</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
+          <div className="filter-item">
+            <label>Status:</label>
+            <select
+              className="filter-select"
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+            >
+              <option value="all">All Statuses</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Needs Revision">Needs Revision</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          
+          <div className="filter-item">
+            <label>Type:</label>
+            <select
+              className="filter-select"
+              value={typeFilter}
+              onChange={handleTypeFilterChange}
+            >
+              <option value="all">All Types</option>
+              {applicationTypes.map((type, index) => (
+                <option key={index} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="filter-item">
+            <label>Sort By:</label>
+            <select
+              className="filter-select"
+              value={sortBy}
+              onChange={handleSortChange}
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="applicant">Applicant Name</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
         </div>
       </div>
 

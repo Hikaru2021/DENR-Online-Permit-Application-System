@@ -67,9 +67,10 @@
 .catalog-filters {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  justify-content: space-between;
+  margin-bottom: 30px;
   flex-wrap: wrap;
+  gap: 15px;
 }
 
 .search-container {
@@ -125,25 +126,28 @@
   min-width: 150px;
 }
 
-.add-button {
+.action-buttons {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  white-space: nowrap;
+  gap: 10px;
   margin-left: auto;
 }
 
+.add-button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
 .add-button:hover {
-  background-color: #1565c0;
+  background-color: #45a049;
 }
 
 .add-button svg {

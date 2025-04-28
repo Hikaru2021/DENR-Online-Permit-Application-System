@@ -17,7 +17,7 @@ const User = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("role");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingUser, setDeletingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -112,7 +112,20 @@ const User = () => {
       (user.user_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.email || "").toLowerCase().includes(searchTerm.toLowerCase()) &&
       (statusFilter === 'all' || user.status === parseInt(statusFilter))
-  );
+  ).sort((a, b) => {
+    switch (sortBy) {
+      case "role":
+        return a.role_id - b.role_id;
+      case "newest":
+        return new Date(b.created_at) - new Date(a.created_at);
+      case "oldest":
+        return new Date(a.created_at) - new Date(b.created_at);
+      case "name":
+        return (a.user_name || "").localeCompare(b.user_name || "");
+      default:
+        return 0;
+    }
+  });
 
   const handleDeleteClick = (user) => {
     setDeletingUser(user);
@@ -224,6 +237,7 @@ const User = () => {
               onChange={handleSortChange}
               className="filter-select"
             >
+              <option value="role">Role Permission</option>
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
               <option value="name">Name</option>

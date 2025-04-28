@@ -443,6 +443,12 @@
     margin: 0;
 }
 
+.application-list-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin: 5px 0 0 0;
+}
+
 .stats-card {
     background-color: #FAFAFA;
     border-radius: 8px;
@@ -451,11 +457,13 @@
 }
 
 .chart-container {
-    background-color: #FAFAFA;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-top: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 250px;
+    padding-bottom: 0;
 }
 
 /* Center text in donut chart */
@@ -866,16 +874,6 @@
     flex-direction: column;
     flex: 1;
     height: 100%;
-}
-
-.chart-container {
-    position: relative;
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 210px;
-    padding-bottom: 0;
 }
 
 .analytics-status-breakdown {

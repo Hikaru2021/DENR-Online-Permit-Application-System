@@ -288,17 +288,17 @@ function ApplicationCatalog() {
           <div className="action-buttons">
             {userRole === 1 && (
               <>
-                <button className="add-button" onClick={() => setShowAddModal(true)}>
-                  <FaPlus /> Add New Application
-                </button>
                 {selectedApplications.length > 0 && (
                   <button 
                     className="delete-button"
                     onClick={() => setShowDeleteConfirmModal(true)}
                   >
-                    <FaTrash /> Delete Selected ({selectedApplications.length})
+                    <FaTrash /> Delete Application
                   </button>
                 )}
+                <button className="add-button" onClick={() => setShowAddModal(true)}>
+                  <FaPlus /> Add New Application
+                </button>
               </>
             )}
           </div>

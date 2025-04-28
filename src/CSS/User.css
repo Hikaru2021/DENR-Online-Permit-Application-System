@@ -17,8 +17,8 @@
     width: calc(100vw - 250px);
     margin-left: 250px;
     transition: margin-left 0.3s ease;
-    background-color: #F4F2F2;
-    padding: 20px;
+    background-color: #FAFAFA;
+    padding: 2rem;
     overflow-y: auto;
     font-family: var(--font-family);
 }
@@ -29,7 +29,7 @@
 }
 
 .user-header {
-    margin-bottom: 30px;
+    margin-bottom: 2rem;
 }
 
 .user-header h1 {
@@ -548,4 +548,21 @@ tr:hover {
 .role-modal .form-actions .delete-button:disabled {
   background-color: #ffcdd2;
   cursor: not-allowed;
+}
+
+.application-list-header {
+  margin-bottom: 2rem;
+}
+
+.application-list-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.application-list-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 5px 0 0 0;
 }

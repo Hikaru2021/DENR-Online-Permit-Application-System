@@ -454,12 +454,10 @@ function Dashboard() {
 
   const getModalTitle = () => {
     // Customize modal title based on user role
-    if (userRole === 1) {
-      return `Admin View: All Applications for ${formatDateString(selectedDate)}`;
-    } else if (userRole === 2) {
-      return `Manager View: All Applications for ${formatDateString(selectedDate)}`;
+    if (userRole === 1||2) {
+      return `All Applications for ${formatDateString(selectedDate)}`;
     } else {
-      return `Your Applications for ${formatDateString(selectedDate)}`;
+      return `My Applications for ${formatDateString(selectedDate)}`;
     }
   };
 
