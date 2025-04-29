@@ -1,8 +1,11 @@
 import { useState, useCallback } from "react";
-import { FaTimes, FaCloudUploadAlt, FaInfoCircle, FaFileAlt, FaMoneyBillWave, FaListUl } from "react-icons/fa";
+import { FaTimes, FaCloudUploadAlt, FaInfoCircle, FaFileAlt, FaMoneyBillWave, FaListUl, FaTrash } from "react-icons/fa";
 import { useDropzone } from "react-dropzone";
 import { supabase } from "../library/supabaseClient";
 import "../CSS/ApplicationSubmissionList.css";
+
+// Supabase storage constants
+const STORAGE_BUCKET = 'guidelines';
 
 const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
   const [formData, setFormData] = useState({
@@ -18,9 +21,18 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
   const [formError, setFormError] = useState(null);
   const [activeStep, setActiveStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const onDrop = useCallback((acceptedFiles) => {
-    setUploadedFiles(prev => [...prev, ...acceptedFiles]);
+    // Add preview URLs for display
+    const filesWithPreview = acceptedFiles.map(file => Object.assign(file, {
+      preview: URL.createObjectURL(file),
+      id: `${file.name}-${Date.now()}`, // Add a unique ID for tracking
+      status: 'pending' // pending, uploading, success, error
+    }));
+    
+    setUploadedFiles(prev => [...prev, ...filesWithPreview]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -80,6 +92,94 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
     setActiveStep(prev => prev - 1);
   };
 
+  const handleRemoveFile = (fileId) => {
+    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+    
+    // Clean up the file preview URL
+    const fileToRemove = uploadedFiles.find(file => file.id === fileId);
+    if (fileToRemove && fileToRemove.preview) {
+      URL.revokeObjectURL(fileToRemove.preview);
+    }
+  };
+
+  const uploadFilesToStorage = async (userId, applicationId) => {
+    setUploadingFiles(true);
+    const uploadedFileData = [];
+    
+    try {
+      // Upload each file to Supabase Storage
+      for (const file of uploadedFiles) {
+        // Update this file's status to uploading
+        setUploadedFiles(prev => 
+          prev.map(f => f.id === file.id ? {...f, status: 'uploading'} : f)
+        );
+        
+        // Create a unique file path: private/{userId}/{applicationId}/{timestamp}-{filename}
+        const timestamp = Date.now();
+        const filePath = `private/${userId}/${applicationId}/${timestamp}-${file.name}`;
+        
+        // Upload to storage
+        const { data, error } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+            onUploadProgress: (progress) => {
+              const percent = Math.round((progress.loaded / progress.total) * 100);
+              setUploadProgress(prev => ({ ...prev, [file.id]: percent }));
+            }
+          });
+          
+        if (error) {
+          console.error('Error uploading file:', error);
+          setUploadedFiles(prev => 
+            prev.map(f => f.id === file.id ? {...f, status: 'error'} : f)
+          );
+          throw error;
+        }
+        
+        // Get public URL (or path if private)
+        const { data: fileUrl } = supabase.storage
+          .from(STORAGE_BUCKET)
+          .getPublicUrl(filePath);
+          
+        const fileData = {
+          file_name: file.name,
+          file_type: file.type,
+          file_link: fileUrl?.publicUrl || filePath,
+          user_submissions: applicationId
+        };
+        
+        uploadedFileData.push(fileData);
+        
+        // Update this file's status to success
+        setUploadedFiles(prev => 
+          prev.map(f => f.id === file.id ? {...f, status: 'success'} : f)
+        );
+      }
+      
+      // Insert all file records into the documents table
+      if (uploadedFileData.length > 0) {
+        const { error: insertError } = await supabase
+          .from('documents')
+          .insert(uploadedFileData);
+          
+        if (insertError) {
+          console.error('Error inserting document records:', insertError);
+          throw insertError;
+        }
+      }
+      
+      return uploadedFileData;
+    } catch (err) {
+      console.error('Error in file upload process:', err);
+      setFormError(`File upload error: ${err.message}`);
+      throw err;
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -114,10 +214,10 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
         .select();
 
       if (applicationError) throw applicationError;
-
-      // TODO: Document upload functionality will be implemented later
+      
+      // Upload documents if any were added
       if (uploadedFiles.length > 0) {
-        console.log('Files ready for future upload:', uploadedFiles.map(f => f.name));
+        await uploadFilesToStorage(user.id, applicationData[0].id);
       }
 
       // Close the form after successful submission
@@ -346,14 +446,30 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                           <h5>Uploaded Files</h5>
                           <div className="files-grid">
                             {uploadedFiles.map((file, index) => (
-                              <div key={index} className="file-card">
+                              <div key={file.id} className="file-card">
                                 <FaFileAlt className="file-icon" />
                                 <div className="file-details">
                                   <span className="file-name">{file.name}</span>
                                   <span className="file-size">
                                     {(file.size / 1024 / 1024).toFixed(2)} MB
                                   </span>
+                                  {uploadProgress[file.id] && file.status === 'uploading' && (
+                                    <div className="upload-progress">
+                                      <div 
+                                        className="progress-bar" 
+                                        style={{width: `${uploadProgress[file.id]}%`}}
+                                      ></div>
+                                      <span className="progress-text">{uploadProgress[file.id]}%</span>
+                                    </div>
+                                  )}
                                 </div>
+                                <button 
+                                  type="button" 
+                                  className="remove-file-btn"
+                                  onClick={() => handleRemoveFile(file.id)}
+                                >
+                                  <FaTrash />
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -401,17 +517,21 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                       <div className="review-card">
                         <h4>Uploaded Documents</h4>
                         <div className="files-grid">
-                          {uploadedFiles.map((file, index) => (
-                            <div key={index} className="file-card">
-                              <FaFileAlt className="file-icon" />
-                              <div className="file-details">
-                                <span className="file-name">{file.name}</span>
-                                <span className="file-size">
-                                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                                </span>
+                          {uploadedFiles.length > 0 ? (
+                            uploadedFiles.map((file, index) => (
+                              <div key={file.id} className="file-card">
+                                <FaFileAlt className="file-icon" />
+                                <div className="file-details">
+                                  <span className="file-name">{file.name}</span>
+                                  <span className="file-size">
+                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))
+                          ) : (
+                            <p className="no-files-message">No documents uploaded</p>
+                          )}
                         </div>
                       </div>
 
@@ -450,7 +570,7 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                   type="button"
                   className="modal-button secondary"
                   onClick={handlePrevStep}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || uploadingFiles}
                 >
                   Previous
                 </button>
@@ -461,7 +581,7 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                   type="button"
                   className="modal-button primary"
                   onClick={handleNextStep}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || uploadingFiles}
                 >
                   {isSubmitting ? "Saving..." : "Next"}
                 </button>
@@ -470,9 +590,9 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                   type="button"
                   className="modal-button primary"
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || uploadingFiles}
                 >
-                  {isSubmitting ? "Submitting..." : "Submit Application"}
+                  {isSubmitting ? "Submitting..." : uploadingFiles ? "Uploading Files..." : "Submit Application"}
                 </button>
               )}
             </div>

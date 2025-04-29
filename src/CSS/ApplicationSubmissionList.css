@@ -1285,12 +1285,312 @@
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #e9ecef;
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
 }
 
 .section-header h3 {
   margin: 0;
   font-size: 1.125rem;
   color: #333;
+  text-align: left;
+  width: 100%;
+}
+
+.section-icon {
+  color: #4CAF50;
+  font-size: 1.25rem;
+}
+
+.section-content {
+  padding: 1.5rem;
+}
+
+.description-content {
+  color: #444;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.requirements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.requirement-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.requirement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.requirement-number {
+  background-color: #4CAF50;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.requirement-text {
+  color: #333;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.fees-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fee-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.fee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fee-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.fee-description {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.fee-amount {
+  font-weight: 500;
+  color: #2E7D32;
+}
+
+.fee-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #E8F5E9;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.total-label {
+  font-weight: 600;
+  color: #1B5E20;
+}
+
+.total-amount {
+  font-weight: 600;
+  color: #1B5E20;
+  font-size: 1.25rem;
+}
+
+.button-icon {
+  margin-left: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .requirement-item,
+  .fee-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .fee-item {
+    align-items: flex-start;
+  }
+
+  .fee-amount {
+    align-self: flex-end;
+  }
+
+  .time-estimate {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Update existing modal styles */
+.modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.details-section h3 {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-size: 1.125rem;
+  color: #333;
+}
+
+.details-description {
+  margin: 0;
+  line-height: 1.6;
+  color: #333;
+}
+
+.requirements-container {
+  margin-top: 10px;
+}
+
+.requirement-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.requirement-input-group .form-input {
+  flex: 1;
+}
+
+.add-requirement-button,
+.remove-requirement-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-requirement-button {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.add-requirement-button:hover {
+  background-color: #bbdefb;
+}
+
+.requirements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.requirement-item span {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.remove-requirement-button {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 4px;
+  font-size: 12px;
+}
+
+.remove-requirement-button:hover {
+  background-color: #ffcdd2;
+}
+
+/* View Application Modal Styles */
+.view-application-modal {
+  max-width: 900px;
+  width: 95%;
+}
+
+.view-application-modal .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1.5rem;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.application-type-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.application-id {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.content-section {
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  color: #333;
+  text-align: left;
+  width: 100%;
 }
 
 .section-icon {
@@ -1633,112 +1933,218 @@ textarea.form-input {
 
 /* Document styles for ViewApplicationModal */
 .documents-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
 }
 
 .document-card {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background-color: #f8f9fa;
+  background-color: #f9f9f9;
+  padding: 15px;
   border-radius: 8px;
-  border: 1px solid #e9ecef;
-  transition: all 0.2s;
-  max-width: 100%;
+  margin-bottom: 10px;
+  transition: background-color 0.2s ease;
+  border: 1px solid #eee;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .document-card:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  background-color: #f0f0f0;
+  border-color: #ddd;
 }
 
 .document-icon {
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  margin-right: 16px;
+  align-items: center;
+  margin-right: 15px;
+  min-width: 40px;
+  flex-shrink: 0;
 }
 
 .file-icon {
   font-size: 24px;
-  color: #6c757d;
+  color: #555;
 }
 
 .file-icon.pdf {
-  color: #dc3545;
+  color: #e74c3c;
 }
 
 .file-icon.doc {
-  color: #0d6efd;
+  color: #3498db;
 }
 
 .document-info {
-  flex: 1;
+  flex-grow: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  width: 100%;
+  align-items: flex-start;
+  margin-right: 10px;
 }
 
 .document-name {
-  font-weight: 600;
-  color: #212529;
-  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: left;
   word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .document-type {
-  font-size: 0.85rem;
-  color: #6c757d;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  text-align: left;
+  width: 100%;
 }
 
 .download-button {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  background-color: #28a745;
+  background-color: #4CAF50;
   color: white;
+  border: none;
   border-radius: 4px;
-  text-decoration: none;
-  transition: all 0.2s;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-left: 10px;
+  white-space: nowrap;
 }
 
 .download-button:hover {
-  background-color: #218838;
+  background-color: #3d8b40;
 }
 
 .download-text {
-  margin-left: 6px;
+  margin-left: 5px;
 }
 
 .loading-indicator, .no-documents {
-  padding: 16px;
+  padding: 20px;
   text-align: center;
-  color: #6c757d;
+  color: #666;
   font-style: italic;
 }
 
-/* Add a new class for document type label */
 .document-type-label {
   display: inline-block;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  border-radius: 4px;
-  margin-top: 4px;
-  font-weight: 500;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  color: white;
+  background-color: #888;
+  margin-top: 5px;
+  text-align: center;
+  align-self: flex-start;
+  margin-right: auto;
 }
 
 .document-type-label.guidelines {
-  background-color: #e3f2fd;
-  color: #0d6efd;
+  background-color: #3498db;
 }
 
 .document-type-label.application-form {
-  background-color: #f3e5f5;
-  color: #9c27b0;
+  background-color: #e67e22;
+}
+
+/* Fix fee alignment */
+.fee-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  text-align: left;
+  padding-right: 15px;
+}
+
+.fee-label {
+  font-weight: 600;
+  color: #333;
+  text-align: left;
+}
+
+.fee-description {
+  font-size: 12px;
+  color: #666;
+  margin-top: 3px;
+  text-align: left;
+}
+
+.fee-amount {
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.fee-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-top: 1px solid #eee;
+  margin-top: 15px;
+}
+
+.total-label {
+  font-weight: 600;
+  color: #333;
+  text-align: left;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: #2ecc71;
+  font-size: 18px;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .document-card {
+    flex-direction: column;
+  }
+  
+  .document-icon {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .document-info {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .download-button {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+}
+
+/* Required Documents section specific styling */
+.content-section:has(.section-header h3:contains("Required Documents")) {
+  width: 100%;
+  align-self: flex-start;
+}
+
+.content-section {
+  width: 100%;
+  box-sizing: border-box;
 } 

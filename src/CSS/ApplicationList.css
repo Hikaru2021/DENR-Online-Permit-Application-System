@@ -232,25 +232,6 @@
   background-color: #45a049;
 }
 
-/* Remove application details modal styles */
-.application-modal-overlay,
-.application-modal-container,
-.application-modal-header,
-.application-modal-body,
-.application-modal-section,
-.application-modal-actions,
-.details-description,
-.download-section,
-.modal-title-section,
-.download-button,
-.details-list,
-.details-grid,
-.details-item,
-.details-label,
-.details-value {
-  display: none;
-}
-
 /* Status Badge Colors */
 .status-badge.permit {
   background-color: #e8f5e9;
@@ -891,32 +872,46 @@
   border: 1px solid #ffebeb;
 }
 
-/* Application Details Modal */
-.application-modal-overlay {
+/* Modal Overlay - Updated styling */
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(3px);
 }
 
-.application-modal-container {
-  background-color: #FAFAFA;
-  border-radius: 8px;
+.modal-content {
+  background-color: #FFFFFF;
+  border-radius: 12px;
   width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
+  max-width: 700px;
+  max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: modalFadeIn 0.3s ease;
 }
 
-.application-modal-header {
-  padding: 20px 24px;
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 22px 28px;
   border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
@@ -925,110 +920,225 @@
   border-radius: 12px 12px 0 0;
 }
 
-.application-modal-close {
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #2c3e50;
+  letter-spacing: -0.5px;
+}
+
+.modal-close {
   background: none;
   border: none;
   color: #666;
   cursor: pointer;
-  padding: 8px;
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   transition: all 0.2s ease;
 }
 
-.application-modal-close:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.08);
   color: #333;
 }
 
-.application-modal-body {
-  padding: 24px;
+.modal-body {
+  padding: 28px;
 }
 
-.application-modal-section {
+.modal-section {
   margin-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 20px;
 }
 
-.application-modal-section h3 {
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 12px;
+.modal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
-.details-description {
-  color: #666;
-  line-height: 1.6;
-  font-size: 14px;
-}
-
-.download-section {
-  margin-top: 16px;
-}
-
-.download-button {
+.modal-section h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  color: #333;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.download-button:hover {
-  background-color: #e9ecef;
-  border-color: #ccc;
+.modal-section h3 svg {
+  color: #4CAF50;
 }
 
-.download-button svg {
-  font-size: 16px;
-  color: #4caf50;
+.modal-section p {
+  margin: 8px 0;
+  color: #444;
+  line-height: 1.5;
 }
 
-.application-modal-actions {
+.modal-footer {
+  padding: 18px 28px;
+  border-top: 1px solid #eee;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid #eee;
+  gap: 14px;
   background-color: #f8f9fa;
   border-radius: 0 0 12px 12px;
 }
 
-.application-modal-btn {
-  padding: 10px 20px;
+.modal-button {
+  padding: 10px 22px;
   border-radius: 8px;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.application-modal-btn.cancel {
-  background-color: #f8f9fa;
-  color: #666;
+  transition: all 0.25s ease;
+  background-color: #f5f5f5;
+  color: #333;
   border: 1px solid #ddd;
 }
 
-.application-modal-btn.cancel:hover {
-  background-color: #e9ecef;
-  color: #333;
+.modal-button:hover {
+  background-color: #e5e5e5;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-.application-modal-btn.apply {
+.modal-button.primary {
   background-color: #4caf50;
   color: white;
   border: none;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
 }
 
-.application-modal-btn.apply:hover {
-  background-color: #45a049;
-  transform: translateY(-1px);
+.modal-button.primary:hover {
+  background-color: #43a047;
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+}
+
+/* Documents list in modal - enhanced styling */
+.documents-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+}
+
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid #eee;
+}
+
+.document-item:hover {
+  background-color: #f0f7ff;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border-color: #d9ebff;
+}
+
+.document-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  text-align: left;
+}
+
+.document-icon {
+  color: #3282F6;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.document-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  word-break: break-word;
+  text-align: left;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.download-document-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
+}
+
+.download-document-btn:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.download-document-btn:disabled {
+  background-color: #aaaaaa;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.no-documents {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  border: 1px dashed #ddd;
+}
+
+/* Fees details styling - enhanced */
+.fees-details {
+  background-color: #f9f9f9;
+  padding: 18px;
+  border-radius: 10px;
+  margin-top: 12px;
+  border: 1px solid #eee;
+}
+
+.fees-details p {
+  margin: 10px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+}
+
+.fees-details p:last-child {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed #ddd;
+  font-weight: 600;
+}
+
+.fees-details p strong {
+  color: #444;
 }
 
 .application-list-container {
@@ -1339,4 +1449,243 @@
   .date-input {
     width: 100%;
   }
+}
+
+/* Document Download Modal Styles */
+.documents-modal {
+  max-width: 600px;
+}
+
+.application-info {
+  background-color: #f9f9f9;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.application-info p {
+  margin: 8px 0;
+}
+
+.documents-list-container {
+  margin-top: 20px;
+}
+
+.documents-list-container h3 {
+  margin-bottom: 16px;
+  color: #333;
+  font-size: 18px;
+}
+
+.documents-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.document-item:hover {
+  background-color: #eef5ff;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.document-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  width: 100%;
+  overflow: hidden;
+}
+
+.document-icon {
+  color: #4B70FD;
+  font-size: 18px;
+}
+
+.document-name {
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  word-break: break-word;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.download-document-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.download-document-btn:hover {
+  background-color: #3d8c40;
+}
+
+.download-document-btn:disabled {
+  background-color: #aaaaaa;
+  cursor: not-allowed;
+}
+
+.no-documents {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+}
+
+/* Fees details styling */
+.fees-details {
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.fees-details p {
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.fees-details p strong {
+  color: #555;
+}
+
+/* Documents list in modal */
+.documents-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+}
+
+.documents-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.document-name {
+  font-size: 14px;
+  color: #333;
+}
+
+.document-size {
+  font-size: 12px;
+  color: #777;
+}
+
+/* Status badges in modal */
+.modal-section .status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Modal specific sizing for application details modal */
+.modal-content.application-details {
+  max-width: 700px;
+}
+
+/* Add styles for the icons within paragraph elements */
+.modal-section p svg {
+  color: #666;
+  margin-right: 8px;
+  font-size: 14px;
+  position: relative;
+  top: 1px;
+}
+
+/* Improve the look of the status badge in the modal */
+.modal-section .status-badge {
+  display: inline-flex;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.modal-section .status-badge.pending {
+  background-color: #fff8e1;
+  color: #ff8f00;
+  border: 1px solid #ffe0b2;
+}
+
+.modal-section .status-badge.approved {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.modal-section .status-badge.rejected {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.modal-section .status-badge.in-review {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #bbdefb;
+}
+
+.modal-section .status-badge.revision {
+  background-color: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffe0b2;
+}
+
+/* Add a little spacing for the document download icon */
+.download-document-btn svg {
+  font-size: 16px;
+}
+
+/* Adjust the button icons */
+.modal-button svg {
+  margin-right: 8px;
+  position: relative;
+  top: -1px;
+}
+
+/* Add an enhanced display for the application ID */
+.modal-section:first-child p {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  background-color: #f5f5f5;
+  padding: 10px 16px;
+  border-radius: 6px;
+  display: inline-block;
+  border-left: 4px solid #4caf50;
 }

@@ -29,7 +29,21 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
         return;
       }
       
-      setDocuments(data || []);
+      // Filter to only show application documents (forms and guidelines)
+      const applicationDocs = data ? data.filter(doc => {
+        // Only show documents that are guidelines or application forms
+        return (
+          // Application forms are in the Forms folder
+          doc.file_link?.includes('/Forms/') ||
+          // Guidelines documents should be explicitly marked or in guidelines folder
+          doc.file_link?.includes('/guidelines/') ||
+          // Check for document type labels
+          doc.document_type === 'guidelines' ||
+          doc.document_type === 'application-form'
+        );
+      }) : [];
+      
+      setDocuments(applicationDocs);
     } catch (error) {
       console.error('Error in fetchDocuments:', error);
     } finally {
@@ -48,12 +62,19 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
   };
 
   const getDocumentType = (doc) => {
-    // Check if the file link contains the Forms folder
+    // First check if document_type is explicitly set
+    if (doc.document_type) {
+      return doc.document_type;
+    }
+    
+    // Otherwise check file path
     if (doc.file_link?.includes('/Forms/')) {
       return 'application-form';
-    } else {
-      // If not in Forms folder, it's a guidelines document
+    } else if (doc.file_link?.includes('/guidelines/')) {
       return 'guidelines';
+    } else {
+      // Default for documents without clear type 
+      return 'other';
     }
   };
 
@@ -114,39 +135,47 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
           <div className="content-section">
             <div className="section-header">
               <FaFileAlt className="section-icon" />
-              <h3>Documents</h3>
+              <h3>Required Documents</h3>
             </div>
             <div className="section-content">
               {isLoading ? (
                 <div className="loading-indicator">Loading documents...</div>
               ) : documents.length === 0 ? (
-                <div className="no-documents">No documents available</div>
+                <div className="no-documents">No required documents available</div>
               ) : (
                 <div className="documents-grid">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="document-card">
-                      <div className="document-icon">
-                        {getFileIcon(doc.file_type)}
-                      </div>
-                      <div className="document-info">
-                        <div className="document-name">{doc.file_name}</div>
-                        <div className="document-type">{doc.file_type}</div>
-                        <div className={`document-type-label ${getDocumentType(doc)}`}>
-                          {getDocumentLabel(getDocumentType(doc))}
+                  {documents.map((doc) => {
+                    const documentType = getDocumentType(doc);
+                    // Skip any documents that aren't guidelines or application forms
+                    if (documentType === 'other') return null;
+                    
+                    return (
+                      <div key={doc.id} className="document-card">
+                        <div className="document-icon">
+                          {getFileIcon(doc.file_type)}
                         </div>
+                        <div className="document-info">
+                          <div className="document-name" title={doc.file_name}>
+                            {doc.file_name}
+                          </div>
+                          <div className="document-type">{doc.file_type}</div>
+                          <div className={`document-type-label ${documentType}`}>
+                            {getDocumentLabel(documentType)}
+                          </div>
+                        </div>
+                        <a 
+                          href={doc.file_link} 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="download-button"
+                          download
+                        >
+                          <FaDownload />
+                          <span className="download-text">Download</span>
+                        </a>
                       </div>
-                      <a 
-                        href={doc.file_link} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="download-button"
-                        download
-                      >
-                        <FaDownload />
-                        <span className="download-text">Download</span>
-                      </a>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

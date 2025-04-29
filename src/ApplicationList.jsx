@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt } from "react-icons/fa";
+import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
 import "./CSS/SharedTable.css";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
 import { supabase } from "./library/supabaseClient";
+import JSZip from 'jszip';
+
+// Supabase storage constants
+const STORAGE_BUCKET = 'guidelines';
 
 function ApplicationList() {
   const navigate = useNavigate();
@@ -23,6 +27,9 @@ function ApplicationList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
   const [applicationTypes, setApplicationTypes] = useState([]);
+  const [downloadingDocId, setDownloadingDocId] = useState(null);
+  const [documents, setDocuments] = useState({});
+  const [isDownloadingAllDocs, setIsDownloadingAllDocs] = useState(false);
 
   // Status mapping function
   const getStatusName = (statusId) => {
@@ -33,6 +40,26 @@ function ApplicationList() {
       case 4: return "Approved";
       case 5: return "Rejected";
       default: return "Unknown";
+    }
+  };
+
+  // Fetch document details
+  const fetchDocuments = async (userAppId) => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('user_submissions', userAppId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        return data;
+      }
+      return [];
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+      return [];
     }
   };
 
@@ -196,9 +223,17 @@ function ApplicationList() {
   };
 
   // Handle view application
-  const handleViewApplication = (application) => {
-    setSelectedApplication(application);
-    setShowViewModal(true);
+  const handleViewApplication = async (application) => {
+    try {
+      const docs = await fetchDocuments(application.id);
+      if (docs && docs.length > 0) {
+        setDocuments({ ...documents, [application.id]: docs });
+      }
+      setSelectedApplication(application);
+      setShowViewModal(true);
+    } catch (err) {
+      console.error('Error retrieving documents for viewing:', err);
+    }
   };
 
   // Handle track application
@@ -227,14 +262,125 @@ function ApplicationList() {
     }
   };
 
-  // Handle download application
+  // Handle download application (all documents as ZIP)
   const handleDownloadApplication = async (application) => {
     try {
-      // Simulate download
-      alert(`Downloading application: ${application.application_id}`);
+      setIsDownloadingAllDocs(true);
+      
+      // Fetch documents for this application
+      const docs = await fetchDocuments(application.id);
+      
+      if (!docs || docs.length === 0) {
+        alert('No documents available for this application');
+        return;
+      }
+      
+      // Create new ZIP file
+      const zip = new JSZip();
+      
+      // Download each file and add to ZIP
+      const downloadPromises = docs.map(async (doc) => {
+        try {
+          // Extract the filepath from the document
+          let filePath = doc.file_link;
+          
+          // If it's a public URL, extract just the path part
+          if (filePath.includes('https://')) {
+            const pathRegex = new RegExp(`${STORAGE_BUCKET}/(.+)`, 'i');
+            const match = filePath.match(pathRegex);
+            if (match && match[1]) {
+              filePath = match[1];
+            } else {
+              throw new Error('Invalid file path format');
+            }
+          }
+          
+          // Download the file from storage
+          const { data, error } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .download(filePath);
+            
+          if (error) throw error;
+          
+          // Add file to zip
+          zip.file(doc.file_name || `document_${doc.id}.pdf`, data);
+          return true;
+        } catch (err) {
+          console.error(`Error downloading document ${doc.id}:`, err);
+          return false;
+        }
+      });
+      
+      // Wait for all downloads to complete
+      await Promise.all(downloadPromises);
+      
+      // Generate ZIP file
+      const zipContent = await zip.generateAsync({ type: 'blob' });
+      
+      // Create download link for the zip
+      const url = URL.createObjectURL(zipContent);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${application.application_id}_documents.zip`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
     } catch (err) {
-      console.error('Error downloading application:', err);
-      alert(`Error downloading application: ${err.message}`);
+      console.error('Error downloading all documents:', err);
+      alert(`Error downloading documents: ${err.message}`);
+    } finally {
+      setIsDownloadingAllDocs(false);
+    }
+  };
+
+  // Handle download specific document
+  const handleDownloadDocument = async (document) => {
+    try {
+      setDownloadingDocId(document.id);
+      
+      // Extract the filepath from the document
+      let filePath = document.file_link;
+      
+      // If it's a public URL, extract just the path part
+      if (filePath.includes('https://')) {
+        // Extract the path portion after the bucket name
+        const pathRegex = new RegExp(`${STORAGE_BUCKET}/(.+)`, 'i');
+        const match = filePath.match(pathRegex);
+        if (match && match[1]) {
+          filePath = match[1];
+        } else {
+          throw new Error('Invalid file path format');
+        }
+      }
+      
+      // Download the file from storage
+      const { data, error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .download(filePath);
+        
+      if (error) throw error;
+      
+      // Create a download link for the file
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.file_name || 'download';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (err) {
+      console.error('Error downloading document:', err);
+      alert(`Error downloading document: ${err.message}`);
+    } finally {
+      setDownloadingDocId(null);
     }
   };
 
@@ -450,7 +596,8 @@ function ApplicationList() {
                           <button 
                             className="action-button download-button" 
                             onClick={() => handleDownloadApplication(application)}
-                            title="Download Application"
+                            title="Download All Documents"
+                            disabled={isDownloadingAllDocs}
                           >
                             <FaDownload />
                           </button>
@@ -544,7 +691,7 @@ function ApplicationList() {
         </>
       )}
 
-      {/* View Application Modal */}
+      {/* View Application Modal with enhanced UI */}
       {showViewModal && selectedApplication && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -554,11 +701,11 @@ function ApplicationList() {
             </div>
             <div className="modal-body">
               <div className="modal-section">
-                <h3>Application ID</h3>
+                <h3><FaIdCard /> Application ID</h3>
                 <p>{selectedApplication.application_id}</p>
               </div>
               <div className="modal-section">
-                <h3>Applicant Information</h3>
+                <h3><FaUser /> Applicant Information</h3>
                 <p><strong>Name:</strong> {selectedApplication.fullName}</p>
                 <p><strong>Email:</strong> {selectedApplication.email}</p>
                 <p><strong>Contact:</strong> {selectedApplication.contactNumber}</p>
@@ -566,41 +713,57 @@ function ApplicationList() {
                 <p><strong>Purpose:</strong> {selectedApplication.purpose}</p>
               </div>
               <div className="modal-section">
-                <h3>Application Type</h3>
+                <h3><FaFileContract /> Application Type</h3>
                 <p>{selectedApplication.title} ({selectedApplication.type})</p>
               </div>
               <div className="modal-section">
-                <h3>Status</h3>
+                <h3><FaTags /> Status</h3>
                 <span className={getStatusBadgeClass(selectedApplication.status)}>
                   {selectedApplication.status}
                 </span>
               </div>
+              
+              {/* Document download section */}
               <div className="modal-section">
-                <h3>Submitted Documents</h3>
-                <ul className="documents-list">
-                  {selectedApplication.documents?.map((doc, index) => (
-                    <li key={index}>
-                      <span className="document-name">{doc.name}</span>
-                      <span className="document-size">{doc.size}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h3><FaFileAlt /> Documents</h3>
+                {documents[selectedApplication.id] && documents[selectedApplication.id].length > 0 ? (
+                  <ul className="documents-list">
+                    {documents[selectedApplication.id].map(doc => (
+                      <li key={doc.id} className="document-item">
+                        <div className="document-info">
+                          <FaFile className="document-icon" />
+                          <span className="document-name">{doc.file_name}</span>
+                        </div>
+                        <button 
+                          className="download-document-btn"
+                          onClick={() => handleDownloadDocument(doc)}
+                          disabled={downloadingDocId === doc.id}
+                        >
+                          {downloadingDocId === doc.id ? 'Downloading...' : <FaDownload />}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="no-documents">No documents available for this application</p>
+                )}
               </div>
+              
               <div className="modal-section">
-                <h3>Fees</h3>
+                <h3><FaMoneyBillWave /> Fees</h3>
                 <div className="fees-details">
-                  <p><strong>Application Fee:</strong> ₱{selectedApplication.fees?.application.toLocaleString()}</p>
-                  <p><strong>Processing Fee:</strong> ₱{selectedApplication.fees?.processing.toLocaleString()}</p>
-                  <p><strong>Total:</strong> ₱{selectedApplication.fees?.total.toLocaleString()}</p>
+                  <p><strong>Application Fee:</strong> <span>₱{Number(selectedApplication.fees?.application || 0).toLocaleString()}</span></p>
+                  <p><strong>Processing Fee:</strong> <span>₱{Number(selectedApplication.fees?.processing || 0).toLocaleString()}</span></p>
+                  <p><strong>Total:</strong> <span>₱{(Number(selectedApplication.fees?.application || 0) + Number(selectedApplication.fees?.processing || 0)).toLocaleString()}</span></p>
                 </div>
               </div>
               <div className="modal-section">
-                <h3>Submitted Date</h3>
+                <h3><FaClock /> Submitted Date</h3>
                 <p>{new Date(selectedApplication.submitted_at).toLocaleString()}</p>
               </div>
               {selectedApplication.notes && (
                 <div className="modal-section">
-                  <h3>Notes</h3>
+                  <h3><FaInfoCircle /> Notes</h3>
                   <p>{selectedApplication.notes}</p>
                 </div>
               )}
@@ -614,7 +777,7 @@ function ApplicationList() {
                   handleTrackApplication(selectedApplication);
                 }}
               >
-                Track Application
+                <FaChartLine /> Track Application
               </button>
             </div>
           </div>
