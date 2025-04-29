@@ -556,7 +556,6 @@
 .download-button {
   display: flex;
   align-items: center;
-  gap: 8px;
   padding: 10px 20px;
   background-color: #f8f9fa;
   border: 1px solid #ddd;
@@ -566,6 +565,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  width: auto;
 }
 
 .download-button:hover {
@@ -1043,6 +1043,7 @@
   margin-bottom: 10px;
   transition: all 0.2s ease;
   border: 1px solid #eee;
+  gap: 15px;
 }
 
 .document-item:hover {
@@ -1054,27 +1055,68 @@
 
 .document-info {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   flex: 1;
   text-align: left;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .document-icon {
   color: #3282F6;
   font-size: 20px;
   flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f7ff;
+  border-radius: 8px;
+}
+
+.document-icon.pdf {
+  color: #E53935;
+  background-color: #FFEBEE;
+}
+
+.document-icon.doc, 
+.document-icon.docx {
+  color: #1565C0;
+  background-color: #E3F2FD;
+}
+
+.document-icon.xls,
+.document-icon.xlsx {
+  color: #2E7D32;
+  background-color: #E8F5E9;
+}
+
+.document-icon.jpg,
+.document-icon.jpeg,
+.document-icon.png {
+  color: #F57C00;
+  background-color: #FFF3E0;
 }
 
 .document-name {
   font-size: 14px;
   font-weight: 500;
   color: #333;
-  word-break: break-word;
   text-align: left;
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  position: relative;
+}
+
+.document-name:hover {
+  white-space: normal;
+  word-break: break-word;
+  position: relative;
 }
 
 .download-document-btn {
@@ -1085,11 +1127,13 @@
   color: white;
   border: none;
   border-radius: 8px;
-  width: 38px;
+  width: auto;
   height: 38px;
+  padding: 0 12px;
   cursor: pointer;
   transition: all 0.25s ease;
   box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
+  flex-shrink: 0;
 }
 
 .download-document-btn:hover {
@@ -1532,15 +1576,17 @@
   background-color: #4CAF50;
   color: white;
   border: none;
-  border-radius: 4px;
-  width: 36px;
-  height: 36px;
+  border-radius: 8px;
+  width: auto;
+  height: 38px;
+  padding: 0 12px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
 }
 
 .download-document-btn:hover {
-  background-color: #3d8c40;
+  background-color: #43a047;
 }
 
 .download-document-btn:disabled {

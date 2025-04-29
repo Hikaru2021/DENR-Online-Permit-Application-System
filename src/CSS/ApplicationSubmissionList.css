@@ -2030,7 +2030,7 @@ textarea.form-input {
   transition: background-color 0.2s ease;
   margin-left: auto;
   white-space: nowrap;
-  min-width: 100px;
+  width: auto;
   justify-content: center;
 }
 

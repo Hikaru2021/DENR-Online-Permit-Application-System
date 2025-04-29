@@ -443,6 +443,10 @@
   font-size: 12px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .download-button:hover {

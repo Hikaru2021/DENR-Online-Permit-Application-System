@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract } from "react-icons/fa";
+import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileArchive, FaFileCode } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
 import "./CSS/SharedTable.css";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
@@ -467,6 +467,43 @@ function ApplicationList() {
     setCurrentPage(currentPage + 1);
   };
 
+  // Add this function inside the ApplicationList component
+  const getFileIcon = (fileName) => {
+    if (!fileName) return <FaFile />;
+    
+    const extension = fileName.split('.').pop().toLowerCase();
+    
+    switch(extension) {
+      case 'pdf':
+        return <FaFilePdf className="document-icon pdf" />;
+      case 'doc':
+      case 'docx':
+        return <FaFileWord className="document-icon doc" />;
+      case 'xls':
+      case 'xlsx':
+      case 'csv':
+        return <FaFileExcel className="document-icon xls" />;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'bmp':
+        return <FaFileImage className="document-icon jpg" />;
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return <FaFileArchive className="document-icon" />;
+      case 'html':
+      case 'css':
+      case 'js':
+      case 'jsx':
+      case 'php':
+        return <FaFileCode className="document-icon" />;
+      default:
+        return <FaFile className="document-icon" />;
+    }
+  };
+
   return (
     <div className="application-list-container">
       <div className="application-list-header">
@@ -578,11 +615,12 @@ function ApplicationList() {
                         </span>
                       </td>
                       <td>
-                        <div className="action-buttons">
+                        <div className="action-buttons" style={{ display: 'inline-flex', gap: 0 }}>
                           <button 
                             className="action-button view-button" 
                             onClick={() => handleViewApplication(application)}
                             title="View Details"
+                            style={{ margin: '0 2px 0 0' }}
                           >
                             <FaEye />
                           </button>
@@ -590,6 +628,7 @@ function ApplicationList() {
                             className="action-button track-button" 
                             onClick={() => handleTrackApplication(application)}
                             title="Track Application"
+                            style={{ margin: '0 2px 0 0' }}
                           >
                             <FaChartLine />
                           </button>
@@ -598,6 +637,7 @@ function ApplicationList() {
                             onClick={() => handleDownloadApplication(application)}
                             title="Download All Documents"
                             disabled={isDownloadingAllDocs}
+                            style={{ margin: '0 2px 0 0' }}
                           >
                             <FaDownload />
                           </button>
@@ -605,6 +645,7 @@ function ApplicationList() {
                             className="action-button delete-button" 
                             onClick={() => handleDeleteApplication(application.id)}
                             title="Delete Application"
+                            style={{ margin: '0' }}
                           >
                             <FaTrash />
                           </button>
@@ -723,7 +764,7 @@ function ApplicationList() {
                 </span>
               </div>
               
-              {/* Document download section */}
+              {/* Document download section - Modified to use file-type icons */}
               <div className="modal-section">
                 <h3><FaFileAlt /> Documents</h3>
                 {documents[selectedApplication.id] && documents[selectedApplication.id].length > 0 ? (
@@ -731,7 +772,7 @@ function ApplicationList() {
                     {documents[selectedApplication.id].map(doc => (
                       <li key={doc.id} className="document-item">
                         <div className="document-info">
-                          <FaFile className="document-icon" />
+                          {getFileIcon(doc.file_name)}
                           <span className="document-name">{doc.file_name}</span>
                         </div>
                         <button 

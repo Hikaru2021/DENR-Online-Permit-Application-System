@@ -20,6 +20,12 @@
   font-size: 0.9rem;
 }
 
+.shared-table td:last-child {
+  padding: 8px 10px;
+  width: 1%;
+  white-space: nowrap;
+}
+
 .shared-table th {
   background-color: #f8f9fa;
   font-weight: 600;
@@ -72,27 +78,34 @@
 /* Action Buttons */
 .shared-table .action-buttons {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
+  gap: .5rem;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .shared-table .action-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   background-color: #f3f4f6;
   padding: 0;
+  margin-right: 2px;
+}
+
+.shared-table .action-button:last-child {
+  margin-right: 0;
 }
 
 .shared-table .action-button svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .shared-table .action-button.edit-button {
