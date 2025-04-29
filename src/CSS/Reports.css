@@ -43,7 +43,6 @@
 .tabs-container {
   display: flex;
   gap: 10px;
-  margin-bottom: 2rem;
   border-bottom: 1px solid #ddd;
   padding-bottom: 10px;
 }
