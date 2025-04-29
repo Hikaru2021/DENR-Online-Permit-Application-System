@@ -187,17 +187,6 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
               <form onSubmit={handleSubmit} className="application-form">
                 <div className="form-group">
-                  <label htmlFor="applicationId">Application ID</label>
-                  <input
-                    type="text"
-                    id="applicationId"
-                    value={application?.referenceNumber || ''}
-                    readOnly
-                    className="form-input readonly"
-                  />
-                </div>
-
-                <div className="form-group">
                   <label htmlFor="currentStatus">Current Status</label>
                   <input
                     type="text"
