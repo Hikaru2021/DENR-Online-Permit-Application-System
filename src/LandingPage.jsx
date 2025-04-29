@@ -4,7 +4,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./CSS/LandingPage.css";
-import { FaArrowRight, FaArrowLeft, FaBars, FaTimes } from "react-icons/fa";
+import { FaArrowRight, FaArrowLeft, FaBars, FaTimes, FaLeaf, FaShieldAlt, FaSeedling } from "react-icons/fa";
 
 function LandingPage() {
     const navigate = useNavigate();
@@ -55,7 +55,7 @@ function LandingPage() {
     function SampleNextArrow(props) {
         const { onClick } = props;
         return (
-            <div className="slick-arrow slick-next" onClick={onClick}>
+            <div className="slick-arrow slick-next custom-arrow" onClick={onClick}>
                 <div className="nav-circle">
                     <FaArrowRight />
                 </div>
@@ -66,7 +66,7 @@ function LandingPage() {
     function SamplePrevArrow(props) {
         const { onClick } = props;
         return (
-            <div className="slick-arrow slick-prev" onClick={onClick}>
+            <div className="slick-arrow slick-prev custom-arrow" onClick={onClick}>
                 <div className="nav-circle">
                     <FaArrowLeft />
                 </div>
@@ -84,10 +84,14 @@ function LandingPage() {
         autoplay: true,
         autoplaySpeed: 5000,
         pauseOnHover: true,
+        arrows: true,
         nextArrow: <SampleNextArrow />,
         prevArrow: <SamplePrevArrow />,
         fade: true,
-        cssEase: "linear",
+        cssEase: "ease-in-out",
+        adaptiveHeight: false,
+        centerMode: false,
+        variableWidth: false,
         responsive: [
             {
                 breakpoint: 768,
@@ -107,7 +111,15 @@ function LandingPage() {
                     autoplaySpeed: 3000
                 }
             }
-        ]
+        ],
+        appendDots: dots => (
+            <div className="custom-dots-container">
+                <ul className="custom-dots">{dots}</ul>
+            </div>
+        ),
+        customPaging: i => (
+            <div className="custom-dot"></div>
+        )
     };
 
     // Tab change handler
@@ -139,7 +151,7 @@ function LandingPage() {
                     <div className="header-container">
                         {/* Logo Section */}
                         <div className="logo-container">
-                            <img src={'./Logo1.png'} alt="DENR Logo" className="gov-logo" />
+                            <img src="Logo1.png" alt="DENR Logo" className="gov-logo" />
                             <div className="logo-text">
                                 <h1>Department of Environment and Natural Resources</h1>
                                 <p>Republic of the Philippines</p>
@@ -174,24 +186,51 @@ function LandingPage() {
                     <div className="hero-section">
                         <Slider {...settings}>
                             <div className="carousel-slide">
-                                <img src="/images/LandingImage.jpg" alt="Forest Conservation" />
+                                <div className="slide-overlay"></div>
+                                <img src="images/landing1.jpg" alt="Forest Conservation" />
                                 <div className="slide-content">
+                                    <div className="slide-icon">
+                                        <FaLeaf />
+                                    </div>
                                     <h2>Protecting Our Natural Resources</h2>
                                     <p>Preserving the Philippines' rich biodiversity for future generations</p>
+                                    <div className="slide-cta">
+                                        <button className="cta-button" onClick={() => handleTabChange("services")}>
+                                            Explore Services <FaArrowRight className="btn-icon" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="carousel-slide">
-                                <img src="/images/LandingImage.jpg" alt="Environmental Protection" />
+                                <div className="slide-overlay"></div>
+                                <img src="images/landing2.jpg" alt="Environmental Protection" />
                                 <div className="slide-content">
+                                    <div className="slide-icon">
+                                        <FaShieldAlt />
+                                    </div>
                                     <h2>Environmental Stewardship</h2>
                                     <p>Committed to sustainable environmental management and conservation</p>
+                                    <div className="slide-cta">
+                                        <button className="cta-button" onClick={() => handleTabChange("about")}>
+                                            Learn More <FaArrowRight className="btn-icon" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="carousel-slide">
-                                <img src="/images/LandingImage.jpg" alt="Natural Resources" />
+                                <div className="slide-overlay"></div>
+                                <img src="images/landing3.jpg" alt="Natural Resources" />
                                 <div className="slide-content">
+                                    <div className="slide-icon">
+                                        <FaSeedling />
+                                    </div>
                                     <h2>Sustainable Development</h2>
                                     <p>Balancing progress with environmental protection</p>
+                                    <div className="slide-cta">
+                                        <button className="cta-button" onClick={handleSignup}>
+                                            Get Started <FaArrowRight className="btn-icon" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </Slider>

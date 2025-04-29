@@ -3,9 +3,11 @@ html {
     scroll-behavior: smooth;
 }
 
-body {
+body, html {
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 .landingpage-body {
@@ -18,15 +20,19 @@ body {
     flex-direction: column;
     overflow-x: hidden;
     position: relative;
+    width: 100%;
 }
 
 .MainBody {
     max-width: 100%;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
+    padding: 0;
     flex: 1;
     padding-top: 70px; /* Height of the header */
     position: relative;
     z-index: 1;
+    overflow-x: hidden;
 }
 
 /* Header Styles */
@@ -194,30 +200,56 @@ section.visible {
     padding: 0;
     height: calc(100vh - 70px);
     min-height: auto;
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
 }
 
-/* Hero Section */
+/* Hero Section with improved containment */
 .hero-section {
     position: relative;
     height: calc(100vh - 70px);
     width: 100%;
+    max-width: 100%;
     overflow: hidden;
     margin: 0;
+    padding: 0;
     z-index: 2;
+    background-color: #003366; /* Fallback color in case images don't load */
+    box-sizing: border-box;
 }
 
 .carousel-slide {
     position: relative;
     height: calc(100vh - 70px);
     width: 100%;
+    overflow: hidden;
 }
 
+/* Carousel slide image without hover effect */
 .carousel-slide img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center;
-    filter: brightness(0.85); /* Slightly dim the image to make text more readable */
+    transition: none;
+    display: block; /* Ensure images display as block elements */
+    max-width: 100%;
+}
+
+/* Remove the hover transform effect */
+.carousel-slide:hover img {
+    transform: none;
+}
+
+.slide-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%);
+    z-index: 2;
 }
 
 /* Carousel Container */
@@ -225,11 +257,14 @@ section.visible {
     position: relative;
     height: 100%;
     width: 100%;
+    max-width: 100vw;
+    margin: 0 auto;
 }
 
 .slick-list,
 .slick-track {
     height: 100%;
+    width: 100%;
 }
 
 .slick-slide {
@@ -238,34 +273,279 @@ section.visible {
 
 .slick-slide > div {
     height: 100%;
+    width: 100%;
 }
 
 .slide-content {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+    top: 50%;
+    left: 10%;
+    transform: translateY(-50%);
+    max-width: 600px;
     color: white;
-    padding: 8rem 2rem 4rem;
-    text-align: center;
+    padding: 2rem;
+    z-index: 3;
+    text-align: left;
+}
+
+.slide-icon {
+    background-color: #4CAF50;
+    color: white;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.slide-icon svg {
+    font-size: 2rem;
 }
 
 .slide-content h2 {
     font-size: 3.5rem;
-    margin: 0 0 1.5rem 0;
+    font-weight: 700;
+    margin: 0 0 1.5rem;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    font-weight: bold;
-    letter-spacing: 1px;
+    line-height: 1.1;
 }
 
 .slide-content p {
     font-size: 1.4rem;
-    margin: 0 auto;
-    opacity: 0.9;
-    max-width: 800px;
-    line-height: 1.6;
+    margin: 0 0 2rem;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.slide-cta {
+    margin-top: 2rem;
+}
+
+.cta-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.cta-button:hover {
+    background-color: #388e3c;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+.btn-icon {
+    margin-left: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.cta-button:hover .btn-icon {
+    transform: translateX(5px);
+}
+
+/* Custom Arrows - single set */
+.custom-arrow {
+    z-index: 20 !important;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    background: none !important;
+    width: auto;
+    height: auto;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.nav-circle {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+/* Arrow positions */
+.slick-prev {
+    left: 30px;
+    z-index: 10;
+}
+
+.slick-next {
+    right: 30px;
+    z-index: 10;
+}
+
+.slick-arrow svg {
+    color: white;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Custom Dots - moved up slightly */
+.custom-dots-container {
+    position: absolute;
+    bottom: 30px;
+    width: 100%;
+    text-align: center;
+    z-index: 20;
+}
+
+.custom-dots {
+    display: inline-flex;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 30px;
+    padding: 8px 15px;
+    backdrop-filter: blur(4px);
+}
+
+.custom-dot {
+    width: 12px;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+li.slick-active .custom-dot {
+    background-color: white;
+    transform: scale(1.2);
+}
+
+/* Media Queries */
+@media (max-width: 1200px) {
+    .slide-content h2 {
+        font-size: 3rem;
+    }
+
+    .slide-content p {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .slide-content {
+        left: 5%;
+        max-width: 500px;
+    }
+    
+    .slide-content h2 {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .slide-content {
+        left: 0;
+        width: 100%;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .slide-icon {
+        margin: 0 auto 1.5rem;
+    }
+
+    .slide-content h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .slide-content p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .slide-overlay {
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+    }
+
+    .custom-dots-container {
+        bottom: 20px;
+    }
+
+    .custom-dots {
+        padding: 6px 12px;
+    }
+
+    .custom-dot {
+        width: 10px;
+        height: 10px;
+        margin: 0 4px;
+    }
+
+    .nav-circle {
+        width: 40px;
+        height: 40px;
+    }
+
+    .slick-prev {
+        left: 15px;
+    }
+
+    .slick-next {
+        right: 15px;
+    }
+
+    .slick-arrow svg {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slide-content h2 {
+        font-size: 1.8rem;
+    }
+
+    .slide-content p {
+        font-size: 0.9rem;
+    }
+
+    .cta-button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .slide-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .slide-icon svg {
+        font-size: 1.5rem;
+    }
+
+    .nav-circle {
+        width: 35px;
+        height: 35px;
+    }
+
+    .slick-arrow svg {
+        font-size: 14px;
+    }
 }
 
 /* Features Grid */
@@ -894,53 +1174,9 @@ section.visible {
     transition: none;
 }
 
-/* Custom Carousel Navigation */
-.slick-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: none !important;
-    width: auto;
-    height: auto;
-}
-
-.nav-circle {
-    width: 50px;
-    height: 50px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px solid rgba(255, 255, 255, 0.7);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.nav-circle:hover {
-    background: rgba(0, 0, 0, 0.8);
-    border-color: #fff;
-    transform: scale(1.1);
-}
-
-.slick-prev {
-    left: 30px;
-}
-
-.slick-next {
-    right: 30px;
-}
-
-.slick-arrow svg {
-    color: white;
-    font-size: 20px;
-    transition: all 0.3s ease;
-}
-
-.nav-circle:hover svg {
-    transform: scale(1.2);
+/* Carousel Transition */
+.slick-slider .slick-slide {
+    transition: opacity 1s ease-in-out;
 }
 
 /* Dots Navigation */
@@ -969,39 +1205,6 @@ section.visible {
 .slick-dots li.slick-active button:before {
     opacity: 1;
     transform: scale(1.2);
-}
-
-/* Responsive Navigation */
-@media (max-width: 768px) {
-    .nav-circle {
-        width: 40px;
-        height: 40px;
-    }
-
-    .slick-prev {
-        left: 15px;
-    }
-
-    .slick-next {
-        right: 15px;
-    }
-
-    .slick-arrow svg {
-        font-size: 16px;
-    }
-
-    .slick-dots {
-        bottom: 20px;
-    }
-
-    .slick-dots li {
-        margin: 0 6px;
-    }
-}
-
-/* Carousel Transition */
-.slick-slider .slick-slide {
-    transition: opacity 1s ease-in-out;
 }
 
 /* Mobile Menu Styles */
@@ -1215,6 +1418,86 @@ body.mobile-menu-open {
 
     .slide-content {
         padding: 2rem 1rem;
+    }
+}
+
+/* Hide default slick arrows but keep custom ones */
+.slick-prev:before, 
+.slick-next:before {
+    content: "" !important;
+    display: none !important;
+}
+
+/* Make sure only our custom arrows are visible */
+button.slick-arrow.slick-prev,
+button.slick-arrow.slick-next {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Custom Arrows - single set */
+.custom-arrow {
+    z-index: 20 !important;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    background: none !important;
+    width: auto;
+    height: auto;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.nav-circle {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+/* Arrow positions */
+.slick-prev {
+    left: 30px;
+    z-index: 10;
+}
+
+.slick-next {
+    right: 30px;
+    z-index: 10;
+}
+
+.slick-arrow svg {
+    color: white;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Responsive Navigation */
+@media (max-width: 768px) {
+    .nav-circle {
+        width: 40px;
+        height: 40px;
+    }
+
+    .slick-prev {
+        left: 15px;
+    }
+
+    .slick-next {
+        right: 15px;
+    }
+
+    .slick-arrow svg {
+        font-size: 16px;
     }
 }
 
