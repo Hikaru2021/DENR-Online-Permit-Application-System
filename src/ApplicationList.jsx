@@ -386,16 +386,16 @@ function ApplicationList() {
 
   // Get status badge class
   const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "Submitted":
-        return "status-badge pending";
-      case "Under Review":
+    switch (status?.toLowerCase()) {
+      case "submitted":
+        return "status-badge submitted";
+      case "under review":
         return "status-badge in-review";
-      case "Needs Revision":
+      case "needs revision":
         return "status-badge revision";
-      case "Approved":
+      case "approved":
         return "status-badge approved";
-      case "Rejected":
+      case "rejected":
         return "status-badge rejected";
       default:
         return "status-badge";

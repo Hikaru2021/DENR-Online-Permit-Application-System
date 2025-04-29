@@ -63,9 +63,16 @@
   color: #dc3545;
 }
 
-.status-pending {
+.status-pending,
+.status-submitted {
   background-color: #fff3cd;
   color: #856404;
+}
+
+/* Ensuring uppercase versions are also styled */
+[class*="status-badge submitted"] {
+  background-color: #fff3cd !important;
+  color: #856404 !important;
 }
 
 .status-review,
