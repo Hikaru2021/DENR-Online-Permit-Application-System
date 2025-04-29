@@ -1305,6 +1305,9 @@
 
 .section-content {
   padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
 }
 
 .description-content {
@@ -2025,8 +2028,10 @@ textarea.form-input {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  margin-left: 10px;
+  margin-left: auto;
   white-space: nowrap;
+  min-width: 100px;
+  justify-content: center;
 }
 
 .download-button:hover {
