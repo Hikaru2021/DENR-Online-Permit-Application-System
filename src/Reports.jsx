@@ -748,7 +748,7 @@ function Reports() {
     <div className="analytics-container">
       {/* Permit Application Overview */}
       <div className="analytics-section">
-        <h3 className="section-title">Permit Application Overview</h3>
+        <h3 className="section-title">Application Overview</h3>
         <div className="metrics-grid">
           <div className="metric-card">
             <div className="metric-icon">
