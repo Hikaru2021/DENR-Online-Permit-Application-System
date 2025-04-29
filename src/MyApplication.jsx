@@ -450,7 +450,6 @@ function MyApplication() {
                     <th>Type</th>
                     <th>Status</th>
                     <th>Submission Date</th>
-                    <th>Last Updated</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -466,7 +465,6 @@ function MyApplication() {
                         </span>
                       </td>
                       <td>{formatDate(application.submissionDate)}</td>
-                      <td>{formatDate(application.lastUpdated)}</td>
                       <td>
                         <div className="action-buttons">
                           <button 

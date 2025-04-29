@@ -215,6 +215,20 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
 
       if (applicationError) throw applicationError;
       
+      // Add record to application_status_history table
+      const { error: historyError } = await supabase
+        .from('application_status_history')
+        .insert([{
+          user_application_id: applicationData[0].id,
+          status_id: 1, // Submitted status
+          remarks: 'Application is already submitted.'
+        }]);
+        
+      if (historyError) {
+        console.error('Error adding status history:', historyError);
+        // Continue with the process even if history record fails
+      }
+      
       // Upload documents if any were added
       if (uploadedFiles.length > 0) {
         await uploadFilesToStorage(user.id, applicationData[0].id);

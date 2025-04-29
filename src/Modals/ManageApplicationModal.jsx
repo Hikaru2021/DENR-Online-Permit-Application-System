@@ -27,6 +27,15 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
     5: 'Rejected'
   };
 
+  // Status remarks mapping
+  const statusRemarks = {
+    1: 'Application is already submitted.',
+    2: 'Application is now under review.',
+    3: 'Application has needs revisions.',
+    4: 'Application is approved. Please claim documents at the office.',
+    5: 'Application is rejected.'
+  };
+
   // Get status name helper function
   const getStatusName = (statusId) => {
     return statusNames[statusId] || 'Unknown';
@@ -194,7 +203,25 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
       console.log('Comment saved successfully:', commentResult);
 
-      // 2. Update application status
+      // 2. Insert record into application_status_history table with predefined remarks
+      const historyData = {
+        user_application_id: userApplication.id,
+        status_id: numericStatus,
+        remarks: statusRemarks[numericStatus] || '',
+      };
+
+      const { data: historyResult, error: historyError } = await supabase
+        .from('application_status_history')
+        .insert(historyData)
+        .select();
+
+      if (historyError) {
+        console.error('Error saving status history:', historyError);
+      } else {
+        console.log('Status history saved successfully:', historyResult);
+      }
+
+      // 3. Update application status
       const updateData = { 
         status: numericStatus 
       };
@@ -215,7 +242,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
       console.log('Status updated successfully:', data);
 
-      // 3. Refresh comments list
+      // 4. Refresh comments list
       await fetchComments(userApplication.id);
 
       // Create status update object for the parent component

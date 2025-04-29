@@ -39,6 +39,17 @@ function ApplicationTracking() {
     fetchUserRole();
   }, []);
 
+  // Format date and time helper function
+  const formatDateTime = (dateString) => {
+    if (!dateString) return { date: '', time: '' };
+    
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString(),
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  };
+
   useEffect(() => {
     const fetchApplication = async () => {
       try {
@@ -74,6 +85,15 @@ function ApplicationTracking() {
 
         if (commentsError) throw commentsError;
         
+        // Fetch status history
+        const { data: statusHistoryData, error: statusHistoryError } = await supabase
+          .from('application_status_history')
+          .select('*')
+          .eq('user_application_id', id)
+          .order('changed_at', { ascending: false });
+          
+        if (statusHistoryError) throw statusHistoryError;
+        
         // Get status name based on status ID
         const getStatusName = (statusId) => {
           switch (statusId) {
@@ -102,6 +122,41 @@ function ApplicationTracking() {
         const revisionInstructions = revisionComment ? revisionComment.revision_comment : 
                                     (applicationData.status === 3 ? "Please update the required documents" : "");
 
+        // Create timeline from status history
+        let timeline = statusHistoryData?.map(history => {
+          const statusName = getStatusName(history.status_id);
+          const { date, time } = formatDateTime(history.changed_at);
+          
+          return {
+            status: statusName,
+            date,
+            time,
+            description: history.remarks || `Application status changed to ${statusName}`,
+            isDone: true,
+            current: applicationData.status === history.status_id,
+            additionalInfo: history.status_id === 4 ? {
+              recipient: applicationData.full_name,
+              approvedDate: date
+            } : null
+          };
+        }) || [];
+        
+        // If no history records exist, create an initial 'Submitted' entry
+        if (timeline.length === 0) {
+          const { date, time } = formatDateTime(applicationData.created_at);
+          timeline = [{
+            status: "Submitted",
+            date,
+            time,
+            description: "Application has been successfully submitted",
+            isDone: true,
+            current: applicationData.status === 1
+          }];
+        }
+
+        // Get formatted submission date and time
+        const { date: submissionDate, time: submissionTime } = formatDateTime(applicationData.created_at);
+
         // Format the application data
         const formattedApplication = {
           id: applicationData.id,
@@ -109,43 +164,12 @@ function ApplicationTracking() {
           referenceNumber: `REF-${applicationData.created_at.split('T')[0]}-${applicationData.id}`,
           type: applicationData.applications.type,
           status: getStatusName(applicationData.status),
-          submissionDate: new Date(applicationData.created_at).toLocaleDateString(),
-          submissionTime: new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          lastUpdated: new Date(applicationData.created_at).toLocaleDateString(),
+          submissionDate,
+          submissionTime,
+          lastUpdated: formatDateTime(applicationData.created_at).date,
           description: applicationData.applications.description,
           comments: formattedComments,
-          timeline: [
-            {
-              status: "Submitted",
-              date: new Date(applicationData.created_at).toLocaleDateString(),
-              time: new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              description: "Application has been successfully submitted",
-              isDone: true,
-              current: applicationData.status === 1
-            },
-            {
-              status: "Under Review",
-              date: applicationData.status >= 2 ? new Date(applicationData.created_at).toLocaleDateString() : null,
-              time: applicationData.status >= 2 ? new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
-              description: "Application is being reviewed by the DENR technical team",
-              isDone: applicationData.status >= 2,
-              current: applicationData.status === 2
-            },
-            {
-              status: applicationData.status === 5 ? "Rejected" : "Approved",
-              date: (applicationData.status === 4 || applicationData.status === 5) ? new Date(applicationData.approved_date || applicationData.created_at).toLocaleDateString() : null,
-              time: (applicationData.status === 4 || applicationData.status === 5) ? new Date(applicationData.approved_date || applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
-              description: applicationData.status === 5 
-                ? "Application has been rejected"
-                : "Application has been approved and ready for certificate claiming",
-              isDone: applicationData.status === 4 || applicationData.status === 5,
-              current: applicationData.status === 4 || applicationData.status === 5,
-              additionalInfo: applicationData.status === 4 ? {
-                recipient: applicationData.full_name,
-                approvedDate: new Date(applicationData.approved_date || applicationData.created_at).toLocaleDateString()
-              } : null
-            }
-          ],
+          timeline: timeline,
           needsRevision: applicationData.status === 3,
           revisionInstructions: revisionInstructions,
           // Add application details
@@ -154,7 +178,8 @@ function ApplicationTracking() {
           address: applicationData.address,
           purpose: applicationData.purpose,
           application_fee: applicationData.applications.application_fee,
-          processing_fee: applicationData.applications.processing_fee
+          processing_fee: applicationData.applications.processing_fee,
+          statusId: applicationData.status
         };
 
         setApplication(formattedApplication);
@@ -213,14 +238,50 @@ function ApplicationTracking() {
         type: statusUpdate.status === "Needs Revision" ? 'revision-request' : 'official-comment'
       };
       
-      setApplication(prev => ({
-        ...prev,
+      // Get current formatted date and time
+      const { date, time } = formatDateTime(new Date());
+      
+      // Create a new timeline entry
+      const newTimelineEntry = {
         status: statusUpdate.status,
-        comments: [newComment, ...prev.comments],
-        needsRevision: statusUpdate.status === "Needs Revision",
-        revisionInstructions: statusUpdate.status === "Needs Revision" ? statusUpdate.comment.message : prev.revisionInstructions,
-        lastUpdated: new Date().toLocaleDateString()
-      }));
+        date,
+        time,
+        description: statusUpdate.status === "Needs Revision" 
+          ? "Application needs revision"
+          : statusUpdate.status === "Approved"
+          ? "Application has been approved and ready for certificate claiming"
+          : statusUpdate.status === "Rejected"
+          ? "Application has been rejected"
+          : `Application status changed to ${statusUpdate.status}`,
+        isDone: true,
+        current: true,
+        additionalInfo: statusUpdate.status === "Approved" ? {
+          recipient: application.full_name,
+          approvedDate: date
+        } : null
+      };
+      
+      setApplication(prev => {
+        // Update the current flag for all timeline items
+        const updatedTimeline = prev.timeline.map(item => ({
+          ...item,
+          current: false
+        }));
+        
+        // Add the new timeline entry at the beginning
+        updatedTimeline.unshift(newTimelineEntry);
+        
+        return {
+          ...prev,
+          status: statusUpdate.status,
+          statusId: statusUpdate.statusId,
+          comments: [newComment, ...prev.comments],
+          timeline: updatedTimeline,
+          needsRevision: statusUpdate.status === "Needs Revision",
+          revisionInstructions: statusUpdate.status === "Needs Revision" ? statusUpdate.comment.message : prev.revisionInstructions,
+          lastUpdated: date
+        };
+      });
     } catch (error) {
       console.error('Error updating status:', error);
       throw new Error('Failed to update application status');
@@ -312,24 +373,36 @@ function ApplicationTracking() {
               }}
             ></div>
 
-            {application.timeline.map((step, index) => (
-              <div 
-                key={index} 
-                className={`progress-step 
-                  ${step.isDone && step.status !== 'Rejected' ? 'completed' : ''}
-                  ${step.current ? 'current' : ''} 
-                  ${step.status === 'Rejected' ? 'rejected' : ''}
-                  ${step.status === 'Approved' && step.current ? 'completed current' : ''}
-                `}
-              >
-                <div className="step-circle">
-                  {step.isDone && step.status !== 'Rejected' ? <FaCheckCircle /> : 
-                   step.status === 'Rejected' ? <FaTimesCircle /> :
-                   step.current ? <FaClock /> : <FaFile />}
-                </div>
-                <div className="step-label">{step.status}</div>
+            {/* Fixed progress steps */}
+            <div 
+              className={`progress-step ${application.statusId >= 1 ? 'completed' : ''} ${application.statusId === 1 ? 'current' : ''}`}
+            >
+              <div className="step-circle">
+                {application.statusId > 1 ? <FaCheckCircle /> : 
+                 application.statusId === 1 ? <FaClock /> : <FaFile />}
               </div>
-            ))}
+              <div className="step-label">Submitted</div>
+            </div>
+            
+            <div 
+              className={`progress-step ${application.statusId >= 2 ? 'completed' : ''} ${application.statusId === 2 || application.statusId === 3 ? 'current' : ''}`}
+            >
+              <div className="step-circle">
+                {application.statusId > 3 ? <FaCheckCircle /> : 
+                 application.statusId === 2 || application.statusId === 3 ? <FaClock /> : <FaFile />}
+              </div>
+              <div className="step-label">Under Review</div>
+            </div>
+            
+            <div 
+              className={`progress-step ${application.statusId === 4 ? 'completed current' : application.statusId === 5 ? 'rejected' : ''}`}
+            >
+              <div className="step-circle">
+                {application.statusId === 4 ? <FaCheckCircle /> : 
+                 application.statusId === 5 ? <FaTimesCircle /> : <FaFile />}
+              </div>
+              <div className="step-label">{application.statusId === 5 ? 'Rejected' : 'Approved'}</div>
+            </div>
           </div>
 
           <div className="progress-timeline">
