@@ -151,6 +151,15 @@
   background-color: #a7f3d0;
 }
 
+.shared-table .action-button.manage-button {
+  color: #6366f1;
+  background-color: #e0e7ff;
+}
+
+.shared-table .action-button.manage-button:hover {
+  background-color: #c7d2fe;
+}
+
 .shared-table .action-button.download-button {
   color: #7c3aed;
   background-color: #ede9fe;

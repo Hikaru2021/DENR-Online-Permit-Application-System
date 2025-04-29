@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileArchive, FaFileCode } from "react-icons/fa";
+import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileArchive, FaFileCode, FaCog, FaEdit } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
 import "./CSS/SharedTable.css";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
+import ManageApplicationModal from "./Modals/ManageApplicationModal";
 import { supabase } from "./library/supabaseClient";
 import JSZip from 'jszip';
 
@@ -19,6 +20,7 @@ function ApplicationList() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSubmissionForm, setShowSubmissionForm] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState(location.state?.statusFilter || "all");
@@ -236,9 +238,10 @@ function ApplicationList() {
     }
   };
 
-  // Handle track application
-  const handleTrackApplication = (application) => {
-    navigate(`/application/${application.id}`);
+  // Handle manage application
+  const handleManageApplication = (application) => {
+    setSelectedApplication(application);
+    setShowManageModal(true);
   };
 
   // Handle edit application
@@ -504,6 +507,30 @@ function ApplicationList() {
     }
   };
 
+  // Handle status update from ManageApplicationModal
+  const handleUpdateStatus = async (statusUpdate) => {
+    try {
+      // Update the application status in the local state
+      const updatedApplications = applications.map(app => {
+        if (app.id === selectedApplication.id) {
+          return {
+            ...app,
+            status: statusUpdate.status,
+            statusId: statusUpdate.statusId,
+            notes: statusUpdate.comment?.message || app.notes
+          };
+        }
+        return app;
+      });
+      
+      setApplications(updatedApplications);
+      console.log(`Application ${selectedApplication.id} status updated to ${statusUpdate.status}`);
+    } catch (err) {
+      console.error('Error updating application status:', err);
+      alert(`Error updating status: ${err.message}`);
+    }
+  };
+
   return (
     <div className="application-list-container">
       <div className="application-list-header">
@@ -625,12 +652,12 @@ function ApplicationList() {
                             <FaEye />
                           </button>
                           <button 
-                            className="action-button track-button" 
-                            onClick={() => handleTrackApplication(application)}
-                            title="Track Application"
+                            className="action-button manage-button" 
+                            onClick={() => handleManageApplication(application)}
+                            title="Manage Application"
                             style={{ margin: '0 2px 0 0' }}
                           >
-                            <FaChartLine />
+                            <FaCog />
                           </button>
                           <button 
                             className="action-button download-button" 
@@ -815,10 +842,10 @@ function ApplicationList() {
                 className="modal-button primary"
                 onClick={() => {
                   setShowViewModal(false);
-                  handleTrackApplication(selectedApplication);
+                  handleManageApplication(selectedApplication);
                 }}
               >
-                <FaChartLine /> Track Application
+                <FaCog /> Manage Application
               </button>
             </div>
           </div>
@@ -889,6 +916,16 @@ function ApplicationList() {
           }}
           application={selectedApplication}
           onApplicationSubmitted={handleApplicationSubmitted}
+        />
+      )}
+
+      {/* Add ManageApplicationModal */}
+      {showManageModal && selectedApplication && (
+        <ManageApplicationModal
+          isOpen={showManageModal}
+          onClose={() => setShowManageModal(false)}
+          application={selectedApplication}
+          onUpdateStatus={handleUpdateStatus}
         />
       )}
     </div>

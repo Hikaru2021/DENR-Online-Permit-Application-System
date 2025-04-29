@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaComments, FaEdit, FaHistory, FaRegClock } from 'react-icons/fa';
 import { supabase } from '../library/supabaseClient';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -13,6 +13,10 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
   const [formError, setFormError] = useState(null);
   const [userApplication, setUserApplication] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+
+  console.log("Application received by modal:", application);
 
   // Status name mapping
   const statusNames = {
@@ -28,8 +32,24 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
     return statusNames[statusId] || 'Unknown';
   };
 
+  // Get status ID from status name
+  const getStatusId = (statusName) => {
+    if (!statusName) return null;
+    
+    // Convert to lowercase for case-insensitive matching
+    const normalizedName = statusName.toLowerCase();
+    
+    for (const [id, name] of Object.entries(statusNames)) {
+      if (name.toLowerCase() === normalizedName) {
+        return parseInt(id, 10);
+      }
+    }
+    
+    return null;
+  };
+
   useEffect(() => {
-    if (isOpen && application?.id) {
+    if (isOpen && application) {
       fetchUserApplication();
     }
   }, [isOpen, application]);
@@ -37,37 +57,73 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
   const fetchUserApplication = async () => {
     setLoading(true);
     try {
-      // Fetch the user application record
-      const { data, error } = await supabase
-        .from('user_applications')
-        .select('*')
-        .eq('application_id', application.id)
-        .single();
+      // Check if we already have the full user application data
+      if (application.id) {
+        console.log("Fetching user application with ID:", application.id);
 
-      if (error) {
-        console.error('Error fetching user application:', error);
-        throw error;
-      }
-      
-      if (data) {
-        console.log('User application data:', data);
-        setUserApplication(data);
-        
-        if (data.status) {
-          // Set the status dropdown to the current status
-          setStatus(data.status.toString());
+        // Set the status dropdown to the current status 
+        // Convert string status to numeric id if necessary
+        if (application.statusId) {
+          setStatus(application.statusId.toString());
+        } else if (application.status) {
+          const statusId = getStatusId(application.status);
+          setStatus(statusId ? statusId.toString() : '');
         } else {
-          console.warn('Status field is missing or null in user_application record');
           setStatus('');
         }
+
+        // Store the application directly - it already has all the data we need
+        setUserApplication(application);
+
+        // Fetch comments for this application
+        await fetchComments(application.id);
       } else {
-        console.warn('No user application found for application ID:', application.id);
+        console.warn('No valid application ID provided');
       }
     } catch (err) {
-      console.error('Error fetching user application:', err);
+      console.error('Error processing application data:', err);
+      setFormError('Error loading application data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchComments = async (applicationId) => {
+    if (!applicationId) return;
+    
+    setCommentsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('user_applications_id', applicationId)
+        .order('comment_date', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Comments loaded:', data);
+      setComments(data || []);
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   // Rich text editor configuration
@@ -115,11 +171,30 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
       // Convert status to integer for database
       const numericStatus = parseInt(status, 10);
 
-      if (!userApplication) {
-        throw new Error('User application not found');
+      if (!userApplication || !userApplication.id) {
+        throw new Error('User application not found or invalid');
       }
 
-      // Prepare update data
+      // 1. First, save the comment to the comments table
+      const commentData = {
+        user_applications_id: userApplication.id,
+        official_comment: comment,
+        revision_comment: status === '3' ? revisionInstructions : null,
+        comment_date: new Date().toISOString()
+      };
+
+      const { data: commentResult, error: commentError } = await supabase
+        .from('comments')
+        .insert(commentData)
+        .select();
+
+      if (commentError) {
+        throw new Error(`Error saving comment: ${commentError.message}`);
+      }
+
+      console.log('Comment saved successfully:', commentResult);
+
+      // 2. Update application status
       const updateData = { 
         status: numericStatus 
       };
@@ -140,6 +215,9 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
       console.log('Status updated successfully:', data);
 
+      // 3. Refresh comments list
+      await fetchComments(userApplication.id);
+
       // Create status update object for the parent component
       const statusUpdate = {
         status: getStatusName(numericStatus),
@@ -157,7 +235,10 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
       // Call the onUpdateStatus prop to update the UI
       await onUpdateStatus(statusUpdate);
-      onClose();
+      
+      // Clear form inputs after successful submission
+      setComment('');
+      setRevisionInstructions('');
     } catch (err) {
       setFormError(err.message);
       console.error('Error updating application status:', err);
@@ -170,7 +251,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container">
+      <div className="modal-container" style={{ maxWidth: '800px' }}>
         <div className="modal-header">
           <h2>Manage Application</h2>
           <button className="modal-close" onClick={onClose}>
@@ -187,11 +268,31 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
               <form onSubmit={handleSubmit} className="application-form">
                 <div className="form-group">
+                  <label>Application ID</label>
+                  <input
+                    type="text"
+                    value={userApplication?.application_id || 'Unknown ID'}
+                    readOnly
+                    className="form-input readonly"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Applicant Name</label>
+                  <input
+                    type="text"
+                    value={userApplication?.applicant_name || userApplication?.fullName || 'Unknown'}
+                    readOnly
+                    className="form-input readonly"
+                  />
+                </div>
+
+                <div className="form-group">
                   <label htmlFor="currentStatus">Current Status</label>
                   <input
                     type="text"
                     id="currentStatus"
-                    value={userApplication?.status ? getStatusName(userApplication.status) : 'No status set'}
+                    value={userApplication?.status || 'Unknown'}
                     readOnly
                     className="form-input readonly"
                   />
@@ -217,7 +318,10 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
                 {status === '3' && (
                   <div className="form-group">
-                    <label htmlFor="revisionInstructions">Revision Instructions</label>
+                    <label htmlFor="revisionInstructions">
+                      <FaEdit style={{ marginRight: '8px' }} />
+                      Revision Instructions
+                    </label>
                     <div className="rich-text-editor">
                       <ReactQuill
                         theme="snow"
@@ -232,7 +336,10 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                 )}
 
                 <div className="form-group">
-                  <label htmlFor="comment">Official Comment</label>
+                  <label htmlFor="comment">
+                    <FaComments style={{ marginRight: '8px' }} />
+                    Official Comment
+                  </label>
                   <div className="rich-text-editor">
                     <ReactQuill
                       theme="snow"
@@ -245,6 +352,53 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                   </div>
                 </div>
               </form>
+
+              {/* Comments History Section */}
+              <div className="comments-history-section">
+                <h3>
+                  <FaHistory style={{ marginRight: '8px' }} />
+                  Comments History
+                </h3>
+                
+                {commentsLoading ? (
+                  <div className="loading-indicator">Loading comments...</div>
+                ) : comments.length > 0 ? (
+                  <div className="comments-list">
+                    {comments.map(comment => (
+                      <div key={comment.id} className="comment-item">
+                        <div className="comment-header">
+                          <span className="comment-date">
+                            <FaRegClock style={{ marginRight: '5px' }} />
+                            {formatDate(comment.comment_date)}
+                          </span>
+                        </div>
+                        
+                        {comment.official_comment && (
+                          <div className="comment-content">
+                            <h4>Official Comment:</h4>
+                            <div 
+                              className="comment-text"
+                              dangerouslySetInnerHTML={{ __html: comment.official_comment }}
+                            />
+                          </div>
+                        )}
+                        
+                        {comment.revision_comment && (
+                          <div className="revision-content">
+                            <h4>Revision Instructions:</h4>
+                            <div 
+                              className="revision-text"
+                              dangerouslySetInnerHTML={{ __html: comment.revision_comment }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-comments">No comments available for this application</div>
+                )}
+              </div>
             </>
           )}
         </div>

@@ -11,10 +11,9 @@ function ApplicationTracking() {
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [newComment, setNewComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAdminManagement, setShowAdminManagement] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [comments, setComments] = useState([]);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -66,6 +65,15 @@ function ApplicationTracking() {
         if (applicationError) throw applicationError;
         if (!applicationData) throw new Error('Application not found');
 
+        // Fetch comments for this application
+        const { data: commentsData, error: commentsError } = await supabase
+          .from('comments')
+          .select('*')
+          .eq('user_applications_id', id)
+          .order('comment_date', { ascending: false });
+
+        if (commentsError) throw commentsError;
+        
         // Get status name based on status ID
         const getStatusName = (statusId) => {
           switch (statusId) {
@@ -78,6 +86,22 @@ function ApplicationTracking() {
           }
         };
 
+        // Format the comments from database
+        const formattedComments = commentsData ? commentsData.map(comment => ({
+          id: comment.id,
+          user: "DENR Admin",
+          role: "admin",
+          timestamp: new Date(comment.comment_date).toLocaleString(),
+          isOfficial: true,
+          type: comment.revision_comment ? 'revision-request' : 'official-comment',
+          message: comment.official_comment || comment.revision_comment || ''
+        })) : [];
+
+        // Determine if there's a revision instruction from comments
+        const revisionComment = commentsData?.find(comment => comment.revision_comment);
+        const revisionInstructions = revisionComment ? revisionComment.revision_comment : 
+                                    (applicationData.status === 3 ? "Please update the required documents" : "");
+
         // Format the application data
         const formattedApplication = {
           id: applicationData.id,
@@ -89,7 +113,7 @@ function ApplicationTracking() {
           submissionTime: new Date(applicationData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           lastUpdated: new Date(applicationData.created_at).toLocaleDateString(),
           description: applicationData.applications.description,
-          comments: [], // We'll keep this empty for now as it's not in the DB
+          comments: formattedComments,
           timeline: [
             {
               status: "Submitted",
@@ -123,7 +147,7 @@ function ApplicationTracking() {
             }
           ],
           needsRevision: applicationData.status === 3,
-          revisionInstructions: applicationData.status === 3 ? "Please update the required documents" : "",
+          revisionInstructions: revisionInstructions,
           // Add application details
           full_name: applicationData.full_name,
           contact_number: applicationData.contact_number,
@@ -134,6 +158,7 @@ function ApplicationTracking() {
         };
 
         setApplication(formattedApplication);
+        setComments(formattedComments);
         setIsLoading(false);
       } catch (err) {
         setError(err.message);
@@ -148,44 +173,56 @@ function ApplicationTracking() {
     navigate('/MyApplication');
   };
 
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    const newCommentObj = {
-      id: application.comments.length + 1,
-      user: "John Doe",
-      role: "client",
-      message: newComment,
-      timestamp: new Date().toLocaleString(),
-      isOfficial: false
-    };
-
-    setApplication(prev => ({
-      ...prev,
-      comments: [...prev.comments, newCommentObj]
-    }));
-    setNewComment('');
-  };
-
   const handleUpdateStatus = async (statusUpdate) => {
     try {
+      // Insert status comment into database
+      const { data: commentData, error: commentError } = await supabase
+        .from('comments')
+        .insert({
+          user_applications_id: application.id,
+          official_comment: statusUpdate.status !== "Needs Revision" ? statusUpdate.comment.message : null,
+          revision_comment: statusUpdate.status === "Needs Revision" ? statusUpdate.comment.message : null,
+        })
+        .select();
+        
+      if (commentError) throw commentError;
+      
+      // Update application status in database
+      const statusId = 
+        statusUpdate.status === "Submitted" ? 1 :
+        statusUpdate.status === "Under Review" ? 2 :
+        statusUpdate.status === "Needs Revision" ? 3 :
+        statusUpdate.status === "Approved" ? 4 :
+        statusUpdate.status === "Rejected" ? 5 : 1;
+        
+      const { error: updateError } = await supabase
+        .from('user_applications')
+        .update({ status: statusId })
+        .eq('id', application.id);
+        
+      if (updateError) throw updateError;
+      
+      // Update local state
+      const newComment = {
+        id: commentData[0].id,
+        user: "Admin",
+        role: "admin",
+        message: statusUpdate.comment.message,
+        timestamp: new Date().toLocaleString(),
+        isOfficial: true,
+        type: statusUpdate.status === "Needs Revision" ? 'revision-request' : 'official-comment'
+      };
+      
       setApplication(prev => ({
         ...prev,
         status: statusUpdate.status,
-        comments: [...prev.comments, {
-          id: prev.comments.length + 1,
-          user: "Admin",
-          role: "admin",
-          message: statusUpdate.comment.message,
-          timestamp: new Date().toLocaleString(),
-          isOfficial: true
-        }],
+        comments: [newComment, ...prev.comments],
         needsRevision: statusUpdate.status === "Needs Revision",
-        revisionInstructions: statusUpdate.revisionInstructions || "",
+        revisionInstructions: statusUpdate.status === "Needs Revision" ? statusUpdate.comment.message : prev.revisionInstructions,
         lastUpdated: new Date().toLocaleDateString()
       }));
     } catch (error) {
+      console.error('Error updating status:', error);
       throw new Error('Failed to update application status');
     }
   };
@@ -323,32 +360,24 @@ function ApplicationTracking() {
           <h2>Official Comments</h2>
           <div className="comments-list">
             {application.comments
-              .filter(comment => comment.role === 'admin' && comment.isOfficial)
+              .filter(comment => comment.type === 'official-comment')
               .map((comment, index) => (
                 <div 
                   key={index} 
                   className={`comment-item admin ${
-                    comment.type === 'revision-request' ? 'revision' : 
                     application.status === 'Rejected' ? 'rejected' : ''
                   }`}
                 >
                   <div className="comment-header">
-                    <span className="comment-user">DENR Admin</span>
+                    <span className="comment-user">Deparment of Environent and Natural Resources Office</span>
                     <span className="comment-timestamp">{comment.timestamp}</span>
                   </div>
                   <div className="comment-content">
-                    {comment.type === 'revision-request' ? (
-                      <>
-                        <h4>Revision Instructions:</h4>
-                        <p>{comment.message}</p>
-                      </>
-                    ) : (
-                      <p>{comment.message}</p>
-                    )}
+                    <p>{comment.message}</p>
                   </div>
                 </div>
             ))}
-            {application.comments.filter(comment => comment.role === 'admin' && comment.isOfficial).length === 0 && (
+            {application.comments.filter(comment => comment.type === 'official-comment').length === 0 && (
               <div className="no-comments">
                 <p>No official comments yet.</p>
               </div>
@@ -360,7 +389,31 @@ function ApplicationTracking() {
           <div className="resubmission-area">
             <div className="resubmission-header">
               <h3>Revision Required</h3>
-              <p>Please review the comments above and resubmit your application with the necessary changes.</p>
+              <p>Please review the revision instructions below and resubmit your application with the necessary changes.</p>
+            </div>
+            <div className="revision-instructions">
+              {application.comments
+                .filter(comment => comment.type === 'revision-request')
+                .map((comment, index) => (
+                  <div 
+                    key={index} 
+                    className="comment-item revision"
+                  >
+                    <div className="comment-header">
+                      <span className="comment-user">DENR Admin</span>
+                      <span className="comment-timestamp">{comment.timestamp}</span>
+                    </div>
+                    <div className="comment-content">
+                      <h4>Revision Instructions:</h4>
+                      <p>{comment.message}</p>
+                    </div>
+                  </div>
+              ))}
+              {application.comments.filter(comment => comment.type === 'revision-request').length === 0 && (
+                <div className="no-comments">
+                  <p>{application.revisionInstructions || "Please update your application as required."}</p>
+                </div>
+              )}
             </div>
           </div>
         )}
