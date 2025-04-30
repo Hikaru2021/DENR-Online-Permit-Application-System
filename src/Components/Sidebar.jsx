@@ -123,12 +123,15 @@ const Sidebar = () => {
         <div className="sidebar-section">
           <p className="sidebar-section-title">MANAGE</p>
           <ul className="sidebar-menu">
-            <li>
-              <NavLink to="/User">
-                <FaUsers className="sidebar-icon" />
-                <span>Users</span>
-              </NavLink>
-            </li>
+            {/* Only show Users management to admins (role_id = 1) */}
+            {userProfile?.role_id === 1 && (
+              <li>
+                <NavLink to="/User">
+                  <FaUsers className="sidebar-icon" />
+                  <span>Users</span>
+                </NavLink>
+              </li>
+            )}
             <li>
               <NavLink to="/ApplicationList">
                 <FaClipboardList className="sidebar-icon" />

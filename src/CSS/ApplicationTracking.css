@@ -802,6 +802,18 @@
   color: #666;
 }
 
+.file-upload-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #FFB74D;
+}
+
+.file-upload-section h4 {
+  font-size: 1.1rem;
+  color: #E65100;
+  margin-bottom: 1rem;
+}
+
 .file-upload-container {
   padding: 2rem;
   border: 2px dashed #FFB74D;
@@ -810,49 +822,125 @@
   cursor: pointer;
   background-color: white;
   transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .file-upload-container:hover {
   border-color: #E65100;
+  background-color: #FFF8E1;
+}
+
+.file-upload-container.dragging {
+  border-color: #E65100;
+  background-color: #FFF8E1;
+  box-shadow: 0 0 10px rgba(230, 81, 0, 0.2);
 }
 
 .file-upload-input {
-  display: none;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: -1;
+}
+
+.upload-icon {
+  font-size: 2.5rem;
+  color: #FFB74D;
+  margin-bottom: 1rem;
+}
+
+.upload-text {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.browse-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #E65100;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.browse-button:hover {
+  background-color: #EF6C00;
+}
+
+.selected-files-container {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .selected-files-list {
-  margin-top: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
 }
 
 .selected-file-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem;
-  background-color: white;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: #F5F5F5;
   border-radius: 4px;
   margin-bottom: 0.5rem;
 }
 
+.selected-file-item:last-child {
+  margin-bottom: 0;
+}
+
 .file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 0.5rem;
   color: #333;
+  font-weight: 500;
+}
+
+.file-size {
+  color: #666;
+  font-size: 0.85rem;
+  margin-right: 1rem;
 }
 
 .remove-file-btn {
   background: none;
   border: none;
-  color: #666;
+  color: #E65100;
+  font-size: 1rem;
   cursor: pointer;
-  font-size: 1.25rem;
   padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
 .remove-file-btn:hover {
-  color: #C62828;
+  background-color: #FFEBEE;
+  color: #D32F2F;
 }
 
 .resubmit-button {
-  margin-top: 1.5rem;
   width: 100%;
   padding: 1rem;
   background-color: #E65100;
@@ -872,6 +960,7 @@
 .resubmit-button:disabled {
   background-color: #FFB74D;
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* Loading and Error States */
@@ -1216,7 +1305,7 @@
   position: absolute;
   top: 50%;
   left: 0;
-  width: 33%; /* First segment only */
+  width: 8%; /* First segment only */
   height: 3px;
   background: #4CAF50;
   transform: translateY(-50%);
@@ -1228,7 +1317,7 @@
 .progress-line-fill.secondary {
   position: absolute;
   top: 50%;
-  left: 33%; /* Start from first segment */
+  left: 8%; /* Start from first segment */
   width: 0;
   height: 3px;
   background: #4CAF50; /* Default green */
@@ -1247,7 +1336,7 @@
     width: 0;
   }
   100% {
-    width: 67%; /* Fill remaining 67% */
+    width: 92%; /* Fill remaining 92% (from 8% to 100%) */
   }
 }
 
@@ -1263,4 +1352,131 @@
 
 .progress-step.completed.current .step-circle {
   animation: greenStepPulse 2s infinite;
+}
+
+/* Add the following styles after the existing progress-line-fill styles */
+.progress-line-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 3px;
+  background: #4CAF50;
+  transform: translateY(-50%);
+  transition: width 0.3s ease;
+  z-index: 2;
+}
+
+/* Adjust positions for the progress steps */
+.progress-bar {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  padding: 0 2rem;
+  min-height: 120px;
+  background: transparent;
+}
+
+/* Position of progress steps */
+.progress-step:nth-child(3) {
+  position: relative;
+  left: 0;
+}
+
+.progress-step:nth-child(4) {
+  position: relative;
+  left: 0;
+}
+
+.progress-step:nth-child(5) {
+  position: relative;
+  left: 0;
+}
+
+/* Progress line fill for different statuses */
+.progress-line-fill.submitted {
+  width: 8% !important;
+}
+
+.progress-line-fill.under-review, .progress-line-fill.needs-revision {
+  width: 50% !important;
+}
+
+.progress-line-fill.approved, .progress-line-fill.rejected {
+  width: 100% !important;
+}
+
+/* Override for rejected applications */
+
+/* Needs Revision style - orange alert */
+.progress-step.needs-revision .step-circle {
+  border-color: #E65100;
+  background: #FFF3E0;
+  position: relative;
+  overflow: visible;
+}
+
+.progress-step.needs-revision .step-circle svg {
+  color: #E65100;
+  font-size: 1.2em;
+  animation: alertPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes alertPulse {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.15); 
+  }
+}
+
+.progress-step.needs-revision .step-label {
+  color: #E65100;
+  font-weight: 600;
+}
+
+/* Needs Revision current step - orange pulse */
+.progress-step.needs-revision.current .step-circle {
+  animation: orangeStepPulse 2s infinite;
+  border-color: #E65100;
+  background: #FFF3E0;
+}
+
+@keyframes orangeStepPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Override for rejected applications */
+
+/* Comments Show More/Less Buttons */
+.show-more-comments,
+.show-less-comments {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #4CAF50;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.show-more-comments:hover,
+.show-less-comments:hover {
+  background-color: #e8f5e9;
+  border-color: #4CAF50;
 } 

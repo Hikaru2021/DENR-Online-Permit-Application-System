@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./CSS/Reports.css"; 
-import { FaSearch, FaDownload, FaChevronDown, FaFilePdf, FaFileExcel, FaFileCsv, FaChartBar, FaChartPie, FaChartLine, FaFileAlt, FaCheckCircle, FaClock, FaSmile, FaArrowUp, FaExclamationTriangle } from "react-icons/fa";
+import { FaSearch, FaDownload, FaChevronDown, FaFilePdf, FaFileExcel, FaFileCsv, FaChartBar, FaChartPie, FaChartLine, FaFileAlt, FaCheckCircle, FaClock, FaSmile, FaArrowUp, FaExclamationTriangle, FaCalendarAlt, FaCalendarDay, FaCalendarWeek, FaCalendarCheck } from "react-icons/fa";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement } from 'chart.js';
 import { supabase } from "./library/supabaseClient";
+import { useReactToPrint } from 'react-to-print';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import * as XLSX from 'xlsx';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement);
 
 function Reports() {
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [reportType, setReportType] = useState("all");
   const [dateRange, setDateRange] = useState("all");
   const [activeTab, setActiveTab] = useState("analytics");
@@ -22,6 +25,17 @@ function Reports() {
   const [users, setUsers] = useState([]);
   const [userApplicationCounts, setUserApplicationCounts] = useState({});
   const [userActivityPeriod, setUserActivityPeriod] = useState("monthly");
+  // Report generation state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportPeriod, setReportPeriod] = useState("monthly");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [reportName, setReportName] = useState("");
+  const [reportData, setReportData] = useState(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
+  // Refs for PDF printing
+  const reportTemplateRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -283,59 +297,24 @@ function Reports() {
   const mockReports = [
     {
       id: "REP001",
-      title: "Monthly Application Summary",
-      type: "Summary",
-      date: "2023-05-15",
-      format: "PDF",
-      size: "2.4 MB"
+      title: "Daily Application Summary",
+      type: "Daily",
+      description: "Summary of all applications submitted on a specific day",
+      format: "PDF"
     },
     {
       id: "REP002",
-      title: "Quarterly Permit Statistics",
-      type: "Statistics",
-      date: "2023-04-10",
-      format: "Excel",
-      size: "1.8 MB"
+      title: "Monthly Application Summary",
+      type: "Monthly",
+      description: "Monthly overview of all applications with status distribution",
+      format: "PDF"
     },
     {
       id: "REP003",
-      title: "Annual Environmental Impact Report",
-      type: "Environmental",
-      date: "2023-01-05",
-      format: "PDF",
-      size: "5.2 MB"
-    },
-    {
-      id: "REP004",
-      title: "Weekly Application Status",
-      type: "Status",
-      date: "2023-05-20",
-      format: "CSV",
-      size: "0.8 MB"
-    },
-    {
-      id: "REP005",
-      title: "Monthly Compliance Report",
-      type: "Compliance",
-      date: "2023-05-01",
-      format: "PDF",
-      size: "3.1 MB"
-    },
-    {
-      id: "REP006",
-      title: "Quarterly Financial Summary",
-      type: "Financial",
-      date: "2023-04-15",
-      format: "Excel",
-      size: "2.7 MB"
-    },
-    {
-      id: "REP007",
-      title: "Annual Permit Distribution",
-      type: "Distribution",
-      date: "2023-01-20",
-      format: "PDF",
-      size: "4.5 MB"
+      title: "Yearly Application Summary",
+      type: "Yearly",
+      description: "Annual report of application processing and approval rates",
+      format: "PDF"
     }
   ];
 
@@ -495,38 +474,6 @@ function Reports() {
     }
   };
 
-  const reportsPerPage = 4;
-  const indexOfLastReport = currentPage * reportsPerPage;
-  const indexOfFirstReport = indexOfLastReport - reportsPerPage;
-  
-  // Filter reports based on search and report type
-  const filteredReports = mockReports.filter(report => {
-    const matchesSearch = 
-      report.title.toLowerCase().includes(search.toLowerCase()) ||
-      report.id.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesType = 
-      reportType === "all" || 
-      report.type.toLowerCase() === reportType.toLowerCase();
-    
-    return matchesSearch && matchesType;
-  });
-  
-  const currentReports = filteredReports.slice(indexOfFirstReport, indexOfLastReport);
-  const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
   const handleDownload = (report) => {
     // Mock download functionality
     console.log("Downloading report:", report);
@@ -535,12 +482,10 @@ function Reports() {
 
   const handleReportTypeChange = (e) => {
     setReportType(e.target.value);
-    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleDateRangeChange = (e) => {
     setDateRange(e.target.value);
-    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const getFormatIcon = (format) => {
@@ -556,55 +501,507 @@ function Reports() {
     }
   };
 
+  // Updated table render function
   const renderTable = () => (
-    <div className="reports-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Report ID</th>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Date</th>
-            <th>Format</th>
-            <th>Size</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentReports.length > 0 ? (
-            currentReports.map((report) => (
-              <tr key={report.id}>
-                <td>{report.id}</td>
-                <td>{report.title}</td>
+    <div className="reports-generation-section">
+      <div className="report-generation-header">
+        <h3>Generate Application Reports</h3>
+        <p>Select a report type and time period to generate detailed application reports</p>
+      </div>
+      
+      <div className="report-generation-options">
+        <div className="report-selection">
+          <label htmlFor="report-period">Report Period:</label>
+          <select 
+            id="report-period" 
+            value={reportPeriod} 
+            onChange={(e) => setReportPeriod(e.target.value)}
+            className="report-select"
+          >
+            <option value="daily">Daily Report</option>
+            <option value="monthly">Monthly Report</option>
+            <option value="yearly">Yearly Report</option>
+          </select>
+        </div>
+        
+        {reportPeriod === "daily" && (
+          <div className="report-date-selection">
+            <label htmlFor="report-date">Select Date:</label>
+            <input 
+              type="date" 
+              id="report-date" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              className="report-date-input"
+            />
+          </div>
+        )}
+        
+        {reportPeriod === "monthly" && (
+          <div className="report-month-selection">
+            <div className="report-month">
+              <label htmlFor="report-month">Month:</label>
+              <select 
+                id="report-month" 
+                value={reportMonth}
+                onChange={(e) => setReportMonth(parseInt(e.target.value))}
+                className="report-select"
+              >
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            <div className="report-year">
+              <label htmlFor="report-year-monthly">Year:</label>
+              <select 
+                id="report-year-monthly" 
+                value={reportYear}
+                onChange={(e) => setReportYear(parseInt(e.target.value))}
+                className="report-select"
+              >
+                {getAvailableYears().map(year => (
+                  <option key={`monthly-${year}`} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+        
+        {reportPeriod === "yearly" && (
+          <div className="report-year-selection">
+            <label htmlFor="report-year">Select Year:</label>
+            <select 
+              id="report-year" 
+              value={reportYear}
+              onChange={(e) => setReportYear(parseInt(e.target.value))}
+              className="report-select"
+            >
+              {getAvailableYears().map(year => (
+                <option key={`yearly-${year}`} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        
+        <button 
+          className="generate-report-btn"
+          onClick={generateReport}
+          disabled={generatingReport}
+        >
+          {generatingReport ? "Generating..." : "Generate Report"}
+        </button>
+      </div>
+      
+      <div className="reports-table">
+        <h3>Available Report Templates</h3>
+        <table>
+          <thead>
+            <tr>
+              <th style={{width: '12%'}}>Report ID</th>
+              <th style={{width: '30%'}}>Report Title</th>
+              <th style={{width: '15%'}}>Type</th>
+              <th style={{width: '43%'}}>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mockReports.map((report) => (
+              <tr key={report.id}
+                  onClick={() => {
+                    setReportPeriod(report.type.toLowerCase());
+                    
+                    if (report.type === "Daily") {
+                      setSelectedDate(new Date().toISOString().split('T')[0]);
+                    } else if (report.type === "Monthly") {
+                      setReportMonth(new Date().getMonth() + 1);
+                      setReportYear(new Date().getFullYear());
+                    } else if (report.type === "Yearly") {
+                      setReportYear(new Date().getFullYear());
+                    }
+                    
+                    // Scroll to report generator
+                    document.querySelector('.report-generation-header')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="report-row"
+              >
+                <td><span className="report-id">{report.id}</span></td>
+                <td><strong>{report.title}</strong></td>
                 <td>{report.type}</td>
-                <td>{new Date(report.date).toLocaleDateString()}</td>
-                <td className="format-cell">
-                  {getFormatIcon(report.format)}
-                  <span>{report.format}</span>
-                </td>
-                <td>{report.size}</td>
                 <td>
-                  <button
-                    className="download-btn"
-                    onClick={() => handleDownload(report)}
-                  >
-                    <FaDownload /> Download
-                  </button>
+                  <div className="report-description">
+                    {report.description}
+                    <span className="select-indicator">Click to select</span>
+                  </div>
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="7" className="no-data">
-                No reports found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
+  // Report generation functions
+  const generateReport = async () => {
+    try {
+      setGeneratingReport(true);
+      
+      // Create query to fetch applications based on period
+      let query = supabase.from('user_applications').select('*');
+      
+      // Filter by selected period
+      if (reportPeriod === "daily") {
+        // For daily reports, filter by exact date
+        const startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        query = query.gte('created_at', startDate.toISOString())
+                     .lte('created_at', endDate.toISOString());
+                     
+      } else if (reportPeriod === "monthly") {
+        // For monthly reports, filter by month and year
+        const startDate = new Date(reportYear, reportMonth - 1, 1);
+        const endDate = new Date(reportYear, reportMonth, 0, 23, 59, 59, 999);
+        
+        query = query.gte('created_at', startDate.toISOString())
+                     .lte('created_at', endDate.toISOString());
+                     
+      } else if (reportPeriod === "yearly") {
+        // For yearly reports, filter by year
+        const startDate = new Date(reportYear, 0, 1);
+        const endDate = new Date(reportYear, 11, 31, 23, 59, 59, 999);
+        
+        query = query.gte('created_at', startDate.toISOString())
+                     .lte('created_at', endDate.toISOString());
+      }
+      
+      // Execute query
+      const { data: applications, error } = await query;
+      
+      if (error) throw error;
+      
+      // Generate report title and date label
+      let title = "";
+      let dateLabel = "";
+      
+      if (reportPeriod === "daily") {
+        const reportDate = new Date(selectedDate);
+        title = `Daily Applications Report - ${reportDate.toLocaleDateString()}`;
+        dateLabel = reportDate.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      } else if (reportPeriod === "monthly") {
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+                           "July", "August", "September", "October", "November", "December"];
+        title = `Monthly Applications Report - ${monthNames[reportMonth - 1]} ${reportYear}`;
+        dateLabel = `${monthNames[reportMonth - 1]} ${reportYear}`;
+      } else if (reportPeriod === "yearly") {
+        title = `Yearly Applications Report - ${reportYear}`;
+        dateLabel = `Year ${reportYear}`;
+      }
+      
+      // Create report data
+      const reportData = {
+        title: title,
+        dateLabel: dateLabel,
+        totalApplications: applications.length,
+        applications: applications,
+        generatedDate: new Date().toLocaleString(),
+        reportPeriod: reportPeriod
+      };
+      
+      // Set report data and show modal
+      setReportData(reportData);
+      setShowReportModal(true);
+      
+    } catch (error) {
+      console.error("Error generating report:", error);
+      alert("Failed to generate report. Please try again.");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  // Handle printing the report
+  const handlePrintReport = useReactToPrint({
+    content: () => reportTemplateRef.current,
+    documentTitle: reportData?.title || "DENR Application Report",
+    onBeforeGetContent: () => {
+      return new Promise((resolve) => {
+        setGeneratingReport(true);
+        resolve();
+      });
+    },
+    onAfterPrint: () => {
+      setGeneratingReport(false);
+    }
+  });
+
+  // Export to PDF function
+  const exportToPDF = async () => {
+    if (!reportTemplateRef.current) return;
+    
+    try {
+      setGeneratingReport(true);
+      const report = reportTemplateRef.current;
+      const canvas = await html2canvas(report, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      
+      pdf.addImage(imgData, 'PNG', imgX, 10, imgWidth * ratio, imgHeight * ratio);
+      
+      // Generate a standardized filename based on report period
+      let fileName = '';
+      if (reportPeriod === "daily") {
+        const reportDate = new Date(selectedDate);
+        const formattedDate = reportDate.toISOString().split('T')[0];
+        fileName = `DailyReport_${formattedDate}.pdf`;
+      } else if (reportPeriod === "monthly") {
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+                           "July", "August", "September", "October", "November", "December"];
+        fileName = `MonthlyReport_${monthNames[reportMonth - 1]}_${reportYear}.pdf`;
+      } else if (reportPeriod === "yearly") {
+        fileName = `YearlyReport_${reportYear}.pdf`;
+      }
+      
+      pdf.save(fileName);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  // Export to CSV function
+  const exportToCSV = () => {
+    if (!reportData || !reportData.applications || reportData.applications.length === 0) {
+      alert('No data available to export');
+      return;
+    }
+    
+    try {
+      setGeneratingReport(true);
+      
+      // Define CSV columns
+      const columns = [
+        'Reference Number',
+        'Full Name',
+        'Contact',
+        'Address',
+        'Purpose',
+        'Submission Date'
+      ];
+      
+      // Convert applications to CSV rows
+      const rows = reportData.applications.map(app => [
+        `REF-${app.id.toString().padStart(6, '0')}`,
+        app.full_name || 'N/A',
+        app.contact_number || 'N/A',
+        app.address || 'N/A',
+        app.purpose || 'N/A',
+        new Date(app.created_at).toLocaleDateString()
+      ]);
+      
+      // Create CSV content
+      let csvContent = columns.join(',') + '\n';
+      rows.forEach(row => {
+        // Escape fields that contain commas, quotes, or newlines
+        const escapedRow = row.map(field => {
+          const fieldStr = String(field);
+          // If field contains commas, quotes, or newlines, wrap it in quotes and escape any quotes
+          if (fieldStr.includes(',') || fieldStr.includes('"') || fieldStr.includes('\n')) {
+            return `"${fieldStr.replace(/"/g, '""')}"`;
+          }
+          return fieldStr;
+        });
+        csvContent += escapedRow.join(',') + '\n';
+      });
+      
+      // Generate a standardized filename based on report period
+      let fileName = '';
+      if (reportPeriod === "daily") {
+        const reportDate = new Date(selectedDate);
+        const formattedDate = reportDate.toISOString().split('T')[0];
+        fileName = `DailyReport_${formattedDate}.csv`;
+      } else if (reportPeriod === "monthly") {
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+                           "July", "August", "September", "October", "November", "December"];
+        fileName = `MonthlyReport_${monthNames[reportMonth - 1]}_${reportYear}.csv`;
+      } else if (reportPeriod === "yearly") {
+        fileName = `YearlyReport_${reportYear}.csv`;
+      }
+      
+      // Create and download the CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Error generating CSV:', err);
+      alert('Failed to generate CSV. Please try again.');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  // Export to Excel function
+  const exportToExcel = () => {
+    if (!reportData || !reportData.applications || reportData.applications.length === 0) {
+      alert('No data available to export');
+      return;
+    }
+    
+    try {
+      setGeneratingReport(true);
+      
+      // Get status names for display
+      const getStatusName = (statusCode) => {
+        switch(statusCode) {
+          case 1: return 'Under Review';
+          case 2: return 'Additional Requirements';
+          case 3: return 'On Hold';
+          case 4: return 'Approved';
+          case 5: return 'Rejected';
+          default: return 'Pending';
+        }
+      };
+      
+      // Define column headers
+      const headers = [
+        'Reference Number',
+        'Full Name',
+        'Contact',
+        'Address',
+        'Purpose',
+        'Status',
+        'Submission Date'
+      ];
+      
+      // Convert applications to data rows
+      const data = reportData.applications.map(app => ({
+        'Reference Number': `REF-${app.id.toString().padStart(6, '0')}`,
+        'Full Name': app.full_name || 'N/A',
+        'Contact': app.contact_number || 'N/A',
+        'Address': app.address || 'N/A',
+        'Purpose': app.purpose || 'N/A',
+        'Status': getStatusName(app.status),
+        'Submission Date': new Date(app.created_at).toLocaleDateString()
+      }));
+      
+      // Create worksheet from data
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      
+      // Set column widths
+      const colWidths = [
+        { wch: 15 }, // Reference Number
+        { wch: 25 }, // Full Name
+        { wch: 15 }, // Contact
+        { wch: 30 }, // Address
+        { wch: 25 }, // Purpose
+        { wch: 15 }, // Status
+        { wch: 15 }  // Submission Date
+      ];
+      worksheet['!cols'] = colWidths;
+      
+      // Create workbook and add the worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
+      
+      // Add report title in a separate sheet
+      const infoData = [
+        { A: 'Report Title', B: reportData.title },
+        { A: 'Period', B: reportData.dateLabel },
+        { A: 'Total Applications', B: reportData.totalApplications.toString() },
+        { A: 'Generated On', B: reportData.generatedDate }
+      ];
+      const infoSheet = XLSX.utils.json_to_sheet(infoData, { header: ['A', 'B'] });
+      XLSX.utils.book_append_sheet(workbook, infoSheet, 'Report Info');
+      
+      // Calculate status statistics
+      const statusCounts = {
+        'Pending': 0,
+        'Under Review': 0,
+        'Additional Requirements': 0,
+        'On Hold': 0,
+        'Approved': 0,
+        'Rejected': 0
+      };
+      
+      // Count applications by status
+      reportData.applications.forEach(app => {
+        const statusName = getStatusName(app.status);
+        statusCounts[statusName] = (statusCounts[statusName] || 0) + 1;
+      });
+      
+      // Create statistics sheet
+      const statsData = Object.keys(statusCounts).map(status => ({
+        'Status': status,
+        'Count': statusCounts[status],
+        'Percentage': `${((statusCounts[status] / reportData.totalApplications) * 100).toFixed(2)}%`
+      }));
+      
+      const statsSheet = XLSX.utils.json_to_sheet(statsData);
+      XLSX.utils.book_append_sheet(workbook, statsSheet, 'Statistics');
+      
+      // Generate a standardized filename based on report period
+      let fileName = '';
+      if (reportPeriod === "daily") {
+        const reportDate = new Date(selectedDate);
+        const formattedDate = reportDate.toISOString().split('T')[0];
+        fileName = `DailyReport_${formattedDate}.xlsx`;
+      } else if (reportPeriod === "monthly") {
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+                           "July", "August", "September", "October", "November", "December"];
+        fileName = `MonthlyReport_${monthNames[reportMonth - 1]}_${reportYear}.xlsx`;
+      } else if (reportPeriod === "yearly") {
+        fileName = `YearlyReport_${reportYear}.xlsx`;
+      }
+      
+      // Save the Excel file
+      XLSX.writeFile(workbook, fileName);
+    } catch (err) {
+      console.error('Error generating Excel:', err);
+      alert('Failed to generate Excel. Please try again.');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  // Add the renderCharts function back 
   const renderCharts = () => (
     <div className="charts-container">
       <div className="chart-row">
@@ -744,7 +1141,124 @@ function Reports() {
     </div>
   );
 
-  const renderAnalytics = () => (
+  // Update the renderAnalytics function
+  const renderAnalytics = () => {
+    // Calculate application metrics
+    const calculateMetrics = () => {
+      if (isLoading || userApplications.length === 0) {
+        return {
+          totalApplications: 0,
+          approvalRate: 0,
+          avgProcessingTime: 0,
+          pendingRate: 0,
+          // Trend data (mock for now - could be calculated from historical data)
+          trends: {
+            totalTrend: 0,
+            approvalTrend: 0,
+            processingTimeTrend: 0,
+            pendingTrend: 0
+          }
+        };
+      }
+
+      // Get current date and date a month ago for trend calculations
+      const currentDate = new Date();
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(currentDate.getMonth() - 1);
+
+      // Filter applications from current month and previous month
+      const currentMonthApps = userApplications.filter(app => 
+        new Date(app.created_at) >= oneMonthAgo && new Date(app.created_at) <= currentDate
+      );
+      
+      const previousMonthDate = new Date(oneMonthAgo);
+      previousMonthDate.setMonth(oneMonthAgo.getMonth() - 1);
+      const previousMonthApps = userApplications.filter(app => 
+        new Date(app.created_at) >= previousMonthDate && new Date(app.created_at) < oneMonthAgo
+      );
+
+      // Calculate approval rate
+      const approvedApps = userApplications.filter(app => app.status === 4).length;
+      const approvalRate = (approvedApps / userApplications.length) * 100;
+      
+      // Previous month approval rate for trend
+      const prevApprovedApps = previousMonthApps.filter(app => app.status === 4).length;
+      const prevApprovalRate = previousMonthApps.length > 0 ? 
+        (prevApprovedApps / previousMonthApps.length) * 100 : 0;
+      
+      // Calculate average processing time (for approved applications)
+      let totalProcessingDays = 0;
+      let processedCount = 0;
+      
+      userApplications.forEach(app => {
+        if (app.status === 4 && app.approved_date) { // If approved and has approval date
+          const submissionDate = new Date(app.created_at);
+          const approvalDate = new Date(app.approved_date);
+          const processingDays = (approvalDate - submissionDate) / (1000 * 60 * 60 * 24);
+          totalProcessingDays += processingDays;
+          processedCount++;
+        }
+      });
+      
+      const avgProcessingTime = processedCount > 0 ? (totalProcessingDays / processedCount) : 0;
+      
+      // Previous month processing time
+      let prevTotalProcessingDays = 0;
+      let prevProcessedCount = 0;
+      
+      previousMonthApps.forEach(app => {
+        if (app.status === 4 && app.approved_date) {
+          const submissionDate = new Date(app.created_at);
+          const approvalDate = new Date(app.approved_date);
+          const processingDays = (approvalDate - submissionDate) / (1000 * 60 * 60 * 24);
+          prevTotalProcessingDays += processingDays;
+          prevProcessedCount++;
+        }
+      });
+      
+      const prevAvgProcessingTime = prevProcessedCount > 0 ? 
+        (prevTotalProcessingDays / prevProcessedCount) : 0;
+      
+      // Calculate pending application rate
+      const pendingApps = userApplications.filter(app => app.status === 1 || app.status === 2).length;
+      const pendingRate = (pendingApps / userApplications.length) * 100;
+      
+      // Previous month pending rate
+      const prevPendingApps = previousMonthApps.filter(app => app.status === 1 || app.status === 2).length;
+      const prevPendingRate = previousMonthApps.length > 0 ? 
+        (prevPendingApps / previousMonthApps.length) * 100 : 0;
+      
+      // Calculate trends (percentage change)
+      const totalTrend = previousMonthApps.length > 0 ? 
+        ((currentMonthApps.length - previousMonthApps.length) / previousMonthApps.length) * 100 : 0;
+      
+      const approvalTrend = prevApprovalRate > 0 ? 
+        (approvalRate - prevApprovalRate) : 0;
+      
+      const processingTimeTrend = prevAvgProcessingTime > 0 ? 
+        (avgProcessingTime - prevAvgProcessingTime) : 0;
+      
+      const pendingTrend = prevPendingRate > 0 ? 
+        (pendingRate - prevPendingRate) : 0;
+      
+      return {
+        totalApplications: userApplications.length,
+        approvalRate: approvalRate.toFixed(1),
+        avgProcessingTime: avgProcessingTime.toFixed(1),
+        pendingRate: pendingRate.toFixed(1),
+        trends: {
+          totalTrend: totalTrend.toFixed(1),
+          approvalTrend: approvalTrend.toFixed(1),
+          processingTimeTrend: processingTimeTrend.toFixed(1),
+          pendingTrend: pendingTrend.toFixed(1)
+        }
+      };
+    };
+    
+    // Get calculated metrics
+    const metrics = calculateMetrics();
+
+    return (
     <div className="analytics-container">
       {/* Permit Application Overview */}
       <div className="analytics-section">
@@ -755,10 +1269,10 @@ function Reports() {
               <FaFileAlt />
             </div>
             <div className="metric-content">
-              <div className="metric-value">{userApplications.length}</div>
+              <div className="metric-value">{metrics.totalApplications}</div>
               <div className="metric-label">Total Applications</div>
-              <div className="metric-trend positive">
-                <FaArrowUp /> 8.3% from last month
+              <div className={`metric-trend ${parseFloat(metrics.trends.totalTrend) >= 0 ? 'positive' : 'negative'}`}>
+                <FaArrowUp /> {Math.abs(parseFloat(metrics.trends.totalTrend))}% from last month
               </div>
             </div>
           </div>
@@ -767,10 +1281,10 @@ function Reports() {
               <FaCheckCircle />
             </div>
             <div className="metric-content">
-              <div className="metric-value">76%</div>
+              <div className="metric-value">{metrics.approvalRate}%</div>
               <div className="metric-label">Approval Rate</div>
-              <div className="metric-trend positive">
-                <FaArrowUp /> 2.1% from last month
+              <div className={`metric-trend ${parseFloat(metrics.trends.approvalTrend) >= 0 ? 'positive' : 'negative'}`}>
+                <FaArrowUp /> {Math.abs(parseFloat(metrics.trends.approvalTrend))}% from last month
               </div>
             </div>
           </div>
@@ -779,10 +1293,10 @@ function Reports() {
               <FaClock />
             </div>
             <div className="metric-content">
-              <div className="metric-value">18.5</div>
+              <div className="metric-value">{metrics.avgProcessingTime}</div>
               <div className="metric-label">Avg. Processing Time (days)</div>
-              <div className="metric-trend negative">
-                <FaArrowUp /> 1.5 days from last month
+              <div className={`metric-trend ${parseFloat(metrics.trends.processingTimeTrend) <= 0 ? 'positive' : 'negative'}`}>
+                <FaArrowUp /> {Math.abs(parseFloat(metrics.trends.processingTimeTrend))} days from last month
               </div>
             </div>
           </div>
@@ -791,60 +1305,13 @@ function Reports() {
               <FaExclamationTriangle />
             </div>
             <div className="metric-content">
-              <div className="metric-value">24%</div>
+              <div className="metric-value">{metrics.pendingRate}%</div>
               <div className="metric-label">Pending Applications</div>
-              <div className="metric-trend negative">
-                <FaArrowUp /> 3.2% from last month
+              <div className={`metric-trend ${parseFloat(metrics.trends.pendingTrend) <= 0 ? 'positive' : 'negative'}`}>
+                <FaArrowUp /> {Math.abs(parseFloat(metrics.trends.pendingTrend))}% from last month
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Permit Types Distribution */}
-      <div className="analytics-section">
-        <h3 className="section-title">Permit Types Distribution</h3>
-        <div className="chart-wrapper">
-          <Pie 
-            data={{
-              labels: ['Environmental Compliance', 'Waste Management', 'Air Quality', 'Water Usage', 'Land Use', 'Other'],
-              datasets: [{
-                data: [35, 25, 15, 12, 8, 5],
-                backgroundColor: [
-                  'rgba(75, 192, 192, 0.7)',
-                  'rgba(54, 162, 235, 0.7)',
-                  'rgba(255, 206, 86, 0.7)',
-                  'rgba(153, 102, 255, 0.7)',
-                  'rgba(255, 159, 64, 0.7)',
-                  'rgba(201, 203, 207, 0.7)'
-                ],
-                borderColor: [
-                  'rgba(75, 192, 192, 1)',
-                  'rgba(54, 162, 235, 1)',
-                  'rgba(255, 206, 86, 1)',
-                  'rgba(153, 102, 255, 1)',
-                  'rgba(255, 159, 64, 1)',
-                  'rgba(201, 203, 207, 1)'
-                ],
-                borderWidth: 1
-              }]
-            }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                  position: 'right',
-                  labels: {
-                    padding: 20,
-                    font: {
-                      size: 12
-                    }
-                  }
-                }
-              }
-              }}
-            />
           </div>
         </div>
         
@@ -909,89 +1376,6 @@ function Reports() {
               }
               }}
             />
-          </div>
-        </div>
-
-      {/* Environmental Compliance Metrics */}
-      <div className="analytics-section">
-        <h3 className="section-title">Environmental Compliance Metrics</h3>
-        <div className="compliance-grid">
-          <div className="compliance-card">
-            <div className="compliance-header">
-              <h4>Air Quality Standards</h4>
-              <div className="compliance-score high">92%</div>
-      </div>
-            <div className="progress-bar">
-              <div className="progress" style={{ width: '92%' }}></div>
-    </div>
-            <div className="compliance-details">
-              <div className="detail-item">
-                <span className="detail-label">Compliant:</span>
-                <span className="detail-value">46/50</span>
-          </div>
-              <div className="detail-item">
-                <span className="detail-label">Non-compliant:</span>
-                <span className="detail-value">4/50</span>
-          </div>
-          </div>
-          </div>
-          <div className="compliance-card">
-            <div className="compliance-header">
-              <h4>Water Quality Standards</h4>
-              <div className="compliance-score medium">78%</div>
-        </div>
-            <div className="progress-bar">
-              <div className="progress" style={{ width: '78%' }}></div>
-      </div>
-            <div className="compliance-details">
-              <div className="detail-item">
-                <span className="detail-label">Compliant:</span>
-                <span className="detail-value">39/50</span>
-            </div>
-              <div className="detail-item">
-                <span className="detail-label">Non-compliant:</span>
-                <span className="detail-value">11/50</span>
-          </div>
-            </div>
-          </div>
-          <div className="compliance-card">
-            <div className="compliance-header">
-              <h4>Waste Management</h4>
-              <div className="compliance-score high">88%</div>
-            </div>
-            <div className="progress-bar">
-              <div className="progress" style={{ width: '88%' }}></div>
-          </div>
-            <div className="compliance-details">
-              <div className="detail-item">
-                <span className="detail-label">Compliant:</span>
-                <span className="detail-value">44/50</span>
-            </div>
-              <div className="detail-item">
-                <span className="detail-label">Non-compliant:</span>
-                <span className="detail-value">6/50</span>
-          </div>
-        </div>
-      </div>
-          <div className="compliance-card">
-            <div className="compliance-header">
-              <h4>Land Use Compliance</h4>
-              <div className="compliance-score low">65%</div>
-          </div>
-            <div className="progress-bar">
-              <div className="progress" style={{ width: '65%' }}></div>
-          </div>
-            <div className="compliance-details">
-              <div className="detail-item">
-                <span className="detail-label">Compliant:</span>
-                <span className="detail-value">32/50</span>
-          </div>
-              <div className="detail-item">
-                <span className="detail-label">Non-compliant:</span>
-                <span className="detail-value">18/50</span>
-          </div>
-          </div>
-          </div>
         </div>
       </div>
 
@@ -1057,6 +1441,111 @@ function Reports() {
       </div>
     </div>
   );
+  };
+
+  // Report Modal Component
+  const ReportModal = () => {
+    if (!reportData) return null;
+    
+    return (
+      <div className="report-modal-overlay">
+        <div className="report-modal">
+          <div className="report-modal-header">
+            <h2>{reportData.title}</h2>
+            <div className="report-modal-actions">
+              <button className="report-action-btn print" onClick={handlePrintReport} disabled={generatingReport}>
+                <FaFilePdf /> Print
+              </button>
+              <button className="report-action-btn export" onClick={exportToPDF} disabled={generatingReport}>
+                <FaDownload /> Save PDF
+              </button>
+              <button className="report-action-btn export-csv" onClick={exportToCSV} disabled={generatingReport}>
+                <FaFileCsv /> Save CSV
+              </button>
+              <button className="report-action-btn export-excel" onClick={exportToExcel} disabled={generatingReport}>
+                <FaFileExcel /> Save Excel
+              </button>
+              <button className="report-modal-close" onClick={() => setShowReportModal(false)}>×</button>
+            </div>
+          </div>
+          
+          <div className="report-content" ref={reportTemplateRef}>
+            <div className="report-header">
+              <div className="report-logo">
+                <div className="logo-placeholder">
+                  <img src="/Logo1.png" alt="DENR Logo" />
+                </div>
+              </div>
+              <div className="report-title">
+                <h1>{reportData.title}</h1>
+                <p>Department of Environment and Natural Resources</p>
+                <p>Online Permit Application System</p>
+              </div>
+            </div>
+            
+            <div className="report-info">
+              <div className="report-info-item">
+                <span className="info-label">Period:</span>
+                <span className="info-value">{reportData.dateLabel}</span>
+              </div>
+              <div className="report-info-item">
+                <span className="info-label">Total Applications:</span>
+                <span className="info-value">{reportData.totalApplications}</span>
+              </div>
+              <div className="report-info-item">
+                <span className="info-label">Generated On:</span>
+                <span className="info-value">{reportData.generatedDate}</span>
+              </div>
+            </div>
+            
+            <div className="report-summary">
+              <h2>Applications Summary</h2>
+              <p>This report provides a summary of applications submitted during the selected period.</p>
+            </div>
+            
+            <div className="report-applications">
+              <h2>Application Details</h2>
+              {reportData.applications.length > 0 ? (
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Ref #</th>
+                      <th>Full Name</th>
+                      <th>Contact</th>
+                      <th>Address</th>
+                      <th>Purpose</th>
+                      <th>Submission Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.applications.map(app => (
+                      <tr key={app.id}>
+                        <td>REF-{app.id.toString().padStart(6, '0')}</td>
+                        <td>{app.full_name || "N/A"}</td>
+                        <td>{app.contact_number || "N/A"}</td>
+                        <td>{app.address || "N/A"}</td>
+                        <td>{app.purpose || "N/A"}</td>
+                        <td>{new Date(app.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="no-applications">
+                  <p>No applications found for this period.</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="report-footer">
+              <p>This is an automatically generated report from the DENR Online Permit Application System.</p>
+              <p>Generated on: {reportData.generatedDate}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="reports-container">
@@ -1092,73 +1581,7 @@ function Reports() {
         {activeTab === 'table' && renderTable()}
       </div>
 
-      {activeTab === 'table' && (
-        <div className="pagination-container">
-          <div className="pagination">
-            <button
-              className="pagination-button nav-button"
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-            >
-              ❮ Prev
-            </button>
-            <div className="pagination-pages">
-              {(() => {
-                const pageNumbers = [];
-                
-                if (totalPages <= 5) {
-                  for (let i = 1; i <= Math.max(1, totalPages); i++) {
-                    pageNumbers.push(i);
-                  }
-                } else {
-                  pageNumbers.push(1);
-                  
-                  if (currentPage <= 3) {
-                    pageNumbers.push(2, 3, 4);
-                    pageNumbers.push('ellipsis');
-                    pageNumbers.push(totalPages);
-                  } 
-                  else if (currentPage >= totalPages - 2) {
-                    pageNumbers.push('ellipsis');
-                    pageNumbers.push(totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-                  } 
-                  else {
-                    pageNumbers.push('ellipsis');
-                    pageNumbers.push(currentPage - 1, currentPage, currentPage + 1);
-                    pageNumbers.push('ellipsis2');
-                    pageNumbers.push(totalPages);
-                  }
-                }
-                
-                return pageNumbers.map((pageNumber, index) => {
-                  if (pageNumber === 'ellipsis' || pageNumber === 'ellipsis2') {
-                    return (
-                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
-                    );
-                  }
-                  
-                  return (
-                    <button
-                      key={pageNumber}
-                      className={`pagination-button ${currentPage === pageNumber ? 'active' : ''}`}
-                      onClick={() => setCurrentPage(pageNumber)}
-                    >
-                      {pageNumber}
-                    </button>
-                  );
-                });
-              })()}
-            </div>
-            <button
-              className="pagination-button nav-button"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              Next ❯
-            </button>
-          </div>
-        </div>
-      )}
+      {showReportModal && <ReportModal />}
         </div>
     );
 }

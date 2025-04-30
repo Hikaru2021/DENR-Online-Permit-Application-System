@@ -286,7 +286,7 @@ function ApplicationCatalog() {
             </div>
           </div>
           <div className="action-buttons">
-            {userRole === 1 && (
+            {userRole === 1 || userRole === 2 && (
               <>
                 {selectedApplications.length > 0 && (
                   <button 
@@ -324,7 +324,7 @@ function ApplicationCatalog() {
               <div className="applications-count">
                 {filteredAndSortedApplications.length} available applications
               </div>
-              {userRole === 1 && filteredAndSortedApplications.length > 0 && (
+              {userRole === 1 && userRole === 2 && filteredAndSortedApplications.length > 0 && (
                 <div className="select-all">
                   <label className="checkbox-container">
                     <input
@@ -345,7 +345,7 @@ function ApplicationCatalog() {
                   className={`catalog-card ${selectedApplications.includes(application.id) ? 'selected' : ''}`}
                   onClick={() => handleViewClick(application)}
                 >
-                  {userRole === 1 && (
+                  {userRole === 1 && userRole === 2 && (
                     <div className="card-actions">
                       <label 
                         className="checkbox-container"

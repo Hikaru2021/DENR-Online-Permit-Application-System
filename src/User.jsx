@@ -25,6 +25,9 @@ const User = () => {
   const [roleChangeData, setRoleChangeData] = useState(null);
   const [isRoleUpdating, setIsRoleUpdating] = useState(false);
   const [totalPages, setTotalPages] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusChangeData, setStatusChangeData] = useState(null);
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -88,6 +91,43 @@ const User = () => {
     return STATUS_MAPPING[statusId]?.label || 'Pending';
   };
 
+  const handleStatusChangeClick = (userId, currentStatus, newStatus) => {
+    setStatusChangeData({
+      userId,
+      currentStatus: getStatusText(currentStatus),
+      newStatus: getStatusText(parseInt(newStatus)),
+      newStatusId: parseInt(newStatus)
+    });
+    setShowStatusModal(true);
+  };
+
+  const handleStatusChangeConfirm = async () => {
+    if (!statusChangeData) return;
+    
+    setIsStatusUpdating(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ status: statusChangeData.newStatusId })
+        .eq('id', statusChangeData.userId)
+        .select();
+
+      if (error) throw error;
+
+      // Update the local state to reflect the change
+      setUsers(users.map(user => 
+        user.id === statusChangeData.userId ? { ...user, status: statusChangeData.newStatusId } : user
+      ));
+      setShowStatusModal(false);
+    } catch (err) {
+      setError(`Error updating status: ${err.message}`);
+      console.error('Error updating status:', err);
+    } finally {
+      setIsStatusUpdating(false);
+      setStatusChangeData(null);
+    }
+  };
+
   const getRolePermission = (roleId) => {
     switch (roleId) {
       case 1: return 'Admin';
@@ -138,12 +178,58 @@ const User = () => {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      // First, find all user_applications for this user to get their IDs
+      const { data: userApplications, error: fetchError } = await supabase
+        .from("user_applications")
+        .select("id")
+        .eq("user_id", deletingUser.id);
+      
+      if (fetchError) throw fetchError;
+      
+      // If user has applications, delete associated records
+      if (userApplications && userApplications.length > 0) {
+        const applicationIds = userApplications.map(app => app.id);
+        
+        // Delete application status history records
+        const { error: historyError } = await supabase
+          .from("application_status_history")
+          .delete()
+          .in("user_application_id", applicationIds);
+          
+        if (historyError) throw historyError;
+        
+        // Delete all documents related to user's applications
+        const { error: documentsError } = await supabase
+          .from("documents")
+          .delete()
+          .in("user_submissions", applicationIds);
+          
+        if (documentsError) throw documentsError;
+        
+        // Delete all comments related to user's applications
+        const { error: commentsError } = await supabase
+          .from("comments")
+          .delete()
+          .in("user_applications_id", applicationIds);
+          
+        if (commentsError) throw commentsError;
+      }
+      
+      // Delete all user_applications for this user
+      const { error: applicationsError } = await supabase
+        .from("user_applications")
+        .delete()
+        .eq("user_id", deletingUser.id);
+        
+      if (applicationsError) throw applicationsError;
+      
+      // Finally delete the user
+      const { error: userError } = await supabase
         .from("users")
         .delete()
         .eq("id", deletingUser.id);
 
-      if (error) throw error;
+      if (userError) throw userError;
 
       setUsers(users.filter(user => user.id !== deletingUser.id));
       setShowDeleteModal(false);
@@ -312,9 +398,17 @@ const User = () => {
                     </td>
                     <td>{formatDate(user.created_at)}</td>
                     <td>
-                      <span className={`status-badge ${getStatusBadgeClass(user.status)}`}>
-                        {getStatusText(user.status)}
-                      </span>
+                      <select
+                        value={user.status || ""}
+                        onChange={(e) => handleStatusChangeClick(user.id, user.status, e.target.value)}
+                        className={`status-select ${getStatusBadgeClass(user.status)}`}
+                      >
+                        {Object.entries(STATUS_MAPPING).map(([id, { label }]) => (
+                          <option key={id} value={id}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <div className="action-buttons">
@@ -485,6 +579,61 @@ const User = () => {
                   disabled={isRoleUpdating}
                 >
                   {isRoleUpdating ? "Updating..." : "Confirm Change"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Change Confirmation Modal */}
+      {showStatusModal && statusChangeData && (
+        <div className="modal-overlay">
+          <div className="modal-container role-modal">
+            <div className="modal-header">
+              <h2>Change User Status</h2>
+              <button
+                className="modal-close"
+                onClick={() => {
+                  setShowStatusModal(false);
+                  setStatusChangeData(null);
+                }}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p className="confirmation-message">
+                Are you sure you want to change this user's status from{' '}
+                <strong>{statusChangeData.currentStatus}</strong> to{' '}
+                <strong>{statusChangeData.newStatus}</strong>?
+              </p>
+              <p className="warning-message">
+                {statusChangeData.newStatusId === 2 
+                  ? "This will prevent the user from accessing the system."
+                  : "This will allow the user to access the system."}
+              </p>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={() => {
+                    setShowStatusModal(false);
+                    setStatusChangeData(null);
+                  }}
+                  disabled={isStatusUpdating}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="submit-button"
+                  onClick={handleStatusChangeConfirm}
+                  disabled={isStatusUpdating}
+                >
+                  {isStatusUpdating ? "Updating..." : "Confirm Change"}
                 </button>
               </div>
             </div>

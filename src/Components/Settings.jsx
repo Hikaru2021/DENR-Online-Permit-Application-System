@@ -241,7 +241,7 @@ const Settings = () => {
 
           <div className="form-group">
             <label>
-              <FaUser /> Full Name
+              <FaUser /> User Name
             </label>
             <input
               type="text"

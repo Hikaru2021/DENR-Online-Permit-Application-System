@@ -1,19 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaCheckCircle, FaClock, FaFileAlt, FaCog, FaTimes, FaFile, FaTimesCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaClock, FaFileAlt, FaTimes, FaFile, FaTimesCircle, FaExclamationCircle } from 'react-icons/fa';
 import { supabase } from './library/supabaseClient';
-import ManageApplicationModal from './Modals/ManageApplicationModal';
 import './CSS/ApplicationTracking.css';
 
-function ApplicationTracking() {
+const ApplicationTracking = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showAdminManagement, setShowAdminManagement] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [comments, setComments] = useState([]);
+  const [showAllComments, setShowAllComments] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  // Supabase storage configuration
+  const STORAGE_BUCKET = 'guidelines';
+
+  // Helper function to convert HTML tags to plain text
+  const convertHtmlToText = (html) => {
+    if (!html) return '';
+    // Create a temporary DOM element
+    const tempElement = document.createElement('div');
+    // Set its HTML content to the input string
+    tempElement.innerHTML = html;
+    // Return the text content
+    return tempElement.textContent || tempElement.innerText || '';
+  };
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -198,93 +217,250 @@ function ApplicationTracking() {
     navigate('/MyApplication');
   };
 
-  const handleUpdateStatus = async (statusUpdate) => {
+  // Handle file selection
+  const handleFileSelect = (files) => {
+    const newFiles = Array.from(files);
+    setSelectedFiles(prevFiles => [...prevFiles, ...newFiles]);
+  };
+
+  // Handle file drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelect(e.dataTransfer.files);
+    }
+  };
+
+  // Handle drag events
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  // Handle browse button click
+  const handleBrowseClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle file input change
+  const handleFileInputChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileSelect(e.target.files);
+    }
+  };
+
+  // Remove a file from selection
+  const handleRemoveFile = (index) => {
+    setSelectedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+  // Handle file upload and submission
+  const handleUploadFiles = async () => {
+    if (selectedFiles.length === 0) return;
+    
+    setIsUploading(true);
+    setIsSubmitting(true);
+    setUploadProgress(0);
+    
     try {
-      // Insert status comment into database
-      const { data: commentData, error: commentError } = await supabase
-        .from('comments')
+      console.log("Starting file upload process...");
+      
+      // First, get existing documents for this application
+      console.log(`Fetching existing documents for application ${application.id}...`);
+      const { data: existingDocs, error: fetchError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('user_submissions', parseInt(application.id));
+        
+      if (fetchError) {
+        console.error("Error fetching existing documents:", fetchError);
+        throw new Error(`Failed to fetch existing documents: ${fetchError.message}`);
+      }
+      
+      console.log(`Found ${existingDocs?.length || 0} existing documents`);
+      
+      // Delete existing documents from storage if they exist
+      if (existingDocs && existingDocs.length > 0) {
+        console.log("Removing existing documents from storage and database...");
+        
+        // First remove from storage - extract file paths from URLs
+        const filesToDelete = existingDocs.map(doc => {
+          // Extract path from URL if it exists
+          if (doc.file_link) {
+            const urlParts = doc.file_link.split('/');
+            // Get last parts of URL which should be the path
+            return `private/${application.id}/${urlParts[urlParts.length - 1]}`;
+          }
+          return null;
+        }).filter(path => path !== null);
+        
+        if (filesToDelete.length > 0) {
+          console.log(`Removing ${filesToDelete.length} files from storage:`, filesToDelete);
+          const { error: deleteStorageError } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .remove(filesToDelete);
+            
+          if (deleteStorageError) {
+            console.warn("Error removing some files from storage:", deleteStorageError);
+            // Continue anyway since we still want to upload new files
+          }
+        }
+        
+        // Then delete document records from database
+        const { error: deleteDbError } = await supabase
+          .from('documents')
+          .delete()
+          .eq('user_submissions', parseInt(application.id));
+          
+        if (deleteDbError) {
+          console.error("Error deleting document records:", deleteDbError);
+          throw new Error(`Failed to delete document records: ${deleteDbError.message}`);
+        }
+        
+        console.log("Successfully removed existing documents");
+      }
+      
+      // Array to store all document records
+      const documentRecords = [];
+      
+      // Upload each file to Supabase storage
+      for (let i = 0; i < selectedFiles.length; i++) {
+        try {
+          const file = selectedFiles[i];
+          console.log(`Processing file ${i + 1}/${selectedFiles.length}: ${file.name}`);
+          
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
+          // Using private folder to comply with existing RLS policy
+          const filePath = `private/${application.id}/${fileName}`;
+          
+          console.log(`Uploading to path: ${filePath}`);
+          
+          // Upload file to storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true, // Changed to true to overwrite if exists
+            });
+            
+          if (uploadError) {
+            console.error("File upload error:", uploadError);
+            throw new Error(`File upload failed: ${uploadError.message}`);
+          }
+          
+          console.log("File uploaded successfully:", uploadData);
+          
+          // Get the public URL
+          const { data } = supabase.storage
+            .from(STORAGE_BUCKET)
+            .getPublicUrl(filePath);
+            
+          if (!data || !data.publicUrl) {
+            throw new Error("Failed to get public URL for uploaded file");
+          }
+          
+          console.log("Public URL generated:", data.publicUrl);
+          
+          // Prepare document record for database
+          documentRecords.push({
+            file_name: file.name,
+            file_type: file.type,
+            file_link: data.publicUrl,
+            user_submissions: parseInt(application.id)
+          });
+          
+          // Update progress
+          setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
+        } catch (fileError) {
+          console.error(`Error processing file ${i + 1}:`, fileError);
+          throw fileError;
+        }
+      }
+      
+      console.log("All files uploaded successfully, saving records to database...");
+      console.log("Document records to insert:", documentRecords);
+      
+      // Insert all document records in the database
+      const { data: documentData, error: documentError } = await supabase
+        .from('documents')
+        .insert(documentRecords)
+        .select();
+        
+      if (documentError) {
+        console.error("Error inserting document records:", documentError);
+        throw new Error(`Database error: ${documentError.message}`);
+      }
+      
+      console.log("Document records inserted successfully:", documentData);
+      
+      // Update application status
+      const { data: appData, error: statusError } = await supabase
+        .from('user_applications')
+        .update({ 
+          status: 1, 
+          last_updated: new Date().toISOString() 
+        })
+        .eq('id', application.id)
+        .select();
+        
+      if (statusError) {
+        console.error("Error updating application status:", statusError);
+        throw new Error(`Status update failed: ${statusError.message}`);
+      }
+      
+      console.log("Application status updated to Submitted:", appData);
+      
+      // Add a new status history record
+      const { data: historyData, error: historyError } = await supabase
+        .from('application_status_history')
         .insert({
-          user_applications_id: application.id,
-          official_comment: statusUpdate.status !== "Needs Revision" ? statusUpdate.comment.message : null,
-          revision_comment: statusUpdate.status === "Needs Revision" ? statusUpdate.comment.message : null,
+          user_application_id: parseInt(application.id),
+          status_id: 1,
+          remarks: `Application resubmitted with ${documentRecords.length} revised document(s)`,
+          changed_at: new Date().toISOString()
         })
         .select();
         
-      if (commentError) throw commentError;
+      if (historyError) {
+        console.error("Error adding status history:", historyError);
+        throw new Error(`History update failed: ${historyError.message}`);
+      }
       
-      // Update application status in database
-      const statusId = 
-        statusUpdate.status === "Submitted" ? 1 :
-        statusUpdate.status === "Under Review" ? 2 :
-        statusUpdate.status === "Needs Revision" ? 3 :
-        statusUpdate.status === "Approved" ? 4 :
-        statusUpdate.status === "Rejected" ? 5 : 1;
-        
-      const { error: updateError } = await supabase
-        .from('user_applications')
-        .update({ status: statusId })
-        .eq('id', application.id);
-        
-      if (updateError) throw updateError;
+      console.log("Status history added successfully:", historyData);
       
-      // Update local state
-      const newComment = {
-        id: commentData[0].id,
-        user: "Admin",
-        role: "admin",
-        message: statusUpdate.comment.message,
-        timestamp: new Date().toLocaleString(),
-        isOfficial: true,
-        type: statusUpdate.status === "Needs Revision" ? 'revision-request' : 'official-comment'
-      };
+      // Update local application state
+      setApplication(prev => ({
+        ...prev,
+        status: 'Submitted',
+        statusId: 1,
+        needsRevision: false,
+        lastUpdated: new Date().toLocaleString()
+      }));
       
-      // Get current formatted date and time
-      const { date, time } = formatDateTime(new Date());
+      // Reset files after successful upload
+      setSelectedFiles([]);
       
-      // Create a new timeline entry
-      const newTimelineEntry = {
-        status: statusUpdate.status,
-        date,
-        time,
-        description: statusUpdate.status === "Needs Revision" 
-          ? "Application needs revision"
-          : statusUpdate.status === "Approved"
-          ? "Application has been approved and ready for certificate claiming"
-          : statusUpdate.status === "Rejected"
-          ? "Application has been rejected"
-          : `Application status changed to ${statusUpdate.status}`,
-        isDone: true,
-        current: true,
-        additionalInfo: statusUpdate.status === "Approved" ? {
-          recipient: application.full_name,
-          approvedDate: date
-        } : null
-      };
+      // Show success message
+      alert('Your application has been successfully resubmitted with the revised documents!');
       
-      setApplication(prev => {
-        // Update the current flag for all timeline items
-        const updatedTimeline = prev.timeline.map(item => ({
-          ...item,
-          current: false
-        }));
-        
-        // Add the new timeline entry at the beginning
-        updatedTimeline.unshift(newTimelineEntry);
-        
-        return {
-          ...prev,
-          status: statusUpdate.status,
-          statusId: statusUpdate.statusId,
-          comments: [newComment, ...prev.comments],
-          timeline: updatedTimeline,
-          needsRevision: statusUpdate.status === "Needs Revision",
-          revisionInstructions: statusUpdate.status === "Needs Revision" ? statusUpdate.comment.message : prev.revisionInstructions,
-          lastUpdated: date
-        };
-      });
+      // Reload the page to show updated status
+      window.location.reload();
+      
     } catch (error) {
-      console.error('Error updating status:', error);
-      throw new Error('Failed to update application status');
+      console.error('Error uploading files and resubmitting application:', error);
+      alert(`Failed to resubmit your application: ${error.message}. Please try again or contact support.`);
+    } finally {
+      setIsUploading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -331,16 +507,6 @@ function ApplicationTracking() {
             <FaArrowLeft /> Back to Applications
           </button>
         </div>
-        {userRole !== 3 && (
-          <div className="header-right">
-            <button 
-              className="admin-manage-button"
-              onClick={() => setShowAdminManagement(true)}
-            >
-              <FaCog /> Manage Application
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="tracking-page-content">
@@ -364,11 +530,8 @@ function ApplicationTracking() {
             <div className="progress-line"></div>
             {/* Progress line fill based on status */}
             <div 
-              className="progress-line-fill"
+              className={`progress-line-fill ${application.status.toLowerCase().replace(' ', '-')}`}
               style={{ 
-                '--progress-width': application.status === 'Submitted' ? '33%' : 
-                                  application.status === 'Under Review' ? '66%' : 
-                                  '100%',
                 backgroundColor: application.status === 'Rejected' ? '#dc3545' : '#4CAF50'
               }}
             ></div>
@@ -385,13 +548,16 @@ function ApplicationTracking() {
             </div>
             
             <div 
-              className={`progress-step ${application.statusId >= 2 ? 'completed' : ''} ${application.statusId === 2 || application.statusId === 3 ? 'current' : ''}`}
+              className={`progress-step ${application.statusId >= 2 ? 'completed' : ''} ${application.statusId === 2 ? 'current' : ''} ${application.statusId === 3 ? 'needs-revision current' : ''}`}
             >
               <div className="step-circle">
                 {application.statusId > 3 ? <FaCheckCircle /> : 
-                 application.statusId === 2 || application.statusId === 3 ? <FaClock /> : <FaFile />}
+                 application.statusId === 2 ? <FaClock /> :
+                 application.statusId === 3 ? <FaExclamationCircle /> : <FaFile />}
               </div>
-              <div className="step-label">Under Review</div>
+              <div className="step-label">
+                {application.statusId === 3 ? 'Needs Revision' : 'Under Review'}
+              </div>
             </div>
             
             <div 
@@ -434,6 +600,7 @@ function ApplicationTracking() {
           <div className="comments-list">
             {application.comments
               .filter(comment => comment.type === 'official-comment')
+              .slice(0, showAllComments ? application.comments.length : 2)
               .map((comment, index) => (
                 <div 
                   key={index} 
@@ -446,7 +613,7 @@ function ApplicationTracking() {
                     <span className="comment-timestamp">{comment.timestamp}</span>
                   </div>
                   <div className="comment-content">
-                    <p>{comment.message}</p>
+                    <p>{convertHtmlToText(comment.message)}</p>
                   </div>
                 </div>
             ))}
@@ -454,6 +621,22 @@ function ApplicationTracking() {
               <div className="no-comments">
                 <p>No official comments yet.</p>
               </div>
+            )}
+            {!showAllComments && application.comments.filter(comment => comment.type === 'official-comment').length > 2 && (
+              <button 
+                className="show-more-comments" 
+                onClick={() => setShowAllComments(true)}
+              >
+                Show More Comments ({application.comments.filter(comment => comment.type === 'official-comment').length - 2} more)
+              </button>
+            )}
+            {showAllComments && application.comments.filter(comment => comment.type === 'official-comment').length > 2 && (
+              <button 
+                className="show-less-comments" 
+                onClick={() => setShowAllComments(false)}
+              >
+                Show Less
+              </button>
             )}
           </div>
         </div>
@@ -467,6 +650,8 @@ function ApplicationTracking() {
             <div className="revision-instructions">
               {application.comments
                 .filter(comment => comment.type === 'revision-request')
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 1)
                 .map((comment, index) => (
                   <div 
                     key={index} 
@@ -478,28 +663,77 @@ function ApplicationTracking() {
                     </div>
                     <div className="comment-content">
                       <h4>Revision Instructions:</h4>
-                      <p>{comment.message}</p>
+                      <p>{convertHtmlToText(comment.message)}</p>
                     </div>
                   </div>
               ))}
               {application.comments.filter(comment => comment.type === 'revision-request').length === 0 && (
                 <div className="no-comments">
-                  <p>{application.revisionInstructions || "Please update your application as required."}</p>
+                  <p>{convertHtmlToText(application.revisionInstructions) || "Please update your application as required."}</p>
+                </div>
+              )}
+            </div>
+            
+            {/* File Upload UI */}
+            <div className="file-upload-section">
+              <h4>Upload Revised Documents</h4>
+              <div 
+                className={`file-upload-container ${isDragging ? 'dragging' : ''}`}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={handleBrowseClick}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileInputChange}
+                  className="file-upload-input"
+                  multiple
+                />
+                <div className="upload-icon">
+                  <FaFileAlt />
+                </div>
+                <p className="upload-text">Drag & drop files here or click to browse</p>
+                <button type="button" className="browse-button">Browse Files</button>
+              </div>
+              
+              {selectedFiles.length > 0 && (
+                <div className="selected-files-container">
+                  <h4>Selected Files ({selectedFiles.length})</h4>
+                  <ul className="selected-files-list">
+                    {selectedFiles.map((file, index) => (
+                      <li key={index} className="selected-file-item">
+                        <span className="file-name">{file.name}</span>
+                        <span className="file-size">({(file.size / 1024).toFixed(2)} KB)</span>
+                        <button
+                          className="remove-file-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFile(index);
+                          }}
+                        >
+                          <FaTimes />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <button 
+                    className="resubmit-button"
+                    onClick={handleUploadFiles}
+                    disabled={isUploading || isSubmitting || selectedFiles.length === 0}
+                  >
+                    {isUploading ? `Uploading... ${uploadProgress}%` : 
+                     isSubmitting ? 'Resubmitting application...' : 
+                     'Resubmit Application with Documents'}
+                  </button>
                 </div>
               )}
             </div>
           </div>
         )}
       </div>
-
-      {showAdminManagement && application && (
-        <ManageApplicationModal
-          isOpen={showAdminManagement}
-          onClose={() => setShowAdminManagement(false)}
-          application={application}
-          onUpdateStatus={handleUpdateStatus}
-        />
-      )}
     </div>
   );
 }

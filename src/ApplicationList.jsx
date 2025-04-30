@@ -252,15 +252,83 @@ function ApplicationList() {
 
   // Handle delete application
   const handleDeleteApplication = async (applicationId) => {
-    if (window.confirm("Are you sure you want to delete this application?")) {
+    if (window.confirm("Are you sure you want to delete this application? This action cannot be undone.")) {
       try {
-        // Simulate API call delay
-        setTimeout(() => {
-          setApplications(applications.filter(app => app.id !== applicationId));
-        }, 500);
+        setIsLoading(true);
+        
+        // 1. Delete application status history records first
+        const { error: historyError } = await supabase
+          .from("application_status_history")
+          .delete()
+          .eq("user_application_id", applicationId);
+          
+        if (historyError) throw historyError;
+        
+        // 2. Get all documents related to this application to delete them from storage
+        const { data: applicationDocs, error: docError } = await supabase
+          .from("documents")
+          .select("*")
+          .eq("user_submissions", applicationId);
+        
+        if (docError) throw docError;
+        
+        // 3. If there are documents, delete them from storage and then from database
+        if (applicationDocs && applicationDocs.length > 0) {
+          for (const doc of applicationDocs) {
+            // Extract the file path from the URL
+            const fileUrl = doc.file_link;
+            if (fileUrl) {
+              // Get the path by removing the base storage URL
+              const filePath = fileUrl.split('/storage/v1/object/public/')[1];
+              if (filePath) {
+                const bucketName = filePath.split('/')[0];
+                const path = filePath.substring(bucketName.length + 1);
+                
+                // Delete the file from storage
+                const { error: storageError } = await supabase.storage
+                  .from(bucketName)
+                  .remove([decodeURIComponent(path)]);
+                
+                if (storageError) {
+                  console.error(`Error deleting file from storage: ${storageError.message}`);
+                }
+              }
+            }
+          }
+          
+          // Delete document records from the database
+          const { error: docDeleteError } = await supabase
+            .from('documents')
+            .delete()
+            .eq('user_submissions', applicationId);
+          
+          if (docDeleteError) throw docDeleteError;
+        }
+        
+        // 4. Delete all comments related to this application
+        const { error: commentsError } = await supabase
+          .from("comments")
+          .delete()
+          .eq("user_applications_id", applicationId);
+          
+        if (commentsError) throw commentsError;
+        
+        // 5. Finally delete the application itself
+        const { error } = await supabase
+          .from('user_applications')
+          .delete()
+          .eq('id', applicationId);
+        
+        if (error) throw error;
+        
+        // Update the UI by removing the deleted application
+        setApplications(applications.filter(app => app.id !== applicationId));
+        
       } catch (err) {
         console.error('Error deleting application:', err);
         alert(`Error deleting application: ${err.message}`);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
