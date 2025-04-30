@@ -540,9 +540,9 @@ function MyApplication() {
                     <th>Reference #</th>
                     <th>Title</th>
                     <th>Type</th>
-                    <th>Status</th>
-                    <th>Submission Date</th>
-                    <th>Actions</th>
+                    <th className="th-center">Status</th>
+                    <th className="th-center">Submission Date</th>
+                    <th className="th-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -551,13 +551,13 @@ function MyApplication() {
                       <td>{application.referenceNumber}</td>
                       <td>{application.title}</td>
                       <td>{application.type}</td>
-                      <td>
+                      <td className="td-center">
                         <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>
                           {application.status}
                         </span>
                       </td>
-                      <td>{formatDateMMDDYYYY(application.submissionDate)}</td>
-                      <td>
+                      <td className="td-center">{formatDateMMDDYYYY(application.submissionDate)}</td>
+                      <td className="td-center">
                         <div className="action-buttons">
                           <button 
                             className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
