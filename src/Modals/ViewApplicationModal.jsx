@@ -110,7 +110,6 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
             <h2>{application.title}</h2>
             <div className="header-meta">
               <span className="application-type-badge">{application.type}</span>
-              <span className="application-id">ID: {application.id}</span>
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>

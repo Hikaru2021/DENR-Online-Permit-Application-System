@@ -472,7 +472,6 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
         <div className="modal-header">
           <h2>Edit Application</h2>
           <div className="application-meta">
-            <span className="application-id">ID: {editedApplication.id}</span>
             <span className="application-date">
               Created: {editedApplication.application_date ? new Date(editedApplication.application_date).toLocaleDateString() : 'N/A'}
             </span>

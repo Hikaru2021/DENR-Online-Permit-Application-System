@@ -7,6 +7,14 @@ import "../CSS/ApplicationSubmissionList.css";
 // Supabase storage constants
 const STORAGE_BUCKET = 'guidelines';
 
+// Add a utility function at the top
+function formatFee(value) {
+  if (value === undefined || value === null || value === "") return "";
+  const num = Number(value);
+  if (isNaN(num)) return value;
+  return Number.isInteger(num) ? num : num.toFixed(2);
+}
+
 const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
   const [formData, setFormData] = useState({
     full_name: "",
@@ -329,19 +337,21 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                           <span className="fee-label">Application Fee</span>
                           <span className="fee-description">One-time payment for application processing</span>
                         </div>
-                        <span className="fee-amount">₱{application.application_fee}</span>
+                        <span className="fee-amount">₱{formatFee(application.application_fee)}</span>
                       </div>
                       <div className="fee-row">
                         <div className="fee-info">
                           <span className="fee-label">Processing Fee</span>
                           <span className="fee-description">Additional processing and handling charges</span>
                         </div>
-                        <span className="fee-amount">₱{application.processing_fee}</span>
+                        <span className="fee-amount">₱{formatFee(application.processing_fee)}</span>
                       </div>
                       <div className="fee-total-row">
                         <span className="total-label">Total Amount</span>
                         <span className="total-amount">
-                          ₱{parseFloat(application.application_fee) + parseFloat(application.processing_fee)}
+                          ₱{formatFee(
+                            (Number(application.application_fee) || 0) + (Number(application.processing_fee) || 0)
+                          )}
                         </span>
                       </div>
                     </div>
@@ -556,18 +566,20 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                             <div className="fee-info">
                               <span className="fee-label">Application Fee</span>
                             </div>
-                            <span className="fee-amount">₱{application.application_fee}</span>
+                            <span className="fee-amount">₱{formatFee(application.application_fee)}</span>
                           </div>
                           <div className="fee-row">
                             <div className="fee-info">
                               <span className="fee-label">Processing Fee</span>
                             </div>
-                            <span className="fee-amount">₱{application.processing_fee}</span>
+                            <span className="fee-amount">₱{formatFee(application.processing_fee)}</span>
                           </div>
                           <div className="fee-total-row">
                             <span className="total-label">Total Amount</span>
                             <span className="total-amount">
-                              ₱{parseFloat(application.application_fee) + parseFloat(application.processing_fee)}
+                              ₱{formatFee(
+                                (Number(application.application_fee) || 0) + (Number(application.processing_fee) || 0)
+                              )}
                             </span>
                           </div>
                         </div>
