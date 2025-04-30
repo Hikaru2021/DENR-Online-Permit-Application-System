@@ -36,6 +36,7 @@ function Reports() {
   const [reportYear, setReportYear] = useState(new Date().getFullYear());
   // Refs for PDF printing
   const reportTemplateRef = useRef(null);
+  const [statusHistory, setStatusHistory] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -68,6 +69,14 @@ function Reports() {
       
       if (appsError) throw appsError;
       setApplications(applications_data || []);
+
+      // Fetch application status history
+      let { data: application_status_history, error: historyError } = await supabase
+        .from('application_status_history')
+        .select('*');
+      
+      if (historyError) throw historyError;
+      setStatusHistory(application_status_history || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -603,18 +612,18 @@ function Reports() {
         </button>
       </div>
       
-      <div className="reports-table">
+    <div className="reports-table">
         <h3>Available Report Templates</h3>
-        <table>
-          <thead>
-            <tr>
+      <table>
+        <thead>
+          <tr>
               <th style={{width: '12%'}}>Report ID</th>
               <th style={{width: '30%'}}>Report Title</th>
               <th style={{width: '15%'}}>Type</th>
               <th style={{width: '43%'}}>Description</th>
-            </tr>
-          </thead>
-          <tbody>
+          </tr>
+        </thead>
+        <tbody>
             {mockReports.map((report) => (
               <tr key={report.id}
                   onClick={() => {
@@ -645,8 +654,8 @@ function Reports() {
                 </td>
               </tr>
             ))}
-          </tbody>
-        </table>
+        </tbody>
+      </table>
       </div>
     </div>
   );
@@ -1141,6 +1150,148 @@ function Reports() {
     </div>
   );
 
+  // Get the status name from status ID
+  const getStatusName = (statusCode) => {
+    switch (statusCode) {
+      case 1:
+        return 'Submitted';
+      case 2:
+        return 'Under Review';
+      case 3:
+        return 'Needs Revision';
+      case 4:
+        return 'Approved';
+      case 5:
+        return 'Rejected';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  // Process status history for the timeline chart
+  const processStatusHistory = () => {
+    if (!statusHistory || statusHistory.length === 0) {
+      return {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [
+          {
+            label: 'Submitted',
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Under Review',
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Needs Revision',
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            borderColor: 'rgba(255, 159, 64, 1)',
+            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Approved',
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Rejected',
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.4,
+            fill: true
+          }
+        ]
+      };
+    }
+
+    // Initialize monthly counts for each status
+    const monthlyStatusCounts = {
+      1: Array(12).fill(0), // Submitted
+      2: Array(12).fill(0), // Under Review
+      3: Array(12).fill(0), // Needs Revision
+      4: Array(12).fill(0), // Approved
+      5: Array(12).fill(0)  // Rejected
+    };
+
+    // Filter for selected year if not "all"
+    const filteredHistory = selectedYear === "all" 
+      ? statusHistory 
+      : statusHistory.filter(entry => {
+          const entryDate = new Date(entry.changed_at);
+          return entryDate.getFullYear() === parseInt(selectedYear);
+        });
+
+    // Count status changes by month
+    filteredHistory.forEach(entry => {
+      const entryDate = new Date(entry.changed_at);
+      const month = entryDate.getMonth(); // 0-based month
+      
+      if (entry.status_id && monthlyStatusCounts[entry.status_id]) {
+        monthlyStatusCounts[entry.status_id][month]++;
+      }
+    });
+
+    return {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      datasets: [
+        {
+          label: 'Submitted',
+          data: monthlyStatusCounts[1],
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Under Review',
+          data: monthlyStatusCounts[2],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Needs Revision',
+          data: monthlyStatusCounts[3],
+          borderColor: 'rgba(255, 159, 64, 1)',
+          backgroundColor: 'rgba(255, 159, 64, 0.2)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Approved',
+          data: monthlyStatusCounts[4],
+          borderColor: 'rgba(46, 204, 113, 1)',
+          backgroundColor: 'rgba(46, 204, 113, 0.2)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Rejected',
+          data: monthlyStatusCounts[5],
+          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
+  };
+
   // Update the renderAnalytics function
   const renderAnalytics = () => {
     // Calculate application metrics
@@ -1318,48 +1469,51 @@ function Reports() {
       {/* Application Status Timeline */}
       <div className="analytics-section">
         <h3 className="section-title">Application Status Timeline</h3>
-          <div className="chart-wrapper">
+        <div className="chart-wrapper" style={{ position: 'relative', paddingTop: '50px', height: '400px' }}>
+          {/* Year filter moved inside the chart with adjusted positioning */}
+          <div className="filter" style={{ 
+            position: 'absolute', 
+            top: '0px', 
+            right: '10px', 
+            zIndex: 10,
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px',
+            background: 'rgba(255, 255, 255, 0.9)',
+            padding: '6px 12px',
+            borderRadius: '4px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}>
+            <label htmlFor="timeline-year-select" style={{ fontWeight: '500', marginBottom: '0', fontSize: '0.9rem' }}>Year:</label>
+            <select 
+              id="timeline-year-select" 
+              value={selectedYear} 
+              onChange={handleYearChange}
+              style={{ 
+                padding: '4px 8px', 
+                borderRadius: '4px', 
+                border: '1px solid #ddd',
+                backgroundColor: '#f8f9fa',
+                minWidth: '100px',
+                fontSize: '0.9rem'
+              }}
+            >
+              <option value="all">All Years</option>
+              {getAvailableYears().map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
           <Line 
-            data={{
-              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-              datasets: [
-                {
-                  label: 'Pending',
-                  data: [12, 19, 15, 17, 22, 24, 28, 25, 23, 20, 18, 15],
-                  borderColor: 'rgba(255, 206, 86, 1)',
-                  backgroundColor: 'rgba(255, 206, 86, 0.2)',
-                  tension: 0.4,
-                  fill: true
-                },
-                {
-                  label: 'Under Review',
-                  data: [8, 12, 11, 14, 16, 18, 15, 17, 19, 16, 14, 12],
-                  borderColor: 'rgba(54, 162, 235, 1)',
-                  backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                  tension: 0.4,
-                  fill: true
-                },
-                {
-                  label: 'Approved',
-                  data: [15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40, 42],
-                  borderColor: 'rgba(75, 192, 192, 1)',
-                  backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                  tension: 0.4,
-                  fill: true
-                },
-                {
-                  label: 'Denied',
-                  data: [3, 4, 5, 4, 6, 5, 4, 3, 4, 5, 4, 3],
-                  borderColor: 'rgba(255, 99, 132, 1)',
-                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                  tension: 0.4,
-                  fill: true
-                }
-              ]
-            }}
+            data={processStatusHistory()}
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
+              layout: {
+                padding: {
+                  top: 10
+                }
+              },
               scales: {
                 y: {
                   beginAtZero: true,
@@ -1371,7 +1525,19 @@ function Reports() {
               },
                 plugins: {
                   legend: {
-                  position: 'top'
+                  position: 'top',
+                  align: 'start',
+                  labels: {
+                    boxWidth: 15,
+                    padding: 15
+                  }
+                },
+                tooltip: {
+                  callbacks: {
+                    title: function(context) {
+                      return context[0].label + ' ' + (selectedYear === "all" ? "" : selectedYear);
+                    }
+                  }
                 }
               }
               }}
@@ -1383,60 +1549,74 @@ function Reports() {
       <div className="analytics-section">
         <h3 className="section-title">Recent Applications</h3>
         <div className="applications-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Application ID</th>
-                <th>Type</th>
-                <th>Applicant</th>
-                <th>Date Submitted</th>
-                <th>Status</th>
-                <th>Processing Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>ENV-2023-089</td>
-                <td>Environmental Compliance</td>
-                <td>ABC Corporation</td>
-                <td>May 15, 2023</td>
-                <td><span className="status-badge approved">Approved</span></td>
-                <td>12 days</td>
-              </tr>
-              <tr>
-                <td>WM-2023-112</td>
-                <td>Waste Management</td>
-                <td>XYZ Industries</td>
-                <td>May 10, 2023</td>
-                <td><span className="status-badge pending">Pending</span></td>
-                <td>17 days</td>
-              </tr>
-              <tr>
-                <td>AQ-2023-045</td>
-                <td>Air Quality</td>
-                <td>123 Manufacturing</td>
-                <td>May 5, 2023</td>
-                <td><span className="status-badge under-review">Under Review</span></td>
-                <td>22 days</td>
-              </tr>
-              <tr>
-                <td>WU-2023-078</td>
-                <td>Water Usage</td>
-                <td>Green Energy Co.</td>
-                <td>April 28, 2023</td>
-                <td><span className="status-badge denied">Denied</span></td>
-                <td>15 days</td>
-              </tr>
-              <tr>
-                <td>LU-2023-023</td>
-                <td>Land Use</td>
-                <td>City Development</td>
-                <td>April 20, 2023</td>
-                <td><span className="status-badge approved">Approved</span></td>
-                <td>19 days</td>
-              </tr>
-            </tbody>
-          </table>
+          {isLoading ? (
+            <div className="loading-spinner">Loading application data...</div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
+          ) : userApplications.length === 0 ? (
+            <div className="no-data-message">No applications found</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Application ID</th>
+                  <th>Applicant</th>
+                  <th>Purpose</th>
+                  <th>Date Submitted</th>
+                  <th>Status</th>
+                  <th>Processing Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userApplications
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                  .slice(0, 5)
+                  .map(app => {
+                    // Calculate processing time
+                    const submissionDate = new Date(app.created_at);
+                    const currentDate = new Date();
+                    const approvalDate = app.approved_date ? new Date(app.approved_date) : null;
+                    
+                    // Use approval date for completed applications, current date for ongoing ones
+                    const endDate = approvalDate || currentDate;
+                    const processingDays = Math.ceil((endDate - submissionDate) / (1000 * 60 * 60 * 24));
+                    
+                    // Status badge class based on status code
+                    let statusBadgeClass = '';
+                    switch(app.status) {
+                      case 1: statusBadgeClass = 'pending'; break;
+                      case 2: statusBadgeClass = 'under-review'; break;
+                      case 3: statusBadgeClass = 'needs-revision'; break;
+                      case 4: statusBadgeClass = 'approved'; break;
+                      case 5: statusBadgeClass = 'denied'; break;
+                      default: statusBadgeClass = 'pending';
+                    }
+                    
+                    return (
+                      <tr key={app.id}>
+                        <td>APP-{app.id.toString().padStart(6, '0')}</td>
+                        <td>{app.full_name || 'N/A'}</td>
+                        <td>{app.purpose || 'N/A'}</td>
+                        <td>{new Date(app.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}</td>
+                        <td>
+                          <span className={`status-badge ${statusBadgeClass}`}>
+                            {getStatusName(app.status)}
+                          </span>
+                        </td>
+                        <td>
+                          {processingDays} day{processingDays !== 1 ? 's' : ''}
+                          {app.status === 4 && ' (completed)'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
