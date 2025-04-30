@@ -12,6 +12,24 @@ import * as XLSX from 'xlsx';
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement);
 
+// Add utility functions at the top (after imports)
+function formatDateMMDDYYYY(date) {
+  const d = new Date(date);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${mm}-${dd}-${yyyy}`;
+}
+function formatTime12hr(date) {
+  const d = new Date(date);
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  return `${hours}:${minutes} ${ampm}`;
+}
+
 function Reports() {
   const [search, setSearch] = useState("");
   const [reportType, setReportType] = useState("all");
@@ -1563,8 +1581,8 @@ function Reports() {
                   <th>Applicant</th>
                   <th>Purpose</th>
                   <th>Date Submitted</th>
-                  <th>Status</th>
-                  <th>Processing Time</th>
+                  <th style={{ textAlign: 'center' }}>Status</th>
+                  <th style={{ textAlign: 'center' }}>Processing Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -1597,17 +1615,13 @@ function Reports() {
                         <td>APP-{app.id.toString().padStart(6, '0')}</td>
                         <td>{app.full_name || 'N/A'}</td>
                         <td>{app.purpose || 'N/A'}</td>
-                        <td>{new Date(app.created_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}</td>
-                        <td>
+                        <td>{formatDateMMDDYYYY(app.created_at)}</td>
+                        <td style={{ textAlign: 'center' }}>
                           <span className={`status-badge ${statusBadgeClass}`}>
                             {getStatusName(app.status)}
                           </span>
                         </td>
-                        <td>
+                        <td style={{ textAlign: 'center' }}>
                           {processingDays} day{processingDays !== 1 ? 's' : ''}
                           {app.status === 4 && ' (completed)'}
                         </td>
@@ -1674,7 +1688,7 @@ function Reports() {
             </div>
               <div className="report-info-item">
                 <span className="info-label">Generated On:</span>
-                <span className="info-value">{reportData.generatedDate}</span>
+                <span className="info-value">{formatDateMMDDYYYY(reportData.generatedDate)}</span>
           </div>
             </div>
             
@@ -1705,7 +1719,7 @@ function Reports() {
                         <td>{app.contact_number || "N/A"}</td>
                         <td>{app.address || "N/A"}</td>
                         <td>{app.purpose || "N/A"}</td>
-                        <td>{new Date(app.created_at).toLocaleDateString()}</td>
+                        <td>{formatDateMMDDYYYY(app.created_at)}</td>
               </tr>
                     ))}
             </tbody>
@@ -1719,7 +1733,7 @@ function Reports() {
             
             <div className="report-footer">
               <p>This is an automatically generated report from the DENR Online Permit Application System.</p>
-              <p>Generated on: {reportData.generatedDate}</p>
+              <p>Generated on: {formatDateMMDDYYYY(reportData.generatedDate)}</p>
             </div>
           </div>
       </div>

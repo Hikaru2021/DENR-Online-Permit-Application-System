@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileArchive, FaFileCode, FaCog, FaEdit } from "react-icons/fa";
+import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileArchive, FaFileCode, FaCog, FaEdit, FaTimes } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
 import "./CSS/SharedTable.css";
 import ApplicationSubmissionForm from "./Modals/ApplicationSubmissionForm";
@@ -10,6 +10,24 @@ import JSZip from 'jszip';
 
 // Supabase storage constants
 const STORAGE_BUCKET = 'guidelines';
+
+function formatDateMMDDYYYY(date) {
+  const d = new Date(date);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${mm}-${dd}-${yyyy}`;
+}
+
+function formatTime12hr(date) {
+  const d = new Date(date);
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  return `${hours}:${minutes} ${ampm}`;
+}
 
 function ApplicationList() {
   const navigate = useNavigate();
@@ -32,6 +50,9 @@ function ApplicationList() {
   const [downloadingDocId, setDownloadingDocId] = useState(null);
   const [documents, setDocuments] = useState({});
   const [isDownloadingAllDocs, setIsDownloadingAllDocs] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingAppId, setDeletingAppId] = useState(null);
+  const [deletingRowId, setDeletingRowId] = useState(null);
 
   // Status mapping function
   const getStatusName = (statusId) => {
@@ -251,85 +272,90 @@ function ApplicationList() {
   };
 
   // Handle delete application
-  const handleDeleteApplication = async (applicationId) => {
-    if (window.confirm("Are you sure you want to delete this application? This action cannot be undone.")) {
-      try {
-        setIsLoading(true);
-        
-        // 1. Delete application status history records first
-        const { error: historyError } = await supabase
-          .from("application_status_history")
-          .delete()
-          .eq("user_application_id", applicationId);
-          
-        if (historyError) throw historyError;
-        
-        // 2. Get all documents related to this application to delete them from storage
-        const { data: applicationDocs, error: docError } = await supabase
-          .from("documents")
-          .select("*")
-          .eq("user_submissions", applicationId);
-        
-        if (docError) throw docError;
-        
-        // 3. If there are documents, delete them from storage and then from database
-        if (applicationDocs && applicationDocs.length > 0) {
-          for (const doc of applicationDocs) {
-            // Extract the file path from the URL
-            const fileUrl = doc.file_link;
-            if (fileUrl) {
-              // Get the path by removing the base storage URL
-              const filePath = fileUrl.split('/storage/v1/object/public/')[1];
-              if (filePath) {
-                const bucketName = filePath.split('/')[0];
-                const path = filePath.substring(bucketName.length + 1);
-                
-                // Delete the file from storage
-                const { error: storageError } = await supabase.storage
-                  .from(bucketName)
-                  .remove([decodeURIComponent(path)]);
-                
-                if (storageError) {
-                  console.error(`Error deleting file from storage: ${storageError.message}`);
-                }
+  const handleDeleteClick = (id) => {
+    const app = applications.find(a => a.id === id);
+    if (!app || app.status === "Approved" || app.status === "Under Review") {
+      setShowDeleteModal(false);
+      setDeletingAppId(null);
+      return;
+    }
+    setDeletingAppId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteApplication = async () => {
+    const app = applications.find(a => a.id === deletingAppId);
+    if (!app || app.status === "Approved" || app.status === "Under Review") {
+      setShowDeleteModal(false);
+      setDeletingAppId(null);
+      setDeletingRowId(null);
+      return;
+    }
+    if (!deletingAppId) return;
+    try {
+      setIsLoading(true);
+      setDeletingRowId(deletingAppId);
+      // Wait for animation
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      // 1. Delete application status history records first
+      const { error: historyError } = await supabase
+        .from("application_status_history")
+        .delete()
+        .eq("user_application_id", deletingAppId);
+      if (historyError) throw historyError;
+      // 2. Get all documents related to this application to delete them from storage
+      const { data: applicationDocs, error: docError } = await supabase
+        .from("documents")
+        .select("*")
+        .eq("user_submissions", deletingAppId);
+      if (docError) throw docError;
+      if (applicationDocs && applicationDocs.length > 0) {
+        for (const doc of applicationDocs) {
+          const fileUrl = doc.file_link;
+          if (fileUrl) {
+            const filePath = fileUrl.split('/storage/v1/object/public/')[1];
+            if (filePath) {
+              const bucketName = filePath.split('/')[0];
+              const path = filePath.substring(bucketName.length + 1);
+              const { error: storageError } = await supabase.storage
+                .from(bucketName)
+                .remove([decodeURIComponent(path)]);
+              if (storageError) {
+                console.error(`Error deleting file from storage: ${storageError.message}`);
               }
             }
           }
-          
-          // Delete document records from the database
-          const { error: docDeleteError } = await supabase
-            .from('documents')
-            .delete()
-            .eq('user_submissions', applicationId);
-          
-          if (docDeleteError) throw docDeleteError;
         }
-        
-        // 4. Delete all comments related to this application
-        const { error: commentsError } = await supabase
-          .from("comments")
+        const { error: docDeleteError } = await supabase
+          .from('documents')
           .delete()
-          .eq("user_applications_id", applicationId);
-          
-        if (commentsError) throw commentsError;
-        
-        // 5. Finally delete the application itself
-        const { error } = await supabase
-          .from('user_applications')
-          .delete()
-          .eq('id', applicationId);
-        
-        if (error) throw error;
-        
-        // Update the UI by removing the deleted application
-        setApplications(applications.filter(app => app.id !== applicationId));
-        
-      } catch (err) {
-        console.error('Error deleting application:', err);
-        alert(`Error deleting application: ${err.message}`);
-      } finally {
-        setIsLoading(false);
+          .eq('user_submissions', deletingAppId);
+        if (docDeleteError) throw docDeleteError;
       }
+      // 4. Delete all comments related to this application
+      const { error: commentsError } = await supabase
+        .from("comments")
+        .delete()
+        .eq("user_applications_id", deletingAppId);
+      if (commentsError) throw commentsError;
+      // 5. Finally delete the application itself
+      const { error } = await supabase
+        .from('user_applications')
+        .delete()
+        .eq('id', deletingAppId);
+      if (error) throw error;
+      setApplications(applications.filter(app => app.id !== deletingAppId));
+      setShowDeleteModal(false);
+      setDeletingAppId(null);
+      setDeletingRowId(null);
+    } catch (err) {
+      console.error('Error deleting application:', err);
+      alert(`Error deleting application: ${err.message}`);
+      setShowDeleteModal(false);
+      setDeletingAppId(null);
+      setDeletingRowId(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -685,10 +711,10 @@ function ApplicationList() {
                   <th>ID</th>
                   <th>Applicant</th>
                   <th>Title</th>
-                  <th>Type</th>
-                  <th>Submitted Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th className="th-center">Type</th>
+                  <th className="th-center">Submitted Date</th>
+                  <th className="th-center">Status</th>
+                  <th className="th-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -698,18 +724,18 @@ function ApplicationList() {
                   </tr>
                 ) : (
                   currentItems.map((application) => (
-                    <tr key={application.id}>
+                    <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
                       <td>{application.application_id}</td>
                       <td>{application.applicant_name}</td>
                       <td>{application.title}</td>
-                      <td>{application.type}</td>
-                      <td>{new Date(application.submitted_at).toLocaleDateString()}</td>
-                      <td>
+                      <td className="td-center">{application.type}</td>
+                      <td className="td-center">{formatDateMMDDYYYY(application.submitted_at)}</td>
+                      <td className="td-center">
                         <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>
                           {application.status}
                         </span>
                       </td>
-                      <td>
+                      <td className="td-center">
                         <div className="action-buttons" style={{ display: 'inline-flex', gap: 0 }}>
                           <button 
                             className="action-button view-button" 
@@ -736,14 +762,16 @@ function ApplicationList() {
                           >
                             <FaDownload />
                           </button>
-                          <button
-                            className="action-button delete-button" 
-                            onClick={() => handleDeleteApplication(application.id)}
-                            title="Delete Application"
-                            style={{ margin: '0' }}
-                          >
-                            <FaTrash />
-                          </button>
+                          {application.status !== "Approved" && application.status !== "Under Review" && (
+                            <button
+                              className="action-button delete-button"
+                              onClick={() => handleDeleteClick(application.id)}
+                              title="Delete Application"
+                              style={{ margin: '0' }}
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -895,7 +923,7 @@ function ApplicationList() {
               </div>
               <div className="modal-section">
                 <h3><FaClock /> Submitted Date</h3>
-                <p>{new Date(selectedApplication.submitted_at).toLocaleString()}</p>
+                <p>{formatTime12hr(selectedApplication.submitted_at)}</p>
               </div>
               {selectedApplication.notes && (
                 <div className="modal-section">
@@ -995,6 +1023,26 @@ function ApplicationList() {
           application={selectedApplication}
           onUpdateStatus={handleUpdateStatus}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-container delete-modal">
+            <div className="modal-header">
+              <h2>Delete Application</h2>
+              <button className="modal-close" onClick={() => setShowDeleteModal(false)}><FaTimes /></button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete this application?</p>
+              <p className="warning-message">This action cannot be undone.</p>
+            </div>
+            <div className="form-actions">
+              <button className="cancel-button" onClick={() => setShowDeleteModal(false)} disabled={isLoading}>Cancel</button>
+              <button className="delete-button" onClick={handleDeleteApplication} disabled={isLoading}>{isLoading ? 'Deleting...' : 'Delete'}</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

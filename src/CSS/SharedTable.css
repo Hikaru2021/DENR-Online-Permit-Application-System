@@ -85,9 +85,12 @@
 /* Action Buttons */
 .shared-table .action-buttons {
   display: flex;
-  gap: .5rem;
-  justify-content: flex-start;
   align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0;
 }
 
 .shared-table .action-button {
@@ -108,6 +111,10 @@
 
 .shared-table .action-button:last-child {
   margin-right: 0;
+}
+
+.action-buttons .action-button:last-child {
+  margin-right: 0 !important;
 }
 
 .shared-table .action-button svg {
@@ -167,6 +174,11 @@
 
 .shared-table .action-button.download-button:hover {
   background-color: #ddd6fe;
+}
+
+/* Remove gap for single button, keep for multiple */
+.action-buttons .action-button:only-child {
+  margin-right: 0 !important;
 }
 
 /* Pagination */
@@ -343,4 +355,47 @@
   .pagination-button:last-child {
     order: 3;
   }
-} 
+}
+
+/* Fade out animation for deleted row */
+.fade-out-row {
+  animation: fadeOutRow 0.4s forwards;
+}
+
+@keyframes fadeOutRow {
+  from {
+    opacity: 1;
+    height: 48px;
+  }
+  to {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+/* Small modal for delete confirmation */
+.modal-container.delete-modal, .modal-container.small {
+  max-width: 350px;
+  width: 90%;
+  padding: 1.5rem 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* Centered table header and cell */
+.th-center, .td-center {
+  text-align: center !important;
+}
+
+/* Utility class for right-aligning numbers or time if needed */
+.td-right {
+  text-align: right !important;
+}
+
+/*
+Date/Time formatting utility (for use in all pages):
+- formatDateMMDDYYYY(date): returns 'MM-DD-YYYY'
+- formatTime12hr(date): returns 'HH:MM AM/PM'
+*/ 

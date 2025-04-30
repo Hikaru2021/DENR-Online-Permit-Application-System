@@ -9,6 +9,24 @@ const STATUS_MAPPING = {
   2: { label: 'Blocked', class: 'status-blocked' }
 };
 
+function formatDateMMDDYYYY(date) {
+  const d = new Date(date);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${mm}-${dd}-${yyyy}`;
+}
+
+function formatTime12hr(date) {
+  const d = new Date(date);
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  return `${hours}:${minutes} ${ampm}`;
+}
+
 const User = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
@@ -353,10 +371,10 @@ const User = () => {
                 <th></th>
                 <th>Username</th>
                 <th>Email</th>
-                <th>Role Permission</th>
+                <th className="th-center">Role Permission</th>
                 <th>Created At</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th className="th-center">Status</th>
+                <th className="th-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -385,7 +403,7 @@ const User = () => {
                     </td>
                     <td>{user.user_name || "N/A"}</td>
                     <td>{user.email || "N/A"}</td>
-                    <td>
+                    <td className="td-center">
                       <select
                         value={user.role_id || ""}
                         onChange={(e) => handleRoleChangeClick(user.id, user.role_id, e.target.value)}
@@ -396,8 +414,8 @@ const User = () => {
                         <option value="3">User</option>
                       </select>
                     </td>
-                    <td>{formatDate(user.created_at)}</td>
-                    <td>
+                    <td>{formatDateMMDDYYYY(user.created_at)}</td>
+                    <td className="td-center">
                       <select
                         value={user.status || ""}
                         onChange={(e) => handleStatusChangeClick(user.id, user.status, e.target.value)}
@@ -410,8 +428,8 @@ const User = () => {
                         ))}
                       </select>
                     </td>
-                    <td>
-                      <div className="action-buttons">
+                    <td className="td-center">
+                      <div className="action-buttons" style={{ gap: 0 }}>
                         <button
                           className="action-button delete-button"
                           onClick={() => handleDeleteClick(user)}
