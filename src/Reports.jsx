@@ -1542,8 +1542,8 @@ function Reports() {
               }
               }}
             />
+          </div>
         </div>
-      </div>
 
       {/* Recent Applications */}
       <div className="analytics-section">
@@ -1617,9 +1617,9 @@ function Reports() {
               </tbody>
             </table>
           )}
-        </div>
       </div>
     </div>
+          </div>
   );
   };
 
@@ -1646,7 +1646,7 @@ function Reports() {
                 <FaFileExcel /> Save Excel
               </button>
               <button className="report-modal-close" onClick={() => setShowReportModal(false)}>×</button>
-            </div>
+          </div>
           </div>
           
           <div className="report-content" ref={reportTemplateRef}>
@@ -1654,50 +1654,50 @@ function Reports() {
               <div className="report-logo">
                 <div className="logo-placeholder">
                   <img src="/Logo1.png" alt="DENR Logo" />
-                </div>
-              </div>
+          </div>
+        </div>
               <div className="report-title">
                 <h1>{reportData.title}</h1>
                 <p>Department of Environment and Natural Resources</p>
                 <p>Online Permit Application System</p>
-              </div>
+      </div>
             </div>
             
             <div className="report-info">
               <div className="report-info-item">
                 <span className="info-label">Period:</span>
                 <span className="info-value">{reportData.dateLabel}</span>
-              </div>
+          </div>
               <div className="report-info-item">
                 <span className="info-label">Total Applications:</span>
                 <span className="info-value">{reportData.totalApplications}</span>
-              </div>
+            </div>
               <div className="report-info-item">
                 <span className="info-label">Generated On:</span>
                 <span className="info-value">{reportData.generatedDate}</span>
-              </div>
+          </div>
             </div>
             
             <div className="report-summary">
               <h2>Applications Summary</h2>
               <p>This report provides a summary of applications submitted during the selected period.</p>
-            </div>
-            
+      </div>
+
             <div className="report-applications">
               <h2>Application Details</h2>
               {reportData.applications.length > 0 ? (
                 <table className="report-table">
-                  <thead>
-                    <tr>
+            <thead>
+              <tr>
                       <th>Ref #</th>
                       <th>Full Name</th>
                       <th>Contact</th>
                       <th>Address</th>
                       <th>Purpose</th>
                       <th>Submission Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              </tr>
+            </thead>
+            <tbody>
                     {reportData.applications.map(app => (
                       <tr key={app.id}>
                         <td>REF-{app.id.toString().padStart(6, '0')}</td>
@@ -1706,14 +1706,14 @@ function Reports() {
                         <td>{app.address || "N/A"}</td>
                         <td>{app.purpose || "N/A"}</td>
                         <td>{new Date(app.created_at).toLocaleDateString()}</td>
-                      </tr>
+              </tr>
                     ))}
-                  </tbody>
-                </table>
+            </tbody>
+          </table>
               ) : (
                 <div className="no-applications">
                   <p>No applications found for this period.</p>
-                </div>
+        </div>
               )}
             </div>
             
@@ -1722,9 +1722,9 @@ function Reports() {
               <p>Generated on: {reportData.generatedDate}</p>
             </div>
           </div>
-        </div>
       </div>
-    );
+    </div>
+  );
   };
 
   return (

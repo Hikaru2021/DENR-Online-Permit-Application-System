@@ -419,21 +419,53 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .tracking-container {
-    width: 95%;
-    margin: 20px;
-    max-height: 85vh;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    border-radius: 0 0 12px 12px;
+    box-shadow: none;
   }
-
   .tracking-content {
-    padding: 20px;
+    padding: 0.75rem 0.5rem !important;
   }
-
+  .resubmission-area {
+    padding: 1rem 0.5rem !important;
+    margin-top: 1rem;
+  }
+  .file-upload-container {
+    padding: 1rem 0.5rem !important;
+    min-width: 0;
+  }
+  .selected-files-container {
+    padding: 0.75rem 0.5rem !important;
+    margin-top: 1rem;
+  }
+  .admin-modal {
+    width: 98vw !important;
+    max-width: 98vw !important;
+    padding: 1rem 0.5rem !important;
+  }
+  .tracking-title h2 {
+    font-size: 1.1rem !important;
+  }
+  .tracking-id {
+    font-size: 0.85rem !important;
+  }
+  .progress-section {
+    padding: 1rem 0.5rem !important;
+    margin: 1rem 0 !important;
+  }
+  .timeline-list {
+    padding-left: 0.5rem !important;
+  }
+  .timeline-item {
+    padding-left: 0.5rem !important;
+  }
   .progress-steps {
     flex-direction: column;
     align-items: flex-start;
     gap: 30px;
   }
-
   .progress-step {
     width: 100%;
     text-align: left;
@@ -441,35 +473,62 @@
     align-items: flex-start;
     gap: 15px;
   }
-
   .step-dot {
     margin: 0;
   }
-
   .progress-bar {
-    padding: 0 1rem;
+    padding: 0 0.5rem !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    margin: 0 auto !important;
+    min-height: 80px !important;
+    box-sizing: border-box;
   }
-
   .step-circle {
-    width: 32px;
-    height: 32px;
+    width: 26px !important;
+    height: 26px !important;
   }
-
   .step-circle svg {
     width: 16px;
     height: 16px;
   }
-
   .step-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem !important;
+    text-align: center;
+    max-width: 60px;
+    white-space: normal;
+    word-break: break-word;
   }
-
   .timeline-item {
     gap: 1rem;
   }
-
   .timeline-date {
     min-width: 90px;
+  }
+  .progress-steps {
+    width: 100%;
+    max-width: 100vw;
+    margin: 0 auto;
+    justify-content: space-around !important;
+    gap: 18px !important;
+  }
+  .progress-step {
+    flex: 1 1 0;
+    min-width: 0;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .timeline-content p {
+    font-size: 0.82rem !important;
+  }
+  .timeline-date {
+    font-size: 0.78rem !important;
+  }
+  .additional-info p {
+    font-size: 0.75rem !important;
+  }
+  .progress-line-fill.submitted {
+    width: 40% !important;
   }
 }
 
@@ -1024,12 +1083,17 @@
   }
 
   .progress-bar {
-    padding: 0 1rem;
+    padding: 0 0.5rem !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    margin: 0 auto !important;
+    min-height: 80px !important;
+    box-sizing: border-box;
   }
 
   .step-circle {
-    width: 32px;
-    height: 32px;
+    width: 26px !important;
+    height: 26px !important;
   }
 
   .step-circle svg {
@@ -1038,7 +1102,11 @@
   }
 
   .step-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem !important;
+    text-align: center;
+    max-width: 60px;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .timeline-item {
@@ -1060,6 +1128,20 @@
 
   .timeline-item {
     padding-left: 1.5rem;
+  }
+
+  .progress-steps {
+    width: 100%;
+    max-width: 100vw;
+    margin: 0 auto;
+    justify-content: space-around !important;
+    gap: 18px !important;
+  }
+  .progress-step {
+    flex: 1 1 0;
+    min-width: 0;
+    align-items: center !important;
+    gap: 6px !important;
   }
 }
 
