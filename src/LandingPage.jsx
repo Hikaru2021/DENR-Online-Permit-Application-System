@@ -274,17 +274,17 @@ function LandingPage() {
 
                     {/* About Section */}
                     <section id="about" className={`content ${activeTab === "about" ? "active" : ""}`}>
-                        <h1 className="section-title">About DENR</h1>
+                        <h1 className="section-title">About DENR-CENRO Baybay City, Leyte</h1>
                         <div className="about-content">
-                            <p>The Department of Environment and Natural Resources (DENR) is the primary agency responsible for the conservation, management, development, and proper use of the country's environment and natural resources.</p>
+                            <p>The Department of Environment and Natural Resources - Community Environment and Natural Resources Office (DENR-CENRO) Baybay City, Leyte is responsible for the conservation, management, development, and proper use of the environment and natural resources within its jurisdiction.</p>
                             <div className="mission-vision">
                                 <div className="mission">
                                     <h3>Mission</h3>
-                                    <p>To mobilize our citizenry in protecting, conserving, and managing the environment and natural resources for the present and future generations.</p>
+                                    <p>To mobilize citizenry in protecting, conserving, and managing the environment and natural resources for the present and future generations, in partnership with stakeholders, for a sustainable and healthy environment in Baybay City and nearby municipalities.</p>
                                 </div>
                                 <div className="vision">
                                     <h3>Vision</h3>
-                                    <p>A nation enjoying and sustaining its natural resources and clean and healthy environment.</p>
+                                    <p>A community enjoying and sustaining its natural resources and a clean, healthy environment for all in Baybay City, Leyte.</p>
                                 </div>
                             </div>
                         </div>
@@ -314,17 +314,17 @@ function LandingPage() {
                         <h1 className="section-title">Contact Us</h1>
                         <div className="contact-info">
                             <div className="contact-details">
-                                <h3>Main Office</h3>
-                                <p>DENR Building, Visayas Avenue, Diliman, Quezon City</p>
-                                <p>Email: info@denr.gov.ph</p>
-                                <p>Phone: (02) 8920-1212</p>
+                                <h3>DENR-CENRO Baybay City, Leyte</h3>
+                                <p>Brgy. Gaas, Baybay City, Leyte, Philippines 6521</p>
+                                <p>Email: cenro.baybay@denr.gov.ph</p>
+                                <p>Phone: (053) 563-9123</p>
                             </div>
                             <div className="office-hours">
                                 <h3>Office Hours</h3>
                                 <p>Monday to Friday: 8:00 AM - 5:00 PM</p>
                                 <p>Closed on weekends and holidays</p>
                             </div>
-                    </div>
+                        </div>
                     </section>
                 </main>
 
