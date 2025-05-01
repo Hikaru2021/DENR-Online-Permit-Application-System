@@ -28,15 +28,37 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setShowSuccessModal(true);
-    
+    setError('');
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) {
         setError('Invalid email or password');
+        setIsLoading(false);
+        setShowSuccessModal(false);
+        return;
+      }
+
+      // Fetch user status from the database
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('status')
+        .eq('email', formData.email)
+        .single();
+
+      if (userError) {
+        setError('Unable to verify user status');
+        setIsLoading(false);
+        setShowSuccessModal(false);
+        return;
+      }
+
+      // Block login if user status is 'blocked' (status ID 2)
+      if (userData.status === 2) {
+        setError('Your account is blocked. Contact DENR admin.');
         setIsLoading(false);
         setShowSuccessModal(false);
         return;
