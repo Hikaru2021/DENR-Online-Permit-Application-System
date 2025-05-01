@@ -1,3 +1,33 @@
+/* Section Title Sizing - Forced Priority */
+.section-title {
+    color: #003366;
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 2.5rem !important;
+    font-weight: bold;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+@media (max-width: 1200px) {
+    .section-title {
+        font-size: 3rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 2.2rem !important;
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-title {
+        font-size: 1.6rem !important;
+    }
+}
+
 /* General Styles */
 html {
     scroll-behavior: smooth;
@@ -470,8 +500,8 @@ li.slick-active .custom-dot {
     }
 
     .slide-content h2 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
+        font-size: 2.2rem;
+        margin-bottom: 1.5rem;
     }
     
     .slide-content p {
@@ -517,7 +547,7 @@ li.slick-active .custom-dot {
 
 @media (max-width: 480px) {
     .slide-content h2 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
     }
 
     .slide-content p {
@@ -690,16 +720,6 @@ li.slick-active .custom-dot {
 }
 
 /* Section Titles */
-.section-title {
-    color: #003366;
-    text-align: center;
-    margin-bottom: 3rem;
-    font-size: 2.5rem;
-    font-weight: bold;
-    position: relative;
-    padding-bottom: 1rem;
-}
-
 .section-title::after {
     content: '';
     position: absolute;
@@ -833,10 +853,6 @@ li.slick-active .custom-dot {
 
     .slide-content p {
         font-size: 1.2rem;
-    }
-
-    .section-title {
-        font-size: 2.2rem;
     }
 }
 
@@ -1118,7 +1134,7 @@ li.slick-active .custom-dot {
     }
 
     .section-title {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
     }
 
     .feature-card,
