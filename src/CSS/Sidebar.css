@@ -278,6 +278,15 @@
         font-size: 1.2rem;
         top: 10px;
         left: 10px;
+        color: #4caf50 !important;
+        border: 1.5px solid #4caf50 !important;
+        background: #e8f5e9 !important;
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .sidebar-hamburger-btn:hover, .sidebar-hamburger-btn:focus {
+        background: #c8e6c9 !important;
+        color: #388e3c !important;
+        border-color: #388e3c !important;
     }
 }
 

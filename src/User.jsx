@@ -46,42 +46,69 @@ const User = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [statusChangeData, setStatusChangeData] = useState(null);
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
-    fetchUsers();
-  }, [currentPage]);
-
-  async function fetchUsers() {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select(`
-          id,
-          created_at,
-          user_name,
-          email,
-          role_id,
-          status,
-          profile_link,
-          user_status (
-            id,
-            user_status
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-
-      if (error) throw error;
-      setUsers(data || []);
-      setTotalPages(Math.ceil(data.length / itemsPerPage));
-    } catch (error) {
-      setError(`Error fetching users: ${error.message}`);
-      console.error('Error fetching users:', error);
-    } finally {
-      setIsLoading(false);
+    // Fetch all users if mobile view, else fetch paginated
+    async function fetchUsers() {
+      setIsLoading(true);
+      try {
+        let data, error;
+        if (isMobileView) {
+          // Fetch all users for mobile view
+          ({ data, error } = await supabase
+            .from('users')
+            .select(`
+              id,
+              created_at,
+              user_name,
+              email,
+              role_id,
+              status,
+              profile_link,
+              user_status (
+                id,
+                user_status
+              )
+            `)
+            .order('created_at', { ascending: false })
+          );
+        } else {
+          // Paginated fetch for desktop
+          ({ data, error } = await supabase
+            .from('users')
+            .select(`
+              id,
+              created_at,
+              user_name,
+              email,
+              role_id,
+              status,
+              profile_link,
+              user_status (
+                id,
+                user_status
+              )
+            `)
+            .order('created_at', { ascending: false })
+            .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1)
+          );
+        }
+        if (error) throw error;
+        setUsers(data || []);
+        setTotalPages(isMobileView ? 1 : Math.ceil((data?.length || 0) / itemsPerPage));
+      } catch (error) {
+        setError(`Error fetching users: ${error.message}`);
+        console.error('Error fetching users:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }
+    fetchUsers();
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [currentPage, isMobileView]);
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -364,139 +391,199 @@ const User = () => {
           </button>
         </div>
       ) : (
-        <div className="applications-table-container table-container">
-          <table className="shared-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Username</th>
-                <th>Email</th>
-                <th className="th-center">Role Permission</th>
-                <th>Created At</th>
-                <th className="th-center">Status</th>
-                <th className="th-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className="profile-picture-container">
-                        {user.profile_link ? (
-                          <img 
-                            src={user.profile_link} 
-                            alt={`${user.user_name}'s profile`} 
-                            className="profile-picture"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = '';
-                              e.target.parentElement.innerHTML = '<div class="profile-picture-placeholder"><FaUser /></div>';
-                            }}
-                          />
-                        ) : (
-                          <div className="profile-picture-placeholder">
-                            <FaUser />
-                          </div>
-                        )}
+        isMobileView ? (
+          <div className="user-cards-mobile">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <div key={user.id} className="user-card-mobile">
+                  <div className="profile-picture-container">
+                    {user.profile_link ? (
+                      <img 
+                        src={user.profile_link} 
+                        alt={`${user.user_name}'s profile`} 
+                        className="profile-picture"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '';
+                        }}
+                      />
+                    ) : (
+                      <div className="profile-picture-placeholder">
+                        <FaUser />
                       </div>
-                    </td>
-                    <td>{user.user_name || "N/A"}</td>
-                    <td>{user.email || "N/A"}</td>
-                    <td className="td-center">
-                      <select
-                        value={user.role_id || ""}
-                        onChange={(e) => handleRoleChangeClick(user.id, user.role_id, e.target.value)}
-                        className="role-select"
-                      >
-                        <option value="1">Admin</option>
-                        <option value="2">Manager</option>
-                        <option value="3">User</option>
-                      </select>
-                    </td>
-                    <td>{formatDateMMDDYYYY(user.created_at)}</td>
-                    <td className="td-center">
-                      <select
-                        value={user.status || ""}
-                        onChange={(e) => handleStatusChangeClick(user.id, user.status, e.target.value)}
-                        className={`status-select ${getStatusBadgeClass(user.status)}`}
-                      >
-                        {Object.entries(STATUS_MAPPING).map(([id, { label }]) => (
-                          <option key={id} value={id}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="td-center">
-                      <div className="action-buttons" style={{ gap: 0 }}>
-                        <button
-                          className="action-button delete-button"
-                          onClick={() => handleDeleteClick(user)}
-                          title="Delete User"
+                    )}
+                  </div>
+                  <div className="user-info-section">
+                    <div className="user-name">{user.user_name || "N/A"}</div>
+                    <div className="user-email">{user.email || "N/A"}</div>
+                  </div>
+                  <hr className="divider" />
+                  <div className="user-info-section">
+                    <span className="user-label">Role:</span> <span className="user-role">{getRolePermission(user.role_id)}</span>
+                  </div>
+                  <div className="user-info-section">
+                    <span className="user-label">Status:</span> <span className={`status-badge ${getStatusBadgeClass(user.status)}`}>{getStatusText(user.status)}</span>
+                  </div>
+                  <div className="user-info-section">
+                    <span className="user-label">Created:</span> <span className="user-created">{formatDateMMDDYYYY(user.created_at)}</span>
+                  </div>
+                  <div className="action-buttons">
+                    <button
+                      className="action-button delete-button"
+                      onClick={() => handleDeleteClick(user)}
+                      title="Delete User"
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.2em' }}>
+                        <FaTrash size={20} />
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                No users found. {searchTerm ? "Try adjusting your search." : ""}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="applications-table-container table-container">
+            <table className="shared-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th className="th-center">Role Permission</th>
+                  <th>Created At</th>
+                  <th className="th-center">Status</th>
+                  <th className="th-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="profile-picture-container">
+                          {user.profile_link ? (
+                            <img 
+                              src={user.profile_link} 
+                              alt={`${user.user_name}'s profile`} 
+                              className="profile-picture"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '';
+                              }}
+                            />
+                          ) : (
+                            <div className="profile-picture-placeholder">
+                              <FaUser />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td>{user.user_name || "N/A"}</td>
+                      <td>{user.email || "N/A"}</td>
+                      <td className="td-center">
+                        <select
+                          value={user.role_id || ""}
+                          onChange={(e) => handleRoleChangeClick(user.id, user.role_id, e.target.value)}
+                          className="role-select"
                         >
-                          <FaTrash />
-                        </button>
-                      </div>
+                          <option value="1">Admin</option>
+                          <option value="2">Manager</option>
+                          <option value="3">User</option>
+                        </select>
+                      </td>
+                      <td>{formatDateMMDDYYYY(user.created_at)}</td>
+                      <td className="td-center">
+                        <select
+                          value={user.status || ""}
+                          onChange={(e) => handleStatusChangeClick(user.id, user.status, e.target.value)}
+                          className={`status-select ${getStatusBadgeClass(user.status)}`}
+                        >
+                          {Object.entries(STATUS_MAPPING).map(([id, { label }]) => (
+                            <option key={id} value={id}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="td-center">
+                        <div className="action-buttons" style={{ gap: 0 }}>
+                          <button
+                            className="action-button delete-button"
+                            onClick={() => handleDeleteClick(user)}
+                            title="Delete User"
+                          >
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.2em' }}>
+                              <FaTrash size={20} />
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="empty-state">
+                      No users found. {searchTerm ? "Try adjusting your search." : ""}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="empty-state">
-                    No users found. {searchTerm ? "Try adjusting your search." : ""}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
 
-      <div className="pagination-container">
-        <div className="pagination">
-          <button
-            className="pagination-button nav-button"
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-          >
-            ❮ Prev
-          </button>
-          <div className="pagination-pages">
-            {/* Add page numbers */}
-            {Array.from({ length: Math.min(5, Math.max(1, totalPages || 1)) }, (_, i) => {
-              // Display current page and two pages before/after when possible
-              let pageToShow;
-              if (totalPages <= 5) {
-                pageToShow = i + 1;
-              } else if (currentPage <= 3) {
-                pageToShow = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageToShow = totalPages - 4 + i;
-              } else {
-                pageToShow = currentPage - 2 + i;
-              }
-              
-              return (
-                <button
-                  key={pageToShow}
-                  className={`pagination-button ${currentPage === pageToShow ? 'active' : ''}`}
-                  onClick={() => setCurrentPage(pageToShow)}
-                >
-                  {pageToShow}
-                </button>
-              );
-            })}
+      {/* Only show pagination if not mobile view */}
+      {!isMobileView && (
+        <div className="pagination-container">
+          <div className="pagination">
+            <button
+              className="pagination-button nav-button"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
+              ❮ Prev
+            </button>
+            <div className="pagination-pages">
+              {/* Add page numbers */}
+              {Array.from({ length: Math.min(5, Math.max(1, totalPages || 1)) }, (_, i) => {
+                // Display current page and two pages before/after when possible
+                let pageToShow;
+                if (totalPages <= 5) {
+                  pageToShow = i + 1;
+                } else if (currentPage <= 3) {
+                  pageToShow = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageToShow = totalPages - 4 + i;
+                } else {
+                  pageToShow = currentPage - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageToShow}
+                    className={`pagination-button ${currentPage === pageToShow ? 'active' : ''}`}
+                    onClick={() => setCurrentPage(pageToShow)}
+                  >
+                    {pageToShow}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              className="pagination-button nav-button"
+              onClick={handleNextPage}
+              disabled={filteredUsers.length < itemsPerPage}
+            >
+              Next ❯
+            </button>
           </div>
-          <button
-            className="pagination-button nav-button"
-            onClick={handleNextPage}
-            disabled={filteredUsers.length < itemsPerPage}
-          >
-            Next ❯
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deletingUser && (

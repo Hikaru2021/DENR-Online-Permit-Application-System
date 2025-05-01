@@ -55,11 +55,15 @@ function Reports() {
   // Refs for PDF printing
   const reportTemplateRef = useRef(null);
   const [statusHistory, setStatusHistory] = useState([]);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     fetchData();
     fetchUserApplications();
     fetchUsers();
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -630,6 +634,39 @@ function Reports() {
         </button>
       </div>
       
+      {isMobileView ? (
+        <div className="reports-table">
+          <h3>Available Report Templates</h3>
+          {mockReports.map((report) => (
+            <div
+              key={report.id}
+              className="report-card-mobile"
+              onClick={() => {
+                setReportPeriod(report.type.toLowerCase());
+                if (report.type === "Daily") {
+                  setSelectedDate(new Date().toISOString().split('T')[0]);
+                } else if (report.type === "Monthly") {
+                  setReportMonth(new Date().getMonth() + 1);
+                  setReportYear(new Date().getFullYear());
+                } else if (report.type === "Yearly") {
+                  setReportYear(new Date().getFullYear());
+                }
+                document.querySelector('.report-generation-header')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <span className="report-card-label">Report ID</span>
+              <span className="report-card-value">{report.id}</span>
+              <span className="report-card-label">Title</span>
+              <span className="report-card-value">{report.title}</span>
+              <span className="report-card-label">Type</span>
+              <span className="report-card-value">{report.type}</span>
+              <span className="report-card-label">Description</span>
+              <span className="report-card-value">{report.description}</span>
+              <span className="select-indicator">Click to select</span>
+            </div>
+          ))}
+        </div>
+      ) : (
     <div className="reports-table">
         <h3>Available Report Templates</h3>
       <table>
@@ -646,7 +683,6 @@ function Reports() {
               <tr key={report.id}
                   onClick={() => {
                     setReportPeriod(report.type.toLowerCase());
-                    
                     if (report.type === "Daily") {
                       setSelectedDate(new Date().toISOString().split('T')[0]);
                     } else if (report.type === "Monthly") {
@@ -655,8 +691,6 @@ function Reports() {
                     } else if (report.type === "Yearly") {
                       setReportYear(new Date().getFullYear());
                     }
-                    
-                    // Scroll to report generator
                     document.querySelector('.report-generation-header')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   className="report-row"
@@ -675,6 +709,7 @@ function Reports() {
         </tbody>
       </table>
       </div>
+      )}
     </div>
   );
 

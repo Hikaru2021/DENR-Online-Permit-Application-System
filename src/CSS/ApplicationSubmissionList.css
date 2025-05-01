@@ -2034,6 +2034,13 @@ textarea.form-input {
   justify-content: center;
 }
 
+.download-button svg {
+  font-size: 16px;
+  color: #fff;
+  opacity: 1;
+  visibility: visible;
+}
+
 .download-button:hover {
   background-color: #3d8b40;
 }

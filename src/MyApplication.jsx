@@ -27,6 +27,8 @@ function formatTime12hr(date) {
 function MyApplication() {
   const navigate = useNavigate();
   const location = useLocation();
+  // Detect mobile view
+  const isMobile = window.innerWidth <= 768;
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,10 +43,47 @@ function MyApplication() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(isMobile ? 4 : 6);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAppId, setDeletingAppId] = useState(null);
   const [deletingRowId, setDeletingRowId] = useState(null);
+  // Track mobile view for responsive rendering
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+
+  // Update itemsPerPage on resize
+  useEffect(() => {
+    const handleResize = () => {
+      const newItemsPerPage = window.innerWidth <= 768 ? 4 : 6;
+      setItemsPerPage(prev => {
+        if (prev !== newItemsPerPage) {
+          setCurrentPage(prevPage => {
+            const firstVisibleIndex = (prevPage - 1) * prev;
+            const newPage = Math.floor(firstVisibleIndex / newItemsPerPage) + 1;
+            const totalPages = Math.ceil(filteredApplications.length / newItemsPerPage);
+            return Math.min(newPage, Math.max(totalPages, 1));
+          });
+        }
+        return newItemsPerPage;
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [filteredApplications.length]);
+
+  // Clamp currentPage to valid range when data or page size changes
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredApplications.length / itemsPerPage));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredApplications.length, itemsPerPage]);
+
+  // Track mobile view for responsive rendering
+  useEffect(() => {
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Status mapping function
   const getStatusName = (statusId) => {
@@ -365,7 +404,10 @@ function MyApplication() {
   // Calculate pagination values
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredApplications.slice(indexOfFirstItem, indexOfLastItem);
+  // For mobile, show all filtered applications; for desktop, paginate
+  const currentItems = isMobileView
+    ? filteredApplications
+    : filteredApplications.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
 
   // Handle page change
@@ -533,80 +575,112 @@ function MyApplication() {
           </div>
         ) : (
           <>
-            <div className="table-container">
-              <table className="shared-table">
-                <thead>
-                  <tr>
-                    <th>Reference #</th>
-                    <th>Title</th>
-                    <th>Type</th>
-                    <th className="th-center">Status</th>
-                    <th className="th-center">Submission Date</th>
-                    <th className="th-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((application) => (
-                    <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
-                      <td>{application.referenceNumber}</td>
-                      <td>{application.title}</td>
-                      <td>{application.type}</td>
-                      <td className="td-center">
-                        <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>
-                          {application.status}
-                        </span>
-                      </td>
-                      <td className="td-center">{formatDateMMDDYYYY(application.submissionDate)}</td>
-                      <td className="td-center">
-                        <div className="action-buttons">
-                          <button 
-                            className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
-                            onClick={() => handleViewDetails(application)}
-                            title={`${getActionText(application.status)} Application`}
-                          >
-                            {application.status === "Approved" || application.status === "Denied" ? <FaEye /> : <FaChartLine />}
-                          </button>
-                          {application.status !== "Approved" && application.status !== "Under Review" && (
-                            <button 
-                              className="action-button delete-button" 
-                              onClick={() => handleDeleteClick(application.id)}
-                              title="Delete Application"
-                            >
-                              <FaTrash />
-                            </button>
-                          )}
-                        </div>
-                      </td>
+            {isMobileView ? (
+              <div className="application-cards-mobile">
+                {currentItems.map((application) => (
+                  <div key={application.id} className="application-card-mobile">
+                    <div><strong>Reference #:</strong> {application.referenceNumber}</div>
+                    <div><strong>Title:</strong> {application.title}</div>
+                    <div><strong>Type:</strong> {application.type}</div>
+                    <div><strong>Status:</strong> <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span></div>
+                    <div><strong>Submission Date:</strong> {formatDateMMDDYYYY(application.submissionDate)}</div>
+                    <div className="action-buttons">
+                      <button 
+                        className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
+                        onClick={() => handleViewDetails(application)}
+                        title={`${getActionText(application.status)} Application`}
+                      >
+                        {application.status === "Approved" || application.status === "Denied" ? <FaEye /> : <FaChartLine />}
+                      </button>
+                      {application.status !== "Approved" && application.status !== "Under Review" && (
+                        <button 
+                          className="action-button delete-button" 
+                          onClick={() => handleDeleteClick(application.id)}
+                          title="Delete Application"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="table-container">
+                <table className="shared-table">
+                  <thead>
+                    <tr>
+                      <th>Reference #</th>
+                      <th>Title</th>
+                      <th>Type</th>
+                      <th className="th-center">Status</th>
+                      <th className="th-center">Submission Date</th>
+                      <th className="th-center">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((application) => (
+                      <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
+                        <td>{application.referenceNumber}</td>
+                        <td>{application.title}</td>
+                        <td>{application.type}</td>
+                        <td className="td-center">
+                          <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>
+                            {application.status}
+                          </span>
+                        </td>
+                        <td className="td-center">{formatDateMMDDYYYY(application.submissionDate)}</td>
+                        <td className="td-center">
+                          <div className="action-buttons">
+                            <button 
+                              className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
+                              onClick={() => handleViewDetails(application)}
+                              title={`${getActionText(application.status)} Application`}
+                            >
+                              {application.status === "Approved" || application.status === "Denied" ? <FaEye /> : <FaChartLine />}
+                            </button>
+                            {application.status !== "Approved" && application.status !== "Under Review" && (
+                              <button 
+                                className="action-button delete-button" 
+                                onClick={() => handleDeleteClick(application.id)}
+                                title="Delete Application"
+                              >
+                                <FaTrash />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             
             {/* Show pagination in fixed container */}
-            <div className="pagination-container">
-              <div className="pagination">
-                <button
-                  className="pagination-button nav-button"
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                >
-                  ❮ Prev
-                </button>
-                
-                <div className="pagination-pages">
-                  {renderPaginationButtons()}
+            {!isMobileView && (
+              <div className="pagination-container">
+                <div className="pagination">
+                  <button
+                    className="pagination-button nav-button"
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                  >
+                    ❮ Prev
+                  </button>
+                  <div className="pagination-pages">
+                    {renderPaginationButtons()}
+                  </div>
+                  <button
+                    className="pagination-button nav-button"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next ❯
+                  </button>
                 </div>
-                
-                <button
-                  className="pagination-button nav-button"
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                >
-                  Next ❯
-                </button>
               </div>
-            </div>
+            )}
           </>
         )}
 

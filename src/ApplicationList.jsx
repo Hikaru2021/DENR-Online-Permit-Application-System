@@ -53,6 +53,7 @@ function ApplicationList() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAppId, setDeletingAppId] = useState(null);
   const [deletingRowId, setDeletingRowId] = useState(null);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
   // Status mapping function
   const getStatusName = (statusId) => {
@@ -625,6 +626,12 @@ function ApplicationList() {
     }
   };
 
+  useEffect(() => {
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="application-list-container">
       <div className="application-list-header">
@@ -703,7 +710,57 @@ function ApplicationList() {
           </button>
         </div>
       ) : (
-        <>
+        isMobileView ? (
+          <div className="application-cards-mobile">
+            {filteredAndSortedApplications.length === 0 ? (
+              <div className="empty-state">No applications found</div>
+            ) : (
+              filteredAndSortedApplications.map((application) => (
+                <div key={application.id} className="application-card-mobile">
+                  <div><strong>ID:</strong> {application.application_id}</div>
+                  <div><strong>Applicant:</strong> {application.applicant_name}</div>
+                  <div><strong>Title:</strong> {application.title}</div>
+                  <div><strong>Type:</strong> {application.type}</div>
+                  <div><strong>Status:</strong> <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span></div>
+                  <div><strong>Submitted Date:</strong> {formatDateMMDDYYYY(application.submitted_at)}</div>
+                  <div className="action-buttons">
+                    <button 
+                      className="action-button view-button" 
+                      onClick={() => handleViewApplication(application)}
+                      title="View Details"
+                    >
+                      <FaEye />
+                    </button>
+                    <button 
+                      className="action-button manage-button" 
+                      onClick={() => handleManageApplication(application)}
+                      title="Manage Application"
+                    >
+                      <FaCog />
+                    </button>
+                    <button 
+                      className="action-button download-button" 
+                      onClick={() => handleDownloadApplication(application)}
+                      title="Download All Documents"
+                      disabled={isDownloadingAllDocs}
+                    >
+                      <FaDownload />
+                    </button>
+                    {application.status !== "Approved" && application.status !== "Under Review" && (
+                      <button
+                        className="action-button delete-button"
+                        onClick={() => handleDeleteClick(application.id)}
+                        title="Delete Application"
+                      >
+                        <FaTrash />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
           <div className="table-container">
             <table className="shared-table">
               <thead>
@@ -780,79 +837,81 @@ function ApplicationList() {
               </tbody>
             </table>
           </div>
-          
-          {/* Fixed pagination container */}
-          <div className="pagination-container">
-            <div className="pagination">
-              <button
-                className="pagination-button nav-button"
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-              >
-                ❮ Prev
-              </button>
-              <div className="pagination-pages">
-                {(() => {
-                  const pageNumbers = [];
+        )
+      )}
+
+      {/* Fixed pagination container */}
+      {!isMobileView && (
+        <div className="pagination-container">
+          <div className="pagination">
+            <button
+              className="pagination-button nav-button"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
+              ❮ Prev
+            </button>
+            <div className="pagination-pages">
+              {(() => {
+                const pageNumbers = [];
+                
+                if (totalPages <= 5) {
+                  // If 5 or fewer pages, show all page numbers
+                  for (let i = 1; i <= Math.max(1, totalPages); i++) {
+                    pageNumbers.push(i);
+                  }
+                } else {
+                  // Always show first page
+                  pageNumbers.push(1);
                   
-                  if (totalPages <= 5) {
-                    // If 5 or fewer pages, show all page numbers
-                    for (let i = 1; i <= Math.max(1, totalPages); i++) {
-                      pageNumbers.push(i);
-                    }
-                  } else {
-                    // Always show first page
-                    pageNumbers.push(1);
-                    
-                    // For current pages near the start
-                    if (currentPage <= 3) {
-                      pageNumbers.push(2, 3, 4);
-                      pageNumbers.push('ellipsis');
-                      pageNumbers.push(totalPages);
-                    } 
-                    // For current pages near the end
-                    else if (currentPage >= totalPages - 2) {
-                      pageNumbers.push('ellipsis');
-                      pageNumbers.push(totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-                    } 
-                    // For current pages in the middle
-                    else {
-                      pageNumbers.push('ellipsis');
-                      pageNumbers.push(currentPage - 1, currentPage, currentPage + 1);
-                      pageNumbers.push('ellipsis2');
-                      pageNumbers.push(totalPages);
-                    }
+                  // For current pages near the start
+                  if (currentPage <= 3) {
+                    pageNumbers.push(2, 3, 4);
+                    pageNumbers.push('ellipsis');
+                    pageNumbers.push(totalPages);
+                  } 
+                  // For current pages near the end
+                  else if (currentPage >= totalPages - 2) {
+                    pageNumbers.push('ellipsis');
+                    pageNumbers.push(totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                  } 
+                  // For current pages in the middle
+                  else {
+                    pageNumbers.push('ellipsis');
+                    pageNumbers.push(currentPage - 1, currentPage, currentPage + 1);
+                    pageNumbers.push('ellipsis2');
+                    pageNumbers.push(totalPages);
+                  }
+                }
+                
+                return pageNumbers.map((pageNumber, index) => {
+                  if (pageNumber === 'ellipsis' || pageNumber === 'ellipsis2') {
+                    return (
+                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    );
                   }
                   
-                  return pageNumbers.map((pageNumber, index) => {
-                    if (pageNumber === 'ellipsis' || pageNumber === 'ellipsis2') {
-                      return (
-                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
-                      );
-                    }
-                    
-                    return (
-                      <button
-                        key={pageNumber}
-                        className={`pagination-button ${currentPage === pageNumber ? 'active' : ''}`}
-                        onClick={() => handlePageChange(pageNumber)}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  });
-                })()}
-              </div>
-              <button
-                className="pagination-button nav-button"
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-              >
-                Next ❯
-              </button>
+                  return (
+                    <button
+                      key={pageNumber}
+                      className={`pagination-button ${currentPage === pageNumber ? 'active' : ''}`}
+                      onClick={() => handlePageChange(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                });
+              })()}
             </div>
+            <button
+              className="pagination-button nav-button"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            >
+              Next ❯
+            </button>
           </div>
-        </>
+        </div>
       )}
 
       {/* View Application Modal with enhanced UI */}

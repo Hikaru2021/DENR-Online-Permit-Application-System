@@ -480,27 +480,58 @@ th {
     padding: 0.5rem 0;
   }
   .reports-table {
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-    border-radius: 6px;
+    padding: 0 !important;
+    overflow-x: visible !important;
     box-shadow: none;
-    overflow-x: auto;
+    background: transparent;
   }
-  .reports-table table,
-  .applications-table table,
-  .report-table {
+  .reports-table table {
     min-width: 600px;
     font-size: 0.95rem;
     table-layout: auto;
     display: table;
+    width: 100%;
   }
-  th, td {
+  .reports-table th, .reports-table td {
     padding: 0.5rem 0.5rem;
     white-space: nowrap !important;
     word-break: normal !important;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 180px;
+    font-size: 0.95rem;
+    touch-action: manipulation;
+    text-align: left !important;
+    vertical-align: middle !important;
+  }
+  .reports-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    text-align: left !important;
+    vertical-align: middle !important;
+  }
+  .reports-table::-webkit-scrollbar {
+    height: 6px;
+    background: #f0f0f0;
+  }
+  .reports-table::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 3px;
+  }
+  .reports-table::after {
+    display: none !important;
+    content: none !important;
+  }
+  .reports-table tbody tr {
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 6px;
+  }
+  .reports-table tbody tr:active {
+    background: #e3f2fd;
   }
   .chart-row {
     flex-direction: column;
@@ -562,6 +593,120 @@ th {
   }
   .report-content {
     padding: 0.5rem !important;
+  }
+  .reports-generation-section {
+    gap: 16px;
+    padding: 1rem 0.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(60,60,60,0.08);
+    margin: 1.2rem 0 1.2rem 0;
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+  }
+  .report-generation-header {
+    margin-bottom: 10px;
+    padding: 0 0.25rem;
+  }
+  .report-generation-header h3 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+  .report-generation-header p {
+    font-size: 0.95rem;
+  }
+  .report-generation-options {
+    flex-direction: column !important;
+    gap: 10px;
+    background-color: #f8f9fa;
+    padding: 0.75rem 0.25rem;
+    border-radius: 6px;
+    align-items: stretch !important;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .report-selection,
+  .report-date-selection,
+  .report-month-selection,
+  .report-year-selection {
+    flex-direction: column !important;
+    gap: 4px;
+    width: 100%;
+    align-items: flex-start !important;
+  }
+  .report-month-selection {
+    flex-direction: column !important;
+    gap: 4px;
+    width: 100%;
+  }
+  .report-month, .report-year {
+    width: 100%;
+    gap: 4px;
+  }
+  .report-select, .report-date-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 1rem;
+    padding: 0.7rem 0.5rem;
+    box-sizing: border-box;
+  }
+  .generate-report-btn {
+    width: 100% !important;
+    font-size: 1.1rem;
+    padding: 0.9rem 0;
+    margin-top: 8px;
+    border-radius: 6px;
+    box-shadow: none;
+    text-align: center !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  /* Hide table header in mobile card view */
+  .reports-table thead {
+    display: none !important;
+  }
+  /* Card style for each report row */
+  .report-card-mobile {
+    width: 100%;
+    max-width: 500px;
+    margin: 0.7rem auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(60,60,60,0.10);
+    border: 1.5px solid #e0e0e0;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .report-card-mobile:last-child {
+    margin-bottom: 1.2rem;
+  }
+  .report-card-label {
+    font-size: 0.92em;
+    color: #888;
+    font-weight: 500;
+    margin-bottom: 0.1em;
+    display: block;
+  }
+  .report-card-value {
+    font-size: 1.05em;
+    color: #222;
+    font-weight: 600;
+    margin-bottom: 0.2em;
+    display: block;
+  }
+  .report-card-mobile .select-indicator {
+    margin-top: 0.2em;
+    font-size: 0.85em;
+    color: #1976d2;
+    font-style: italic;
+    opacity: 1;
   }
 }
 
