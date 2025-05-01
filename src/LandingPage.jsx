@@ -88,6 +88,7 @@ function LandingPage() {
     }
 
     // Carousel settings
+    const isMobile = window.innerWidth <= 768;
     const settings = {
         dots: true,
         infinite: true,
@@ -95,11 +96,11 @@ function LandingPage() {
         slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
-        autoplaySpeed: 5000,
+        autoplaySpeed: isMobile ? 4000 : 5000,
         pauseOnHover: true,
-        arrows: true,
-        nextArrow: <SampleNextArrow />,
-        prevArrow: <SamplePrevArrow />,
+        arrows: !isMobile,
+        nextArrow: !isMobile ? <SampleNextArrow /> : undefined,
+        prevArrow: !isMobile ? <SamplePrevArrow /> : undefined,
         fade: true,
         cssEase: "ease-in-out",
         adaptiveHeight: false,
@@ -109,7 +110,7 @@ function LandingPage() {
             {
                 breakpoint: 768,
                 settings: {
-                    arrows: true,
+                    arrows: false,
                     dots: true,
                     autoplay: true,
                     autoplaySpeed: 4000
@@ -118,7 +119,7 @@ function LandingPage() {
             {
                 breakpoint: 480,
                 settings: {
-                    arrows: true,
+                    arrows: false,
                     dots: true,
                     autoplay: true,
                     autoplaySpeed: 3000
