@@ -43,6 +43,19 @@ function LandingPage() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Ensure sidebar is closed by default on mobile and when resizing
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth <= 768) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        // Initial check
+        handleResize();
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const handleLogin = () => {
         navigate('/login');
     };

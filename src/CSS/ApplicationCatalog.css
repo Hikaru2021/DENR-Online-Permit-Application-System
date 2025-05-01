@@ -51,14 +51,14 @@
 }
 
 .catalog-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 var(--spacing-xs) 0;
 }
 
 .catalog-subtitle {
-  font-size: 1rem;
+  font-size: .8rem;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -544,6 +544,10 @@
     margin-left: 0;
     width: 100%;
     padding: var(--spacing-md);
+  }
+
+  .catalog-wrapper {
+    margin-top: 40px;
   }
 
   .catalog-grid {
