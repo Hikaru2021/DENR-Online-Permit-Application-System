@@ -585,22 +585,30 @@ function Dashboard() {
               <div className="calendar-container">
                 <div className="calendar-navigation">
                   <div className="calendar-month-nav">
-                    <button className="calendar-nav-btn" onClick={handlePrevMonth}>
-                      <FaChevronLeft />
-                    </button>
+                    {window.innerWidth > 768 && (
+                      <button className="calendar-nav-btn" onClick={handlePrevMonth}>
+                        <FaChevronLeft />
+                      </button>
+                    )}
                     <h4>{getMonthName(currentDate)}</h4>
-                    <button className="calendar-nav-btn" onClick={handleNextMonth}>
-                      <FaChevronRight />
-                    </button>
+                    {window.innerWidth > 768 && (
+                      <button className="calendar-nav-btn" onClick={handleNextMonth}>
+                        <FaChevronRight />
+                      </button>
+                    )}
                   </div>
                   <div className="calendar-year-nav">
-                    <button className="calendar-nav-btn" onClick={handlePrevYear}>
-                      <FaChevronLeft />
-                    </button>
+                    {window.innerWidth > 768 && (
+                      <button className="calendar-nav-btn" onClick={handlePrevYear}>
+                        <FaChevronLeft />
+                      </button>
+                    )}
                     <h4>{currentDate.getFullYear()}</h4>
-                    <button className="calendar-nav-btn" onClick={handleNextYear}>
-                      <FaChevronRight />
-                    </button>
+                    {window.innerWidth > 768 && (
+                      <button className="calendar-nav-btn" onClick={handleNextYear}>
+                        <FaChevronRight />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="calendar-grid">
