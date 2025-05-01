@@ -154,7 +154,7 @@ function LandingPage() {
                             <img src="Logo1.png" alt="DENR Logo" className="gov-logo" />
                             <div className="logo-text">
                                 <h1>Department of Environment and Natural Resources</h1>
-                                <p>Republic of the Philippines</p>
+                                <p>Baybay City, Leyte</p>
                             </div>
                         </div>
 
