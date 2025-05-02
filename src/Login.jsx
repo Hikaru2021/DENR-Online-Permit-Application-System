@@ -13,6 +13,7 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,6 +23,8 @@ const Login = () => {
       ...prevState,
       [name]: value
     }));
+    setFieldErrors(prev => ({ ...prev, [name]: '' })); // Clear field error on change
+    setError(''); // Clear general error
   };
 
   const handleSubmit = async (e) => {
@@ -29,14 +32,39 @@ const Login = () => {
     setIsLoading(true);
     setShowSuccessModal(true);
     setError('');
+    setFieldErrors({ email: '', password: '' });
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setFieldErrors(prev => ({ ...prev, email: 'Invalid email' }));
+      setIsLoading(false);
+      setShowSuccessModal(false);
+      return;
+    }
+
     try {
+      // Check if email exists in users table
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', formData.email);
+      if (checkError) throw checkError;
+      if (!existingUsers || existingUsers.length === 0) {
+        setFieldErrors(prev => ({ ...prev, email: 'Email not found' }));
+        setIsLoading(false);
+        setShowSuccessModal(false);
+        return;
+      }
+
+      // Try to sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) {
-        setError('Invalid email or password');
+        setFieldErrors(prev => ({ ...prev, password: 'Incorrect password' }));
         setIsLoading(false);
         setShowSuccessModal(false);
         return;
@@ -56,9 +84,8 @@ const Login = () => {
         return;
       }
 
-      // Block login if user status is 'blocked' (status ID 2)
       if (userData.status === 2) {
-        setError('Your account is blocked. Contact DENR admin.');
+        setFieldErrors(prev => ({ ...prev, email: 'Your account is blocked. Contact DENR admin.' }));
         setIsLoading(false);
         setShowSuccessModal(false);
         return;
@@ -114,6 +141,7 @@ const Login = () => {
                 required
               />
             </div>
+            {fieldErrors.email && <small className="field-error">{fieldErrors.email}</small>}
           </div>
 
           <div className="form-group">
@@ -137,6 +165,7 @@ const Login = () => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+            {fieldErrors.password && <small className="field-error">{fieldErrors.password}</small>}
           </div>
 
           <button 

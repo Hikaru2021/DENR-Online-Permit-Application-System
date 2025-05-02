@@ -191,22 +191,47 @@
 .timeline-list {
   margin-top: 2rem;
   padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .timeline-item {
-  display: grid;
-  grid-template-columns: 120px 30px 1fr;
-  gap: 1rem;
-  padding: 1rem 0;
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 0;
   position: relative;
+  background: none;
+  border-radius: 0;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: none;
+  transition: none;
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+
+.timeline-item:last-child {
+  border-bottom: none;
 }
 
 .timeline-item:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: none;
+  transform: none;
 }
 
 .timeline-date {
+  min-width: 100px;
   text-align: right;
+  padding-right: 1rem;
+  color: #666;
+  font-size: 0.95rem;
+  position: relative;
+  border-right: none !important;
+}
+
+.timeline-date::after, .timeline-date::before {
+  display: none !important;
 }
 
 .timeline-date .date {
@@ -215,53 +240,55 @@
 }
 
 .timeline-date .time {
-  font-size: 0.875rem;
-  color: #666;
+  font-size: 0.85rem;
+  color: #999;
 }
 
 .timeline-marker {
   position: relative;
   width: 12px;
   height: 12px;
-  background: #4CAF50;
+  background: #bdbdbd;
   border-radius: 50%;
-  margin: 6px auto;
+  margin-top: 6px;
+  box-shadow: none;
 }
 
 .timeline-marker::before {
   content: '';
   position: absolute;
   left: 50%;
-  top: 12px;
+  top: -24px;
   bottom: -24px;
   width: 2px;
   background: #e0e0e0;
   transform: translateX(-50%);
-}
-
-.timeline-item:last-child .timeline-marker::before {
-  display: none;
+  z-index: -1;
 }
 
 .timeline-content {
-  padding-right: 1rem;
+  flex: 1;
+  padding: 0.25rem 0;
 }
 
 .timeline-content p {
   margin: 0;
   color: #333;
+  line-height: 1.5;
+  font-size: 0.97rem;
 }
 
 .additional-info {
   margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.03);
+  padding: 0.5rem 0.75rem;
+  background: #f7f7f7;
   border-radius: 4px;
+  border: 1px solid #e0e0e0;
 }
 
 .additional-info p {
   margin: 0.25rem 0;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: #666;
 }
 
@@ -504,6 +531,9 @@
   }
   .timeline-date {
     min-width: 90px;
+    padding-right: 0.5rem;
+    font-size: 0.85rem;
+    border-right: none !important;
   }
   .progress-steps {
     width: 100%;

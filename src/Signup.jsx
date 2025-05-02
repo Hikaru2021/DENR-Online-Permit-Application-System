@@ -14,6 +14,7 @@ const Signup = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '', confirmPassword: '' });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,21 +24,56 @@ const Signup = () => {
       ...prevState,
       [name]: value
     }));
+    setFieldErrors(prev => ({ ...prev, [name]: '' })); // Clear field error on change
+    setError(''); // Clear general error
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setShowSuccessModal(true);
+    setError('');
+    setFieldErrors({ email: '', password: '', confirmPassword: '' });
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setFieldErrors(prev => ({ ...prev, email: `Email address [${formData.email}] is invalid` }));
+      setIsLoading(false);
+      setShowSuccessModal(false);
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setFieldErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      setIsLoading(false);
+      setShowSuccessModal(false);
+      return;
+    }
+
+    // Password must be at least 6 characters, contain only letters and digits, and have at least one letter and one digit
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setFieldErrors(prev => ({ ...prev, password: 'Password must be at least 6 characters, contain letters and digits, and have at least one letter and one digit' }));
       setIsLoading(false);
       setShowSuccessModal(false);
       return;
     }
 
     try {
+      // Check if email already exists in users table
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', formData.email);
+      if (checkError) throw checkError;
+      if (existingUsers && existingUsers.length > 0) {
+        setFieldErrors(prev => ({ ...prev, email: 'Email already exists' }));
+        setIsLoading(false);
+        setShowSuccessModal(false);
+        return;
+      }
+
       // 1. Sign up the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -132,6 +168,7 @@ const Signup = () => {
                 required
               />
             </div>
+            {fieldErrors.email && <small className="field-error">{fieldErrors.email}</small>}
           </div>
 
           <div className="form-group">
@@ -155,6 +192,7 @@ const Signup = () => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+            {fieldErrors.password && <small className="field-error">{fieldErrors.password}</small>}
           </div>
 
           <div className="form-group">
@@ -171,6 +209,7 @@ const Signup = () => {
                 required
               />
             </div>
+            {fieldErrors.confirmPassword && <small className="field-error">{fieldErrors.confirmPassword}</small>}
           </div>
 
           <button 
