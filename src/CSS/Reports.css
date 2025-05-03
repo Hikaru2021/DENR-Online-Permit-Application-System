@@ -710,6 +710,12 @@ th {
   }
 }
 
+@media (min-width: 769px) {
+  .section-title {
+    font-size: 1.1rem !important;
+  }
+}
+
 .report-card {
   background-color: #FAFAFA;
   border-radius: 8px;

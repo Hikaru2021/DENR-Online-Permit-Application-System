@@ -31,7 +31,7 @@ const User = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(window.innerWidth <= 768 ? 1000 : 5);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -42,61 +42,33 @@ const User = () => {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleChangeData, setRoleChangeData] = useState(null);
   const [isRoleUpdating, setIsRoleUpdating] = useState(false);
-  const [totalPages, setTotalPages] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [statusChangeData, setStatusChangeData] = useState(null);
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
-    // Fetch all users if mobile view, else fetch paginated
     async function fetchUsers() {
       setIsLoading(true);
       try {
-        let data, error;
-        if (isMobileView) {
-          // Fetch all users for mobile view
-          ({ data, error } = await supabase
-            .from('users')
-            .select(`
+        const { data, error } = await supabase
+          .from('users')
+          .select(`
+            id,
+            created_at,
+            user_name,
+            email,
+            role_id,
+            status,
+            profile_link,
+            user_status (
               id,
-              created_at,
-              user_name,
-              email,
-              role_id,
-              status,
-              profile_link,
-              user_status (
-                id,
-                user_status
-              )
-            `)
-            .order('created_at', { ascending: false })
-          );
-        } else {
-          // Paginated fetch for desktop
-          ({ data, error } = await supabase
-            .from('users')
-            .select(`
-              id,
-              created_at,
-              user_name,
-              email,
-              role_id,
-              status,
-              profile_link,
-              user_status (
-                id,
-                user_status
-              )
-            `)
-            .order('created_at', { ascending: false })
-            .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1)
-          );
-        }
+              user_status
+            )
+          `)
+          .order('created_at', { ascending: false });
         if (error) throw error;
         setUsers(data || []);
-        setTotalPages(isMobileView ? 1 : Math.ceil((data?.length || 0) / itemsPerPage));
       } catch (error) {
         setError(`Error fetching users: ${error.message}`);
         console.error('Error fetching users:', error);
@@ -105,10 +77,14 @@ const User = () => {
       }
     }
     fetchUsers();
-    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobileView(mobile);
+      setItemsPerPage(mobile ? 1000 : 5);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [currentPage, isMobileView]);
+  }, []);
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -324,6 +300,14 @@ const User = () => {
     }
   };
 
+  // 2. Calculate current page users
+  const indexOfLastUser = currentPage * itemsPerPage;
+  const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+  const currentUsers = isMobileView
+    ? filteredUsers
+    : filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = isMobileView ? 1 : Math.ceil(filteredUsers.length / itemsPerPage);
+
   return (
     <div className="my-application-container">
       <div className="application-list-header">
@@ -461,8 +445,8 @@ const User = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
+                {currentUsers.length > 0 ? (
+                  currentUsers.map((user) => (
                     <tr key={user.id}>
                       <td>
                         <div className="profile-picture-container">

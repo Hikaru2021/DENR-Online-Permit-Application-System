@@ -1324,12 +1324,15 @@
 
 @keyframes redStepPulse {
   0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.25);
     transform: scale(1);
   }
   50% {
+    box-shadow: 0 0 0 8px rgba(244, 67, 54, 0);
     transform: scale(1.08);
   }
   100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.25);
     transform: scale(1);
   }
 }
@@ -1364,9 +1367,10 @@
 
 /* Rejected style - red pulse */
 .progress-step.rejected.current .step-circle {
-  animation: redStepPulse 2s infinite;
-  border-color: #f44336;
-  background: #ffebee;
+  animation: redStepPulse 2s infinite !important;
+  border-color: #f44336 !important;
+  background: #ffebee !important;
+  box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.25) !important;
 }
 
 .progress-step.rejected.current .step-circle svg {
@@ -1523,49 +1527,31 @@
 
 /* Needs Revision style - orange alert */
 .progress-step.needs-revision .step-circle {
-  border-color: #E65100;
-  background: #FFF3E0;
-  position: relative;
-  overflow: visible;
+  border-color: #FFA000 !important;
+  background: #FFF8E1 !important;
 }
 
 .progress-step.needs-revision .step-circle svg {
-  color: #E65100;
-  font-size: 1.2em;
-  animation: alertPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes alertPulse {
-  0%, 100% { 
-    transform: scale(1); 
-  }
-  50% { 
-    transform: scale(1.15); 
-  }
+  color: #FFA000 !important;
 }
 
 .progress-step.needs-revision .step-label {
-  color: #E65100;
+  color: #FFA000 !important;
   font-weight: 600;
 }
 
 /* Needs Revision current step - orange pulse */
 .progress-step.needs-revision.current .step-circle {
   animation: orangeStepPulse 2s infinite;
-  border-color: #E65100;
-  background: #FFF3E0;
+  border-color: #FFA000 !important;
+  background: #FFF8E1 !important;
+  box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.25) !important;
 }
 
 @keyframes orangeStepPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
 /* Override for rejected applications */
@@ -1591,4 +1577,25 @@
 .show-less-comments:hover {
   background-color: #e8f5e9;
   border-color: #4CAF50;
+}
+
+@keyframes superRedPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.25);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(244, 67, 54, 0);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.25);
+    transform: scale(1);
+  }
+}
+
+div.progress-step.rejected.current > .step-circle {
+  animation: superRedPulse 2s infinite !important;
+  border-color: #f44336 !important;
+  background: #ffebee !important;
 } 
