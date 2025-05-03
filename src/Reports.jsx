@@ -1800,7 +1800,7 @@ function Reports() {
           className={`tab-btn ${activeTab === 'table' ? 'active' : ''}`}
           onClick={() => setActiveTab('table')}
         >
-          <FaChartBar /> Reports Table
+          <FaChartBar /> Generate Report
         </button>
       </div>
 

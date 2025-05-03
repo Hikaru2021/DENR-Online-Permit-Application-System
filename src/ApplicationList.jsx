@@ -122,6 +122,7 @@ function ApplicationList() {
       // Transform the data to match our component's expected format
       const transformedApplications = user_applications.map(app => ({
         id: app.id,
+        referenceNumber: `REF-${app.id.toString().padStart(6, '0')}`,
         application_id: `APP-${app.id.toString().padStart(6, '0')}`,
         applicant_name: app.full_name,
         title: app.applications.title,
@@ -717,7 +718,7 @@ function ApplicationList() {
             ) : (
               filteredAndSortedApplications.map((application) => (
                 <div key={application.id} className="application-card-mobile">
-                  <div><strong>ID:</strong> {application.application_id}</div>
+                  <div><strong>Reference #:</strong> {application.referenceNumber}</div>
                   <div><strong>Applicant:</strong> {application.applicant_name}</div>
                   <div><strong>Title:</strong> {application.title}</div>
                   <div><strong>Type:</strong> {application.type}</div>
@@ -765,7 +766,7 @@ function ApplicationList() {
             <table className="shared-table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>Reference #</th>
                   <th>Applicant</th>
                   <th>Title</th>
                   <th className="th-center">Type</th>
@@ -782,7 +783,7 @@ function ApplicationList() {
                 ) : (
                   currentItems.map((application) => (
                     <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
-                      <td>{application.application_id}</td>
+                      <td>{application.referenceNumber}</td>
                       <td>{application.applicant_name}</td>
                       <td>{application.title}</td>
                       <td className="td-center">{application.type}</td>
