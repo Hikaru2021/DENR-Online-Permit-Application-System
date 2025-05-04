@@ -21,9 +21,11 @@
   margin-left: 250px;
   transition: margin-left 0.3s ease, width 0.3s ease;
   background-color: #FAFAFA;
-  padding: 2rem;
+  padding: 2rem 2.5rem 2rem 2.5rem !important;
   overflow-y: auto;
   font-family: var(--font-family);
+  margin-bottom: 0;
+  padding-bottom: 0 !important;
 }
 
 .sidebar-collapsed .my-application-container {
@@ -34,7 +36,7 @@
 .my-application-content {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0;
   width: 100%;
   height: 100%;
 }
@@ -63,7 +65,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2rem !important;
   flex-wrap: wrap;
 }
 
@@ -125,6 +127,7 @@
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  margin-bottom: 0 !important;
 }
 
 .application-table {
@@ -1119,7 +1122,6 @@
     padding: 0.45em 0.7em;
   }
 }
-
 .application-title {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1130,3 +1132,89 @@
   line-height: 1.3;
   max-height: 2.6em;
 }
+
+.one-line-table td, .one-line-table th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.ref-col {
+  width: 1%;
+  text-align: left;
+}
+
+.title-col {
+  width: 43%;
+  min-width: 180px;
+  max-width: 350px;
+}
+
+.nowrap-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Optionally, adjust .application-title for single-line truncation in table */
+.one-line-table .application-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: none;
+}
+
+.shared-table.one-line-table {
+  table-layout: auto;
+  width: 100%;
+}
+
+.draggable-title {
+  overflow-x: auto;
+  white-space: nowrap;
+  cursor: grab;
+  max-width: 300px;
+  display: block;
+  scrollbar-width: none; /* Firefox */
+  text-overflow: unset;
+}
+.draggable-title::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Remove ellipsis for .one-line-table .application-title */
+.one-line-table .application-title {
+  text-overflow: unset;
+}
+
+.status-col {
+  width: 0.5%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.shared-table {
+  width: 1200px !important;
+  margin: 0 auto !important;
+}
+
+.table-pagination-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  min-height: 0;
+  position: relative;
+}
+
+.table-pagination-wrapper .table-container {
+  flex: 1 1 auto;
+}
+
+.table-pagination-wrapper .pagination-container {
+  flex-shrink: 0;
+  margin-top: 0 !important;
+}
+

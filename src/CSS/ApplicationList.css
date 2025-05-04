@@ -1197,21 +1197,18 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  min-height: 0;
   width: calc(100vw - 250px);
   margin-left: 250px;
   transition: margin-left 0.3s ease, width 0.3s ease;
   background-color: #FAFAFA;
   padding: 2rem;
-  overflow-y: auto;
+  padding-bottom: 0 !important;
 }
 
-.sidebar-collapsed .application-list-container {
-  margin-left: 70px;
-  width: calc(100vw - 70px);
-}
-
-.application-list-header {
-  margin-bottom: 2rem;
+.application-list-header,
+.application-list-filters {
+  flex-shrink: 0;
 }
 
 .application-list-title {
@@ -1795,4 +1792,56 @@
 .download-button:hover, .download-document-btn:hover {
   background-color: #43a047 !important;
   color: #fff !important;
+}
+.one-line-table td, .one-line-table th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.ref-col {
+  width: 1%;
+  text-align: left;
+}
+
+.title-col {
+  width: 22%;
+  min-width: 120px;
+  max-width: 220px;
+}
+
+.nowrap-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.one-line-table .application-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.draggable-title {
+  overflow-x: auto;
+  white-space: nowrap;
+  cursor: grab;
+  max-width: 200px;
+  display: block;
+  scrollbar-width: none; /* Firefox */
+}
+.draggable-title::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.table-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
 }

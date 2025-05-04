@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaSearch, FaFilter, FaSort, FaChartLine, FaDownload, FaTrash, FaTimes, FaClock, FaEye } from "react-icons/fa";
 import "./CSS/MyApplication.css"; 
@@ -22,6 +22,48 @@ function formatTime12hr(date) {
   hours = hours % 12;
   hours = hours ? hours : 12;
   return `${hours}:${minutes} ${ampm}`;
+}
+
+function DraggableTitle({ children }) {
+  const ref = useRef(null);
+  // Use refs to store drag state
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const onMouseDown = (e) => {
+    isDownRef.current = true;
+    startXRef.current = e.pageX - ref.current.offsetLeft;
+    scrollLeftRef.current = ref.current.scrollLeft;
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const onMouseMove = (e) => {
+    if (!isDownRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    const walk = x - startXRef.current;
+    ref.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const onMouseUp = () => {
+    isDownRef.current = false;
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
+  };
+
+  return (
+    <span
+      className="application-title draggable-title"
+      ref={ref}
+      onMouseDown={onMouseDown}
+      tabIndex={0}
+      style={{ userSelect: 'none' }}
+    >
+      {children}
+    </span>
+  );
 }
 
 function MyApplication() {
@@ -623,78 +665,74 @@ function MyApplication() {
                 ))}
               </div>
             ) : (
-              <div className="table-container">
-                <table className="shared-table">
-                  <thead>
-                    <tr>
-                      <th>Reference #</th>
-                      <th>Title</th>
-                      <th>Type</th>
-                      <th className="th-center">Status</th>
-                      <th className="th-center">Submission Date</th>
-                      <th className="th-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentItems.map((application) => (
-                      <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
-                        <td>{application.referenceNumber}</td>
-                        <td><span className="application-title">{application.title}</span></td>
-                        <td>{application.type}</td>
-                        <td className="td-center">
-                          <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>
-                            {application.status}
-                          </span>
-                        </td>
-                        <td className="td-center">{formatDateMMDDYYYY(application.submissionDate)}</td>
-                        <td className="td-center">
-                          <div className="action-buttons">
-                            <button 
-                              className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
-                              onClick={() => handleViewDetails(application)}
-                              title={`${getActionText(application.status)} Application`}
-                            >
-                              {application.status === "Approved" || application.status === "Denied" ? <FaEye /> : <FaChartLine />}
-                            </button>
-                            {application.status !== "Approved" && application.status !== "Under Review" && (
-                              <button 
-                                className="action-button delete-button" 
-                                onClick={() => handleDeleteClick(application.id)}
-                                title="Delete Application"
-                              >
-                                <FaTrash />
-                              </button>
-                            )}
-                          </div>
-                        </td>
+              <div className="table-pagination-wrapper">
+                <div className="table-container">
+                  <table className="shared-table one-line-table">
+                    <thead>
+                      <tr>
+                        <th className="ref-col">Reference #</th>
+                        <th className="title-col">Title</th>
+                        <th>Type</th>
+                        <th className="status-col th-center">Status</th>
+                        <th className="th-center">Submission Date</th>
+                        <th className="th-center">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            
-            {/* Show pagination in fixed container */}
-            {!isMobileView && (
-              <div className="pagination-container">
-                <div className="pagination">
-                  <button
-                    className="pagination-button nav-button"
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                  >
-                    ❮ Prev
-                  </button>
-                  <div className="pagination-pages">
-                    {renderPaginationButtons()}
+                    </thead>
+                    <tbody>
+                      {currentItems.map((application) => (
+                        <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
+                          <td className="ref-col"><span className="nowrap-text">{application.referenceNumber}</span></td>
+                          <td className="title-col"><DraggableTitle>{application.title}</DraggableTitle></td>
+                          <td>{application.type}</td>
+                          <td className="status-col td-center">
+                            <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span>
+                          </td>
+                          <td className="td-center">{formatDateMMDDYYYY(application.submissionDate)}</td>
+                          <td className="td-center">
+                            <div className="action-buttons">
+                              <button 
+                                className={`action-button ${application.status === "Approved" || application.status === "Denied" ? 'view-button' : 'track-button'}`}
+                                onClick={() => handleViewDetails(application)}
+                                title={`${getActionText(application.status)} Application`}
+                              >
+                                {application.status === "Approved" || application.status === "Denied" ? <FaEye /> : <FaChartLine />}
+                              </button>
+                              {application.status !== "Approved" && application.status !== "Under Review" && (
+                                <button 
+                                  className="action-button delete-button" 
+                                  onClick={() => handleDeleteClick(application.id)}
+                                  title="Delete Application"
+                                >
+                                  <FaTrash />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="pagination-container">
+                  <div className="pagination">
+                    <button
+                      className="pagination-button nav-button"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                    >
+                      ❮ Prev
+                    </button>
+                    <div className="pagination-pages">
+                      {renderPaginationButtons()}
+                    </div>
+                    <button
+                      className="pagination-button nav-button"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next ❯
+                    </button>
                   </div>
-                  <button
-                    className="pagination-button nav-button"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next ❯
-                  </button>
                 </div>
               </div>
             )}

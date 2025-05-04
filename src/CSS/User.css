@@ -46,11 +46,14 @@
     line-height: 1.5;
 }
 
+div.my-application-filters {
+  margin-bottom: 0.5rem !important;
+}
+
 .my-application-filters {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
   flex-wrap: wrap;
 }
 
@@ -378,11 +381,10 @@
   }
 }
 
-.table-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+.table-container, .table-pagination-wrapper {
+  overflow-y: visible !important;
+  height: auto !important;
+  min-height: unset !important;
 }
 
 table {
@@ -858,4 +860,23 @@ tr:hover {
 .profile-picture-placeholder svg {
   width: 20px;
   height: 20px;
+}
+
+.shared-table {
+  width: 1200px !important;
+  margin: 0 auto !important;
+}
+.table-pagination-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 0;
+  position: relative;
+}
+.table-pagination-wrapper .table-container {
+  flex: 1 1 auto;
+}
+.table-pagination-wrapper .pagination-container {
+  flex-shrink: 0;
+  margin-top: auto;
 }

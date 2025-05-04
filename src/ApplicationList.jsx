@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaSearch, FaFilter, FaSort, FaEye, FaChartLine, FaTrash, FaDownload, FaCalendarAlt, FaFile, FaIdCard, FaUser, FaMapMarkerAlt, FaEnvelope, FaPhone, FaFileAlt, FaClipboardList, FaMoneyBillWave, FaInfoCircle, FaTags, FaClock, FaFileContract, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileArchive, FaFileCode, FaCog, FaEdit, FaTimes } from "react-icons/fa";
 import "./CSS/ApplicationList.css";
@@ -27,6 +27,48 @@ function formatTime12hr(date) {
   hours = hours % 12;
   hours = hours ? hours : 12;
   return `${hours}:${minutes} ${ampm}`;
+}
+
+function DraggableTitle({ children }) {
+  const ref = useRef(null);
+  // Use refs to store drag state
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const onMouseDown = (e) => {
+    isDownRef.current = true;
+    startXRef.current = e.pageX - ref.current.offsetLeft;
+    scrollLeftRef.current = ref.current.scrollLeft;
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const onMouseMove = (e) => {
+    if (!isDownRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    const walk = x - startXRef.current;
+    ref.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const onMouseUp = () => {
+    isDownRef.current = false;
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
+  };
+
+  return (
+    <span
+      className="application-title draggable-title"
+      ref={ref}
+      onMouseDown={onMouseDown}
+      tabIndex={0}
+      style={{ userSelect: 'none' }}
+    >
+      {children}
+    </span>
+  );
 }
 
 function ApplicationList() {
@@ -737,7 +779,7 @@ function ApplicationList() {
                 <div key={application.id} className="application-card-mobile">
                   <div><strong>Reference #:</strong> {application.referenceNumber}</div>
                   <div><strong>Applicant:</strong> {application.applicant_name}</div>
-                  <div><strong>Title:</strong> <span className="application-title">{application.title}</span></div>
+                  <div><strong>Title:</strong> {application.title}</div>
                   <div><strong>Type:</strong> {application.type}</div>
                   <div><strong>Status:</strong> <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span></div>
                   <div><strong>Submitted Date:</strong> {formatDateMMDDYYYY(application.submitted_at)}</div>
@@ -802,7 +844,7 @@ function ApplicationList() {
                     <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
                       <td>{application.referenceNumber}</td>
                       <td>{application.applicant_name}</td>
-                      <td><span className="application-title">{application.title}</span></td>
+                      <td><DraggableTitle>{application.title}</DraggableTitle></td>
                       <td className="td-center">{application.type}</td>
                       <td className="td-center">{formatDateMMDDYYYY(application.submitted_at)}</td>
                       <td className="td-center">
