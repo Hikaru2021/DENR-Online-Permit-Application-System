@@ -180,7 +180,7 @@ const ApplicationTracking = () => {
         const formattedApplication = {
           id: applicationData.id,
           title: applicationData.applications.title,
-          referenceNumber: `REF-${applicationData.created_at.split('T')[0]}-${applicationData.id}`,
+          referenceNumber: `REF-${String(applicationData.id).padStart(6, '0')}`,
           type: applicationData.applications.type,
           status: getStatusName(applicationData.status),
           submissionDate,
