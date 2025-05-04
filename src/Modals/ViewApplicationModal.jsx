@@ -107,7 +107,7 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
         {/* Header Section */}
         <div className="modal-header">
           <div className="modal-title-section">
-            <h2>{application.title}</h2>
+            <h2 style={{ textAlign: 'justify' }}>{application.title}</h2>
             <div className="header-meta">
               <span className="application-type-badge">{application.type}</span>
             </div>

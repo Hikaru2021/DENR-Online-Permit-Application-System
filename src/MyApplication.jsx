@@ -597,7 +597,7 @@ function MyApplication() {
                 {currentItems.map((application) => (
                   <div key={application.id} className="application-card-mobile">
                     <div><strong>Reference #:</strong> {application.referenceNumber}</div>
-                    <div><strong>Title:</strong> {application.title}</div>
+                    <div><strong>Title:</strong> <span className="application-title">{application.title}</span></div>
                     <div><strong>Type:</strong> {application.type}</div>
                     <div><strong>Status:</strong> <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span></div>
                     <div><strong>Submission Date:</strong> {formatDateMMDDYYYY(application.submissionDate)}</div>
@@ -639,7 +639,7 @@ function MyApplication() {
                     {currentItems.map((application) => (
                       <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
                         <td>{application.referenceNumber}</td>
-                        <td>{application.title}</td>
+                        <td><span className="application-title">{application.title}</span></td>
                         <td>{application.type}</td>
                         <td className="td-center">
                           <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>

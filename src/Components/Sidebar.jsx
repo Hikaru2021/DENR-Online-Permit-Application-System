@@ -12,6 +12,7 @@ const Sidebar = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState(null);
   const [minimized, setMinimized] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,6 +50,8 @@ const Sidebar = () => {
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -69,6 +72,10 @@ const Sidebar = () => {
   const handleProfileClick = () => {
     navigate('/Settings');
   };
+
+  if (profileLoading) {
+    return null;
+  }
 
   return (
     <>
