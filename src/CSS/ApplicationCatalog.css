@@ -791,4 +791,38 @@
     width: 100%;
     justify-content: flex-start;
   }
+}
+
+.toast-notification {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  min-width: 320px;
+  max-width: 90vw;
+  background: #43a047;
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  opacity: 0.98;
+  animation: toast-fade-in 0.4s, toast-fade-out 0.4s 2.6s;
+  pointer-events: none;
+}
+.toast-notification.success {
+  background: #43a047;
+}
+.toast-notification.error {
+  background: #e53935;
+}
+@keyframes toast-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to { opacity: 0.98; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toast-fade-out {
+  from { opacity: 0.98; }
+  to { opacity: 0; }
 } 

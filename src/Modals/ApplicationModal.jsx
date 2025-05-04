@@ -14,7 +14,7 @@ export default function ApplicationModal({ application, onClose }) {
   }, [onClose]);
 
   return (
-    <div className="modal-container" onClick={onClose}>
+    <div className="modal-container" style={{ borderRadius: '12px' }} onClick={onClose}>
       {/* Backdrop */}
       <div className="modal-backdrop"></div>
 

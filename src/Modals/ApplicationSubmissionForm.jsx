@@ -256,7 +256,7 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container application-submission-form">
+      <div className="modal-container application-submission-form" style={{ borderRadius: '12px' }}>
         <div className="modal-header">
           <div className="modal-title-section">
             <h2>Application Submission</h2>

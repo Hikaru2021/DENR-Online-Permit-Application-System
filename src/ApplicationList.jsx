@@ -54,6 +54,7 @@ function ApplicationList() {
   const [deletingAppId, setDeletingAppId] = useState(null);
   const [deletingRowId, setDeletingRowId] = useState(null);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   // Status mapping function
   const getStatusName = (statusId) => {
@@ -285,6 +286,15 @@ function ApplicationList() {
     setShowDeleteModal(true);
   };
 
+  // Toast auto-dismiss effect
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // Update handleDeleteApplication to show toast
   const handleDeleteApplication = async () => {
     const app = applications.find(a => a.id === deletingAppId);
     if (!app || app.status === "Approved" || app.status === "Under Review") {
@@ -297,7 +307,6 @@ function ApplicationList() {
     try {
       setIsLoading(true);
       setDeletingRowId(deletingAppId);
-      // Wait for animation
       await new Promise((resolve) => setTimeout(resolve, 400));
       // 1. Delete application status history records first
       const { error: historyError } = await supabase
@@ -306,13 +315,13 @@ function ApplicationList() {
         .eq("user_application_id", deletingAppId);
       if (historyError) throw historyError;
       // 2. Get all documents related to this application to delete them from storage
-      const { data: applicationDocs, error: docError } = await supabase
+      const { data: documents, error: docError } = await supabase
         .from("documents")
         .select("*")
         .eq("user_submissions", deletingAppId);
       if (docError) throw docError;
-      if (applicationDocs && applicationDocs.length > 0) {
-        for (const doc of applicationDocs) {
+      if (documents && documents.length > 0) {
+        for (const doc of documents) {
           const fileUrl = doc.file_link;
           if (fileUrl) {
             const filePath = fileUrl.split('/storage/v1/object/public/')[1];
@@ -350,12 +359,14 @@ function ApplicationList() {
       setShowDeleteModal(false);
       setDeletingAppId(null);
       setDeletingRowId(null);
+      // Show success toast
+      setToast({ show: true, message: "Application deleted successfully!", type: "success" });
     } catch (err) {
-      console.error('Error deleting application:', err);
-      alert(`Error deleting application: ${err.message}`);
+      setError(`Error deleting application: ${err.message}`);
       setShowDeleteModal(false);
       setDeletingAppId(null);
       setDeletingRowId(null);
+      console.error("Error deleting application:", err);
     } finally {
       setIsLoading(false);
     }
@@ -635,6 +646,12 @@ function ApplicationList() {
 
   return (
     <div className="application-list-container">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="application-list-header">
         <h1 className="application-list-title">Application List</h1>
         <p className="application-list-subtitle">Manage and track all submitted applications</p>

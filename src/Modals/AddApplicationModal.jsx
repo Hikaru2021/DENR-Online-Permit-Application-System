@@ -339,7 +339,7 @@ const AddApplicationModal = ({ isOpen, onClose, onApplicationAdded }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container">
+      <div className="modal-container add-application-modal" style={{ borderRadius: '12px' }}>
         <div className="modal-header">
           <h2>Create New Application</h2>
           <button className="modal-close" onClick={onClose}>

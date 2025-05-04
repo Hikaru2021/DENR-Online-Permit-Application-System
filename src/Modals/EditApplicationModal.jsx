@@ -468,7 +468,7 @@ const EditApplicationModal = ({ isOpen, onClose, onApplicationUpdated, applicati
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container">
+      <div className="modal-container edit-application-modal" style={{ borderRadius: '12px' }}>
         <div className="modal-header">
           <h2>Edit Application</h2>
           <div className="application-meta">

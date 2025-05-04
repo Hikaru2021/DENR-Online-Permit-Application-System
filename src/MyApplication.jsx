@@ -49,6 +49,7 @@ function MyApplication() {
   const [deletingRowId, setDeletingRowId] = useState(null);
   // Track mobile view for responsive rendering
   const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   // Update itemsPerPage on resize
   useEffect(() => {
@@ -239,6 +240,15 @@ function MyApplication() {
     setShowDeleteModal(true);
   };
 
+  // Toast auto-dismiss effect
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // Update handleDeleteApplication to show toast
   const handleDeleteApplication = async () => {
     const app = applications.find(a => a.id === deletingAppId);
     if (!app || app.status === "Approved" || app.status === "Under Review") {
@@ -251,7 +261,6 @@ function MyApplication() {
     try {
       setIsLoading(true);
       setDeletingRowId(deletingAppId);
-      // Wait for animation
       await new Promise((resolve) => setTimeout(resolve, 400));
       // ... original delete logic ...
       // 1. Delete application status history records first
@@ -305,6 +314,8 @@ function MyApplication() {
       setShowDeleteModal(false);
       setDeletingAppId(null);
       setDeletingRowId(null);
+      // Show success toast
+      setToast({ show: true, message: "Application deleted successfully!", type: "success" });
     } catch (err) {
       setError(`Error deleting application: ${err.message}`);
       setShowDeleteModal(false);
@@ -505,6 +516,12 @@ function MyApplication() {
 
   return (
     <div className="my-application-container">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="application-list-header">
         <h1 className="application-list-title">My Applications</h1>
         <p className="application-list-subtitle">Track and manage your permit applications</p>

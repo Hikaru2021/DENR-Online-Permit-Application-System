@@ -259,13 +259,26 @@
 
 .modal-container {
   background-color: white;
-  border-radius: 12px;
+  border-radius: 12px !important;
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+  padding-right: 8px;
+}
+
+.modal-container::-webkit-scrollbar {
+  width: 10px;
+  background: transparent;
+}
+
+.modal-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 12px;
 }
 
 .modal-header {
@@ -1755,7 +1768,7 @@
   .view-application-modal {
     width: 100%;
     margin: 0;
-    border-radius: 0;
+    border-radius: 12px !important;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -2383,4 +2396,20 @@ textarea.form-input {
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content {
+  border-radius: 12px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+  padding-right: 8px;
+}
+.modal-content::-webkit-scrollbar {
+  width: 10px;
+  background: transparent;
+}
+.modal-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 12px;
 } 

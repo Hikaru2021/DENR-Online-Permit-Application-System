@@ -278,7 +278,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container" style={{ maxWidth: '800px' }}>
+      <div className="modal-container manage-application-modal" style={{ borderRadius: '12px', maxWidth: '800px' }}>
         <div className="modal-header">
           <h2>Manage Application</h2>
           <button className="modal-close" onClick={onClose}>

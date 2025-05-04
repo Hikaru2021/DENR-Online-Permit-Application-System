@@ -27,6 +27,7 @@ function ApplicationCatalog() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [visibleModal, setVisibleModal] = useState(null);
   const [sorting, setSorting] = useState("latest");
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   // Fetch applications from Supabase
   const fetchApplications = async () => {
@@ -74,6 +75,14 @@ function ApplicationCatalog() {
     fetchApplications();
     fetchUserRole();
   }, []);
+
+  // Toast auto-dismiss effect
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -227,9 +236,8 @@ function ApplicationCatalog() {
       await fetchApplications();
       setSelectedApplications([]);
       setShowDeleteConfirmModal(false);
-      
-      // Show success message
-      alert("Selected applications and related documents have been deleted successfully!");
+      // Show success toast
+      setToast({ show: true, message: "Selected applications and related documents have been deleted successfully!", type: "success" });
     } catch (error) {
       console.error("Error deleting applications:", error.message);
       alert("Error deleting applications: " + error.message);
@@ -240,6 +248,12 @@ function ApplicationCatalog() {
 
   return (
     <div className="catalog-container">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="catalog-wrapper">
         <div className="catalog-header">
           <h1 className="catalog-title">Application Catalog</h1>

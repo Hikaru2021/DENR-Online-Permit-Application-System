@@ -103,7 +103,7 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container view-application-modal">
+      <div className="modal-container view-application-modal" style={{ borderRadius: '12px' }}>
         {/* Header Section */}
         <div className="modal-header">
           <div className="modal-title-section">
