@@ -224,12 +224,21 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
       if (applicationError) throw applicationError;
       
       // Add record to application_status_history table
+      const now = new Date();
+      const formattedNow = now.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
       const { error: historyError } = await supabase
         .from('application_status_history')
         .insert([{
           user_application_id: applicationData[0].id,
           status_id: 1, // Submitted status
-          remarks: 'Application is already submitted.'
+          remarks: `Application submitted on ${formattedNow}. Review will begin shortly.`
         }]);
         
       if (historyError) {

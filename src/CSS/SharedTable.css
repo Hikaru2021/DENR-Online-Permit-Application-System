@@ -59,8 +59,8 @@
 .status-inactive,
 .status-rejected,
 .status-denied {
-  background-color: #f8d7da;
-  color: #dc3545;
+  background-color: #ffa8a8;
+  color: #a61e4d;
 }
 
 .status-pending,
@@ -80,6 +80,27 @@
 .status-on-review {
   background-color: #e3f2fd;
   color: #1976d2;
+}
+
+.status-badge.payment-pending {
+  background-color: #ffe066;
+  color: #7a5d00;
+}
+.status-badge.payment-recieved {
+  background-color: #b2f2bb;
+  color: #186a3b;
+}
+.status-badge.payment-failed {
+  background-color: #f8d7da;
+  color: #dc3545;
+}
+.status-badge.inspecting {
+  background-color: #d0ebff;
+  color: #1864ab;
+}
+.status-badge.completed {
+  background-color: #e6fcf5;
+  color: #087f5b;
 }
 
 /* Action Buttons */

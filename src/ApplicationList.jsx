@@ -106,6 +106,11 @@ function ApplicationList() {
       case 3: return "Needs Revision";
       case 4: return "Approved";
       case 5: return "Rejected";
+      case 6: return "Payment Pending";
+      case 7: return "Payment Recieved";
+      case 8: return "Payment Failed";
+      case 9: return "Inspecting";
+      case 10: return "Completed";
       default: return "Unknown";
     }
   };
@@ -549,6 +554,16 @@ function ApplicationList() {
         return "status-badge approved";
       case "rejected":
         return "status-badge rejected";
+      case "payment pending":
+        return "status-badge payment-pending";
+      case "payment recieved":
+        return "status-badge payment-recieved";
+      case "payment failed":
+        return "status-badge payment-failed";
+      case "inspecting":
+        return "status-badge inspecting";
+      case "completed":
+        return "status-badge completed";
       default:
         return "status-badge";
     }
@@ -724,6 +739,11 @@ function ApplicationList() {
               <option value="Needs Revision">Needs Revision</option>
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
+              <option value="Payment Pending">Payment Pending</option>
+              <option value="Payment Recieved">Payment Recieved</option>
+              <option value="Payment Failed">Payment Failed</option>
+              <option value="Inspecting">Inspecting</option>
+              <option value="Completed">Completed</option>
             </select>
           </div>
           
@@ -1092,6 +1112,11 @@ function ApplicationList() {
                     <option value="Needs Revision">Needs Revision</option>
                     <option value="Approved">Approved</option>
                     <option value="Rejected">Rejected</option>
+                    <option value="Payment Pending">Payment Pending</option>
+                    <option value="Payment Recieved">Payment Recieved</option>
+                    <option value="Payment Failed">Payment Failed</option>
+                    <option value="Inspecting">Inspecting</option>
+                    <option value="Completed">Completed</option>
                   </select>
                 </div>
                 <div className="form-group">

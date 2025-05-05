@@ -136,6 +136,11 @@ function MyApplication() {
       case 3: return "Needs Revision";
       case 4: return "Approved";
       case 5: return "Rejected";
+      case 6: return "Payment Pending";
+      case 7: return "Payment Recieved";
+      case 8: return "Payment Failed";
+      case 9: return "Inspecting";
+      case 10: return "Completed";
       default: return "Unknown";
     }
   };
@@ -422,6 +427,16 @@ function MyApplication() {
         return "status-approved";
       case "Rejected":
         return "status-denied";
+      case "Payment Pending":
+        return "status-badge payment-pending";
+      case "Payment Recieved":
+        return "status-badge payment-recieved";
+      case "Payment Failed":
+        return "status-badge payment-failed";
+      case "Inspecting":
+        return "status-badge inspecting";
+      case "Completed":
+        return "status-badge completed";
       default:
         return "";
     }
@@ -597,6 +612,11 @@ function MyApplication() {
                 <option value="Needs Revision">Needs Revision</option>
                 <option value="Approved">Approved</option>
                 <option value="Rejected">Rejected</option>
+                <option value="Payment Pending">Payment Pending</option>
+                <option value="Payment Recieved">Payment Recieved</option>
+                <option value="Payment Failed">Payment Failed</option>
+                <option value="Inspecting">Inspecting</option>
+                <option value="Completed">Completed</option>
               </select>
             </div>
 

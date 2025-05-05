@@ -121,20 +121,44 @@ const ApplicationTracking = () => {
             case 3: return 'Needs Revision';
             case 4: return 'Approved';
             case 5: return 'Rejected';
+            case 6: return 'Payment Pending';
+            case 7: return 'Payment Recieved';
+            case 8: return 'Payment Failed';
+            case 9: return 'Inspecting';
+            case 10: return 'Completed';
             default: return 'Unknown';
           }
         };
 
         // Format the comments from database
-        const formattedComments = commentsData ? commentsData.map(comment => ({
-          id: comment.id,
-          user: "DENR Admin",
-          role: "admin",
-          timestamp: new Date(comment.comment_date).toLocaleString(),
-          isOfficial: true,
-          type: comment.revision_comment ? 'revision-request' : 'official-comment',
-          message: comment.official_comment || comment.revision_comment || ''
-        })) : [];
+        const formattedComments = commentsData
+          ? commentsData.flatMap(comment => {
+              const arr = [];
+              if (comment.official_comment) {
+                arr.push({
+                  id: comment.id,
+                  user: "DENR Admin",
+                  role: "admin",
+                  timestamp: new Date(comment.comment_date).toLocaleString(),
+                  isOfficial: true,
+                  type: 'official-comment',
+                  message: comment.official_comment
+                });
+              }
+              if (comment.revision_comment) {
+                arr.push({
+                  id: comment.id,
+                  user: "DENR Admin",
+                  role: "admin",
+                  timestamp: new Date(comment.comment_date).toLocaleString(),
+                  isOfficial: true,
+                  type: 'revision-request',
+                  message: comment.revision_comment
+                });
+              }
+              return arr;
+            })
+          : [];
 
         // Determine if there's a revision instruction from comments
         const revisionComment = commentsData?.find(comment => comment.revision_comment);
@@ -600,7 +624,7 @@ const ApplicationTracking = () => {
           <div className="comments-list">
             {application.comments
               .filter(comment => comment.type === 'official-comment')
-              .slice(0, showAllComments ? application.comments.length : 2)
+              .slice(0, showAllComments ? application.comments.filter(comment => comment.type === 'official-comment').length : 2)
               .map((comment, index) => (
                 <div 
                   key={index} 

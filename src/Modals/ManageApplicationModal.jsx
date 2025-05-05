@@ -15,6 +15,10 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
+  const [deadline, setDeadline] = useState('');
+  const [newDeadline, setNewDeadline] = useState('');
+  const [revisionDeadline, setRevisionDeadline] = useState('');
+  const [applicantName, setApplicantName] = useState('');
 
   console.log("Application received by modal:", application);
 
@@ -24,16 +28,51 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
     2: 'Under Review',
     3: 'Needs Revision',
     4: 'Approved',
-    5: 'Rejected'
+    5: 'Rejected',
+    6: 'Payment Pending',
+    7: 'Payment Recieved',
+    8: 'Payment Failed',
+    9: 'Inspecting',
+    10: 'Completed'
   };
 
   // Status remarks mapping
   const statusRemarks = {
-    1: 'Application is already submitted.',
-    2: 'Application is now under review.',
-    3: 'Application has needs revisions.',
-    4: 'Application is approved. Please claim documents at the office.',
-    5: 'Application is rejected.'
+    1: 'Application submitted on [date_now with time]. Review will begin shortly.',
+    2: 'Application is under review as of [date_now with time].',
+    3: 'Revision required. Please submit the revised application by [revision_deadline]',
+    4: 'Approved on [date_now]. Further instructions will be sent.',
+    5: 'Payment pending. Please complete the payment by [payment_deadline].',
+    6: 'Payment pending. Please complete the payment by [payment_deadline].',
+    7: 'Payment confirmed on [date_now with time]. Next steps will follow.',
+    8: 'Payment failed. Please complete the payment by [newpayment_deadline].',
+    9: 'Inspection scheduled. Please be prepared and ensure all necessary documents are available for the inspection.',
+    10: 'Process completed on [date_now with time].'
+  };
+
+  // Helper to format date as 'MMM DD, YYYY, HH:mm'
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  // Get dynamic status remarks
+  const getStatusRemarks = (statusId) => {
+    let remark = statusRemarks[statusId] || '';
+    const now = formatDateTime(new Date());
+    remark = remark.replace(/\[date_now with time\]/g, now);
+    remark = remark.replace(/\[payment_deadline\]/g, deadline ? formatDateTime(deadline) : '[payment_deadline]');
+    remark = remark.replace(/\[newpayment_deadline\]/g, newDeadline ? formatDateTime(newDeadline) : '[newpayment_deadline]');
+    remark = remark.replace(/\[revision_deadline\]/g, revisionDeadline ? formatDateTime(revisionDeadline) : '[revision_deadline]');
+    return remark;
   };
 
   // Get status name helper function
@@ -66,25 +105,39 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
   const fetchUserApplication = async () => {
     setLoading(true);
     try {
-      // Check if we already have the full user application data
       if (application.id) {
         console.log("Fetching user application with ID:", application.id);
 
-        // Set the status dropdown to the current status 
-        // Convert string status to numeric id if necessary
-        if (application.statusId) {
-          setStatus(application.statusId.toString());
-        } else if (application.status) {
-          const statusId = getStatusId(application.status);
-          setStatus(statusId ? statusId.toString() : '');
-        } else {
-          setStatus('');
+        // Fetch the latest user application data from Supabase
+        const { data: dbApp, error: dbError } = await supabase
+          .from('user_applications')
+          .select('*')
+          .eq('id', application.id)
+          .single();
+
+        if (dbError) {
+          throw dbError;
         }
 
-        // Store the application directly - it already has all the data we need
-        setUserApplication(application);
+        // Set deadlines from dbApp
+        setDeadline(dbApp.payment_deadline ? dbApp.payment_deadline.slice(0, 16) : '');
+        setNewDeadline(dbApp.newpayment_deadline ? dbApp.newpayment_deadline.slice(0, 16) : '');
+        setRevisionDeadline(dbApp.revision_deadline ? dbApp.revision_deadline.slice(0, 16) : '');
 
-        // Fetch comments for this application
+        // Fetch the applicant's name from the users table using user_id
+        let applicantNameValue = dbApp.full_name || dbApp.applicant_name || dbApp.fullName || '';
+        if (dbApp.user_id) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('full_name')
+            .eq('id', dbApp.user_id)
+            .single();
+          if (!userError && userData && userData.full_name) {
+            applicantNameValue = userData.full_name;
+          }
+        }
+        setUserApplication(dbApp);
+        setApplicantName(applicantNameValue);
         await fetchComments(application.id);
       } else {
         console.warn('No valid application ID provided');
@@ -173,7 +226,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
         throw new Error('Please provide revision instructions');
       }
 
-      if (!comment.trim()) {
+      if (!comment.trim() && status !== '3') {
         throw new Error('Please provide a comment');
       }
 
@@ -184,7 +237,24 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
         throw new Error('User application not found or invalid');
       }
 
-      // 1. First, save the comment to the comments table
+      // 1. Save revision comment to the comments table if status is 3
+      if (numericStatus === 3) {
+        const { data: revisionCommentData, error: revisionCommentError } = await supabase
+          .from('comments')
+          .insert([
+            {
+              user_applications_id: userApplication.id,
+              revision_comment: revisionInstructions,
+              comment_date: new Date().toISOString()
+            }
+          ])
+          .select();
+        if (revisionCommentError) {
+          throw new Error(`Error saving revision comment: ${revisionCommentError.message}`);
+        }
+      }
+
+      // 2. First, save the comment to the comments table
       const commentData = {
         user_applications_id: userApplication.id,
         official_comment: comment,
@@ -203,11 +273,11 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
       console.log('Comment saved successfully:', commentResult);
 
-      // 2. Insert record into application_status_history table with predefined remarks
+      // 3. Insert record into application_status_history table with predefined remarks
       const historyData = {
         user_application_id: userApplication.id,
         status_id: numericStatus,
-        remarks: statusRemarks[numericStatus] || '',
+        remarks: getStatusRemarks(numericStatus),
       };
 
       const { data: historyResult, error: historyError } = await supabase
@@ -221,14 +291,21 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
         console.log('Status history saved successfully:', historyResult);
       }
 
-      // 3. Update application status
+      // 4. Update application status and deadlines
       const updateData = { 
         status: numericStatus 
       };
-      
-      // Set approved_date if status is Approved (4)
       if (numericStatus === 4) {
         updateData.approved_date = new Date().toISOString();
+      }
+      if (numericStatus === 6) {
+        updateData.payment_deadline = deadline ? new Date(deadline).toISOString() : null;
+      }
+      if (numericStatus === 8) {
+        updateData.newpayment_deadline = newDeadline ? new Date(newDeadline).toISOString() : null;
+      }
+      if (numericStatus === 3) {
+        updateData.revision_deadline = revisionDeadline ? new Date(revisionDeadline).toISOString() : null;
       }
 
       // Update the user_applications table
@@ -242,7 +319,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
 
       console.log('Status updated successfully:', data);
 
-      // 4. Refresh comments list
+      // 5. Refresh comments list
       await fetchComments(userApplication.id);
 
       // Create status update object for the parent component
@@ -298,7 +375,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                   <label>Application ID</label>
                   <input
                     type="text"
-                    value={userApplication?.application_id || 'Unknown ID'}
+                    value={userApplication ? `REF-${String(userApplication.id).padStart(6, '0')}` : 'Unknown ID'}
                     readOnly
                     className="form-input readonly"
                   />
@@ -308,7 +385,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                   <label>Applicant Name</label>
                   <input
                     type="text"
-                    value={userApplication?.applicant_name || userApplication?.fullName || 'Unknown'}
+                    value={applicantName || 'Unknown'}
                     readOnly
                     className="form-input readonly"
                   />
@@ -319,7 +396,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                   <input
                     type="text"
                     id="currentStatus"
-                    value={userApplication?.status || 'Unknown'}
+                    value={userApplication?.status ? statusNames[userApplication.status] || 'Unknown' : 'Unknown'}
                     readOnly
                     className="form-input readonly"
                   />
@@ -340,26 +417,73 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                     <option value="3">Needs Revision</option>
                     <option value="4">Approved</option>
                     <option value="5">Rejected</option>
+                    <option value="6">Payment Pending</option>
+                    <option value="7">Payment Recieved</option>
+                    <option value="8">Payment Failed</option>
+                    <option value="9">Inspecting</option>
+                    <option value="10">Completed</option>
                   </select>
                 </div>
 
-                {status === '3' && (
+                {/* Deadline UI for Payment Pending and Payment Failed */}
+                {status === '6' && (
                   <div className="form-group">
-                    <label htmlFor="revisionInstructions">
-                      <FaEdit style={{ marginRight: '8px' }} />
-                      Revision Instructions
-                    </label>
-                    <div className="rich-text-editor">
-                      <ReactQuill
-                        theme="snow"
-                        value={revisionInstructions}
-                        onChange={setRevisionInstructions}
-                        modules={modules}
-                        formats={formats}
-                        placeholder="Provide detailed instructions for revision"
+                    <label htmlFor="deadline">Deadline</label>
+                    <input
+                      type="datetime-local"
+                      id="deadline"
+                      className="form-input"
+                      value={deadline}
+                      onChange={e => setDeadline(e.target.value)}
+                    />
+                  </div>
+                )}
+                {status === '8' && (
+                  <>
+                    <div className="form-group">
+                      <label>Previous Deadline</label>
+                      <div className="form-input readonly" style={{ padding: '0.5rem 0.75rem', background: '#f5f5f5', borderRadius: '4px' }}>
+                        {deadline ? new Date(deadline).toLocaleString() : 'No previous deadline set'}
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="new-deadline">New Deadline</label>
+                      <input
+                        type="datetime-local"
+                        id="new-deadline"
+                        className="form-input"
+                        value={newDeadline}
+                        onChange={e => setNewDeadline(e.target.value)}
                       />
                     </div>
-                  </div>
+                  </>
+                )}
+                {status === '3' && (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="revision-deadline">Revision Deadline</label>
+                      <input
+                        type="datetime-local"
+                        id="revision-deadline"
+                        className="form-input"
+                        value={revisionDeadline}
+                        onChange={e => setRevisionDeadline(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="revisionInstructions">Revision Instructions</label>
+                      <div className="rich-text-editor">
+                        <ReactQuill
+                          theme="snow"
+                          value={revisionInstructions}
+                          onChange={setRevisionInstructions}
+                          modules={modules}
+                          formats={formats}
+                          placeholder="Provide detailed instructions for revision"
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 <div className="form-group">
