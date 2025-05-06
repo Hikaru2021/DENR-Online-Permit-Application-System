@@ -928,79 +928,79 @@ function ApplicationList() {
           </div>
         )
       )}
-
-      {/* Fixed pagination container */}
+          
+          {/* Fixed pagination container */}
       {!isMobileView && (
-        <div className="pagination-container">
-          <div className="pagination">
-            <button
-              className="pagination-button nav-button"
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-            >
-              ❮ Prev
-            </button>
-            <div className="pagination-pages">
-              {(() => {
-                const pageNumbers = [];
-                
-                if (totalPages <= 5) {
-                  // If 5 or fewer pages, show all page numbers
-                  for (let i = 1; i <= Math.max(1, totalPages); i++) {
-                    pageNumbers.push(i);
-                  }
-                } else {
-                  // Always show first page
-                  pageNumbers.push(1);
+          <div className="pagination-container">
+            <div className="pagination">
+              <button
+                className="pagination-button nav-button"
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+              >
+                ❮ Prev
+              </button>
+              <div className="pagination-pages">
+                {(() => {
+                  const pageNumbers = [];
                   
-                  // For current pages near the start
-                  if (currentPage <= 3) {
-                    pageNumbers.push(2, 3, 4);
-                    pageNumbers.push('ellipsis');
-                    pageNumbers.push(totalPages);
-                  } 
-                  // For current pages near the end
-                  else if (currentPage >= totalPages - 2) {
-                    pageNumbers.push('ellipsis');
-                    pageNumbers.push(totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-                  } 
-                  // For current pages in the middle
-                  else {
-                    pageNumbers.push('ellipsis');
-                    pageNumbers.push(currentPage - 1, currentPage, currentPage + 1);
-                    pageNumbers.push('ellipsis2');
-                    pageNumbers.push(totalPages);
+                  if (totalPages <= 5) {
+                    // If 5 or fewer pages, show all page numbers
+                    for (let i = 1; i <= Math.max(1, totalPages); i++) {
+                      pageNumbers.push(i);
+                    }
+                  } else {
+                    // Always show first page
+                    pageNumbers.push(1);
+                    
+                    // For current pages near the start
+                    if (currentPage <= 3) {
+                      pageNumbers.push(2, 3, 4);
+                      pageNumbers.push('ellipsis');
+                      pageNumbers.push(totalPages);
+                    } 
+                    // For current pages near the end
+                    else if (currentPage >= totalPages - 2) {
+                      pageNumbers.push('ellipsis');
+                      pageNumbers.push(totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    } 
+                    // For current pages in the middle
+                    else {
+                      pageNumbers.push('ellipsis');
+                      pageNumbers.push(currentPage - 1, currentPage, currentPage + 1);
+                      pageNumbers.push('ellipsis2');
+                      pageNumbers.push(totalPages);
+                    }
                   }
-                }
-                
-                return pageNumbers.map((pageNumber, index) => {
-                  if (pageNumber === 'ellipsis' || pageNumber === 'ellipsis2') {
+                  
+                  return pageNumbers.map((pageNumber, index) => {
+                    if (pageNumber === 'ellipsis' || pageNumber === 'ellipsis2') {
+                      return (
+                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                      );
+                    }
+                    
                     return (
-                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                      <button
+                        key={pageNumber}
+                        className={`pagination-button ${currentPage === pageNumber ? 'active' : ''}`}
+                        onClick={() => handlePageChange(pageNumber)}
+                      >
+                        {pageNumber}
+                      </button>
                     );
-                  }
-                  
-                  return (
-                    <button
-                      key={pageNumber}
-                      className={`pagination-button ${currentPage === pageNumber ? 'active' : ''}`}
-                      onClick={() => handlePageChange(pageNumber)}
-                    >
-                      {pageNumber}
-                    </button>
-                  );
-                });
-              })()}
+                  });
+                })()}
+              </div>
+              <button
+                className="pagination-button nav-button"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Next ❯
+              </button>
             </div>
-            <button
-              className="pagination-button nav-button"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              Next ❯
-            </button>
           </div>
-        </div>
       )}
 
       {/* View Application Modal with enhanced UI */}

@@ -160,11 +160,11 @@ const ApplicationTracking = () => {
               }
               if (comment.revision_comment) {
                 arr.push({
-                  id: comment.id,
-                  user: "DENR Admin",
-                  role: "admin",
-                  timestamp: new Date(comment.comment_date).toLocaleString(),
-                  isOfficial: true,
+          id: comment.id,
+          user: "DENR Admin",
+          role: "admin",
+          timestamp: new Date(comment.comment_date).toLocaleString(),
+          isOfficial: true,
                   type: 'revision-request',
                   message: comment.revision_comment
                 });
@@ -587,13 +587,13 @@ const ApplicationTracking = () => {
 
         {/* Progress Bar or Message */}
         {isRejected ? (
-          <div className="progress-section">
+        <div className="progress-section">
             <div className="progress-message rejected">This application has been <b>Rejected</b>.</div>
-          </div>
+              </div>
         ) : isCompleted ? (
           <div className="progress-section">
             <div className="progress-message completed">This application process is <b>Completed</b>.</div>
-          </div>
+            </div>
         ) : (
           <div className="progress-section">
             <div className="progress-bar five-steps">
@@ -640,39 +640,39 @@ const ApplicationTracking = () => {
                   <div
                     key={step.label}
                     className={stepClassName}
-                  >
-                    <div className="step-circle">
+            >
+              <div className="step-circle">
                       {/* Show check icon for all completed steps, including 'Submitted' */}
                       {isCompleted ? <FaCheckCircle /> : icon}
-                    </div>
-                    <div className="step-label">{label}</div>
-                  </div>
+              </div>
+                    <div className={`step-label${label.split(' ').length === 2 ? ' two-line' : ''}`}>{label}</div>
+              </div>
                 );
               })}
             </div>
           </div>
         )}
 
-        <div className="progress-timeline">
-          <div className="timeline-list">
-            {application.timeline.map((item, index) => (
-              <div key={index} className="timeline-item">
-                <div className="timeline-date">
-                  <div className="date">{item.date}</div>
-                  <div className="time">{item.time}</div>
+          <div className="progress-timeline">
+            <div className="timeline-list">
+              {application.timeline.map((item, index) => (
+                <div key={index} className="timeline-item">
+                  <div className="timeline-date">
+                    <div className="date">{item.date}</div>
+                    <div className="time">{item.time}</div>
+                  </div>
+                  <div className="timeline-marker"></div>
+                  <div className="timeline-content">
+                    <p>{item.description}</p>
+                    {item.additionalInfo && (
+                      <div className="additional-info">
+                        <p>Recipient: {item.additionalInfo.recipient}</p>
+                        <p>Approved Date: {item.additionalInfo.approvedDate}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="timeline-marker"></div>
-                <div className="timeline-content">
-                  <p>{item.description}</p>
-                  {item.additionalInfo && (
-                    <div className="additional-info">
-                      <p>Recipient: {item.additionalInfo.recipient}</p>
-                      <p>Approved Date: {item.additionalInfo.approvedDate}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 

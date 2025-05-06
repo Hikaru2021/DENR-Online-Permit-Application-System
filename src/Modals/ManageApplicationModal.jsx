@@ -468,19 +468,19 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                         onChange={e => setRevisionDeadline(e.target.value)}
                       />
                     </div>
-                    <div className="form-group">
+                  <div className="form-group">
                       <label htmlFor="revisionInstructions">Revision Instructions</label>
-                      <div className="rich-text-editor">
-                        <ReactQuill
-                          theme="snow"
-                          value={revisionInstructions}
-                          onChange={setRevisionInstructions}
-                          modules={modules}
-                          formats={formats}
-                          placeholder="Provide detailed instructions for revision"
-                        />
-                      </div>
+                    <div className="rich-text-editor">
+                      <ReactQuill
+                        theme="snow"
+                        value={revisionInstructions}
+                        onChange={setRevisionInstructions}
+                        modules={modules}
+                        formats={formats}
+                        placeholder="Provide detailed instructions for revision"
+                      />
                     </div>
+                  </div>
                   </>
                 )}
 
