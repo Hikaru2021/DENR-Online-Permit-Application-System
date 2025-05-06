@@ -413,12 +413,12 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                     <option value="1">Submitted</option>
                     <option value="2">Under Review</option>
                     <option value="3">Needs Revision</option>
-                    <option value="4">Approved</option>
-                    <option value="5">Rejected</option>
                     <option value="6">Payment Pending</option>
                     <option value="7">Payment Recieved</option>
                     <option value="8">Payment Failed</option>
                     <option value="9">Inspecting</option>
+                    <option value="4">Approved</option>
+                    <option value="5">Rejected</option>
                     <option value="10">Completed</option>
                   </select>
                 </div>
