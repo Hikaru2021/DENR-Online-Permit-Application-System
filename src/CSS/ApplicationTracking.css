@@ -2075,4 +2075,19 @@ div.progress-step.rejected.current > .step-circle {
   text-align: center;
   box-sizing: border-box;
   white-space: nowrap !important;
+}
+
+/* Incomplete (not yet done) steps: gray border */
+.progress-step.five-step:not(.completed):not(.current) .step-circle {
+  border: 2.5px solid #bdbdbd !important;
+  background: #fff !important;
+  color: #bdbdbd !important;
+}
+
+/* Ongoing (current) step: green border */
+.progress-step.five-step.current .step-circle {
+  border: 2.5px solid #43a047 !important;
+  background: #fff !important;
+  color: #43a047 !important;
+  box-shadow: 0 0 0 6px rgba(67, 160, 71, 0.18), 0 2px 8px rgba(0,0,0,0.04);
 } 

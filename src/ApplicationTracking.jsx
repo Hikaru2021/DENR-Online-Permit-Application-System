@@ -642,10 +642,8 @@ const ApplicationTracking = () => {
                     className={stepClassName}
                   >
                     <div className="step-circle">
-                      {step.label === 'Submitted'
-                        ? <FaClock />
-                        : (isCompleted ? <FaCheckCircle /> : icon)
-                      }
+                      {/* Show check icon for all completed steps, including 'Submitted' */}
+                      {isCompleted ? <FaCheckCircle /> : icon}
                     </div>
                     <div className="step-label">{label}</div>
                   </div>
