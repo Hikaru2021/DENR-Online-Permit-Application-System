@@ -379,6 +379,18 @@ div.my-application-filters {
   .user-cards-mobile .user-card-mobile:not(:last-child) {
     margin-bottom: 1.2rem;
   }
+  .user-header h1 {
+    font-size: 19.2px !important;
+  }
+  .user-header p {
+    font-size: 12.8px !important;
+  }
+  div.application-list-header,
+  .application-list-header {
+    margin: 0.8rem !important;
+    margin-top: 1.2rem !important;
+    margin-bottom: 1rem !important;
+  }
 }
 
 .table-container, .table-pagination-wrapper {

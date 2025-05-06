@@ -888,6 +888,12 @@
   .application-list-header {
     gap: 0 !important;
   }
+  .my-application-header h1 {
+    font-size: 19.2px !important;
+  }
+  .my-application-header p {
+    font-size: 12.8px !important;
+  }
 }
 
 .applications-table th.sortable {

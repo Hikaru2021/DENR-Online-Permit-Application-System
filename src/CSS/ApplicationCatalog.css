@@ -585,11 +585,10 @@
   }
 
   .catalog-title {
-    font-size: 1.2rem;
-    margin: 0 0 0.15rem 0;
+    font-size: 24px !important;
   }
   .catalog-subtitle {
-    font-size: 0.95rem;
+    font-size: 12.8px !important;
   }
 }
 

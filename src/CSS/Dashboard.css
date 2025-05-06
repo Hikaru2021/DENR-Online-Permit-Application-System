@@ -520,6 +520,13 @@
         margin-left: 15px !important;
         margin-top: 50px !important;
     }
+    .dashboard-title,
+    .application-list-title {
+        font-size: 19.2px !important;
+    }
+    .application-list-subtitle {
+        font-size: 12.8px !important;
+    }
 }
 
 @media (max-width: 480px) {
