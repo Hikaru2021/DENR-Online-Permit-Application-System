@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaCheckCircle, FaClock, FaFileAlt, FaTimes, FaFile, FaTimesCircle, FaExclamationCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaClock, FaFileAlt, FaTimes, FaFile, FaTimesCircle, FaExclamationCircle, FaSearch, FaMoneyBillWave, FaClipboardList } from 'react-icons/fa';
 import { supabase } from './library/supabaseClient';
 import './CSS/ApplicationTracking.css';
+
+// Custom icon: Document with magnifying glass
+const DocumentMagnifyIcon = () => (
+  <span style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 22,
+    height: 22
+  }}>
+    <FaFileAlt style={{ fontSize: 20, color: '#43a047' }} />
+  </span>
+);
 
 const ApplicationTracking = () => {
   const { id } = useParams();
@@ -523,6 +536,29 @@ const ApplicationTracking = () => {
     );
   }
 
+  // 5-step progress logic
+  const statusId = application.statusId;
+  const isRejected = statusId === 5;
+  const isCompleted = statusId === 10;
+
+  // Step mapping with icons and status-based classes
+  const stepMap = [
+    { label: 'Submitted', ids: [1], icon: <FaClock />, className: 'submitted' },
+    { label: 'Under Review / Needs Revision', ids: [2, 3], icon: null, className: '' },
+    { label: 'Payment', ids: [6, 7, 8], icon: null, className: '' },
+    { label: 'Inspecting', ids: [9], icon: <FaSearch />, className: 'inspecting' },
+    { label: 'Approved', ids: [4], icon: <FaCheckCircle />, className: 'approved' },
+  ];
+
+  // Determine current step
+  let currentStep = 0;
+  for (let i = 0; i < stepMap.length; i++) {
+    if (stepMap[i].ids.includes(statusId)) {
+      currentStep = i;
+      break;
+    }
+  }
+
   return (
     <div className="tracking-page">
       <div className="tracking-page-header">
@@ -549,73 +585,96 @@ const ApplicationTracking = () => {
           </div>
         </div>
 
-        <div className="progress-section">
-          <div className="progress-bar">
-            <div className="progress-line"></div>
-            {/* Progress line fill based on status */}
-            <div 
-              className={`progress-line-fill ${application.status.toLowerCase().replace(' ', '-')}`}
-              style={{ 
-                backgroundColor: application.status === 'Rejected' ? '#dc3545' : '#4CAF50'
-              }}
-            ></div>
-
-            {/* Fixed progress steps */}
-            <div 
-              className={`progress-step ${application.statusId >= 1 ? 'completed' : ''} ${application.statusId === 1 ? 'current' : ''}`}
-            >
-              <div className="step-circle">
-                {application.statusId > 1 ? <FaCheckCircle /> : 
-                 application.statusId === 1 ? <FaClock /> : <FaFile />}
-              </div>
-              <div className="step-label">Submitted</div>
-            </div>
-            
-            <div 
-              className={`progress-step ${application.statusId >= 2 ? 'completed' : ''} ${application.statusId === 2 ? 'current' : ''} ${application.statusId === 3 ? 'needs-revision current' : ''}`}
-            >
-              <div className="step-circle">
-                {application.statusId > 3 ? <FaCheckCircle /> : 
-                 application.statusId === 2 ? <FaClock /> :
-                 application.statusId === 3 ? <FaExclamationCircle /> : <FaFile />}
-              </div>
-              <div className="step-label">
-                {application.statusId === 3 ? 'Needs Revision' : 'Under Review'}
-              </div>
-            </div>
-            
-            <div 
-              className={`progress-step ${application.statusId === 4 ? 'completed current' : application.statusId === 5 ? 'rejected' : ''}`}
-            >
-              <div className="step-circle">
-                {application.statusId === 4 ? <FaCheckCircle /> : 
-                 application.statusId === 5 ? <FaTimesCircle /> : <FaFile />}
-              </div>
-              <div className="step-label">{application.statusId === 5 ? 'Rejected' : 'Approved'}</div>
+        {/* Progress Bar or Message */}
+        {isRejected ? (
+          <div className="progress-section">
+            <div className="progress-message rejected">This application has been <b>Rejected</b>.</div>
+          </div>
+        ) : isCompleted ? (
+          <div className="progress-section">
+            <div className="progress-message completed">This application process is <b>Completed</b>.</div>
+          </div>
+        ) : (
+          <div className="progress-section">
+            <div className="progress-bar five-steps">
+              {stepMap.map((step, idx) => {
+                const isCompleted = currentStep > idx;
+                const isLastCompleted = isCompleted && currentStep === idx + 1;
+                let label = step.label;
+                let icon = step.icon;
+                let stepClass = step.className;
+                // Assign label, icon, and class based on statusId
+                if (step.label === 'Under Review / Needs Revision') {
+                  if (statusId === 3) {
+                    label = 'Needs Revision';
+                    icon = <FaExclamationCircle />;
+                    stepClass = 'needs-revision';
+                  } else {
+                    label = 'Under Review';
+                    icon = <DocumentMagnifyIcon />;
+                    stepClass = 'under-review';
+                  }
+                }
+                if (step.label === 'Payment') {
+                  if (statusId === 6) {
+                    label = 'Payment Pending';
+                    icon = <FaMoneyBillWave />;
+                    stepClass = 'payment-pending';
+                  } else if (statusId === 7) {
+                    label = 'Payment Recieved';
+                    icon = <FaCheckCircle />;
+                    stepClass = 'payment-recieved';
+                  } else if (statusId === 8) {
+                    label = 'Payment Failed';
+                    icon = <FaTimesCircle />;
+                    stepClass = 'payment-failed';
+                  } else {
+                    label = 'Payment';
+                    icon = <FaMoneyBillWave />;
+                    stepClass = 'payment';
+                  }
+                }
+                // Compose className for the step
+                const stepClassName = `progress-step five-step${isCompleted ? ' completed' : ''}${currentStep === idx ? ' current' : ''}${isLastCompleted ? ' last-completed' : ''} ${stepClass}`;
+                return (
+                  <div
+                    key={step.label}
+                    className={stepClassName}
+                  >
+                    <div className="step-circle">
+                      {step.label === 'Submitted'
+                        ? <FaClock />
+                        : (isCompleted ? <FaCheckCircle /> : icon)
+                      }
+                    </div>
+                    <div className="step-label">{label}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        )}
 
-          <div className="progress-timeline">
-            <div className="timeline-list">
-              {application.timeline.map((item, index) => (
-                <div key={index} className="timeline-item">
-                  <div className="timeline-date">
-                    <div className="date">{item.date}</div>
-                    <div className="time">{item.time}</div>
-                  </div>
-                  <div className="timeline-marker"></div>
-                  <div className="timeline-content">
-                    <p>{item.description}</p>
-                    {item.additionalInfo && (
-                      <div className="additional-info">
-                        <p>Recipient: {item.additionalInfo.recipient}</p>
-                        <p>Approved Date: {item.additionalInfo.approvedDate}</p>
-                      </div>
-                    )}
-                  </div>
+        <div className="progress-timeline">
+          <div className="timeline-list">
+            {application.timeline.map((item, index) => (
+              <div key={index} className="timeline-item">
+                <div className="timeline-date">
+                  <div className="date">{item.date}</div>
+                  <div className="time">{item.time}</div>
                 </div>
-              ))}
-            </div>
+                <div className="timeline-marker"></div>
+                <div className="timeline-content">
+                  <p>{item.description}</p>
+                  {item.additionalInfo && (
+                    <div className="additional-info">
+                      <p>Recipient: {item.additionalInfo.recipient}</p>
+                      <p>Approved Date: {item.additionalInfo.approvedDate}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -623,8 +682,8 @@ const ApplicationTracking = () => {
           <h2>Official Comments</h2>
           <div className="comments-list">
             {application.comments
-              .filter(comment => comment.type === 'official-comment')
-              .slice(0, showAllComments ? application.comments.filter(comment => comment.type === 'official-comment').length : 2)
+              .filter(comment => comment.type === 'official-comment' && comment.message && comment.message.trim())
+              .slice(0, showAllComments ? application.comments.filter(comment => comment.type === 'official-comment' && comment.message && comment.message.trim()).length : 2)
               .map((comment, index) => (
                 <div 
                   key={index} 
@@ -641,20 +700,20 @@ const ApplicationTracking = () => {
                   </div>
                 </div>
             ))}
-            {application.comments.filter(comment => comment.type === 'official-comment').length === 0 && (
+            {application.comments.filter(comment => comment.type === 'official-comment' && comment.message && comment.message.trim()).length === 0 && (
               <div className="no-comments">
                 <p>No official comments yet.</p>
               </div>
             )}
-            {!showAllComments && application.comments.filter(comment => comment.type === 'official-comment').length > 2 && (
+            {!showAllComments && application.comments.filter(comment => comment.type === 'official-comment' && comment.message && comment.message.trim()).length > 2 && (
               <button 
                 className="show-more-comments" 
                 onClick={() => setShowAllComments(true)}
               >
-                Show More Comments ({application.comments.filter(comment => comment.type === 'official-comment').length - 2} more)
+                Show More Comments ({application.comments.filter(comment => comment.type === 'official-comment' && comment.message && comment.message.trim()).length - 2} more)
               </button>
             )}
-            {showAllComments && application.comments.filter(comment => comment.type === 'official-comment').length > 2 && (
+            {showAllComments && application.comments.filter(comment => comment.type === 'official-comment' && comment.message && comment.message.trim()).length > 2 && (
               <button 
                 className="show-less-comments" 
                 onClick={() => setShowAllComments(false)}

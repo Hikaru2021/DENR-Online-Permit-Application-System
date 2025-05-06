@@ -9,6 +9,15 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+function getStatusClassName(status) {
+  return status
+    .toLowerCase()
+    .replace(/ /g, '-')
+    .replace('payment recieved', 'payment-recieved')
+    .replace('payment pending', 'payment-pending')
+    .replace('payment failed', 'payment-failed');
+}
+
 function Dashboard() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -20,11 +29,13 @@ function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [statusCounts, setStatusCounts] = useState({
-    submitted: 0,
-    underReview: 0,
+    pending: 0,
     needsRevision: 0,
     approved: 0,
-    rejected: 0
+    rejected: 0,
+    payments: 0,
+    inspecting: 0,
+    completed: 0
   });
   const [totalApplications, setTotalApplications] = useState(0);
 
@@ -81,48 +92,65 @@ function Dashboard() {
         
         if (data) {
           // Count applications by status
-          const counts = {
-            submitted: 0,
-            underReview: 0,
-            needsRevision: 0,
-            approved: 0,
-            rejected: 0
-          };
-          
+          let pending = 0;
+          let needsRevision = 0;
+          let approved = 0;
+          let rejected = 0;
+          let payments = 0;
+          let inspecting = 0;
+          let completed = 0;
           data.forEach(app => {
             switch (app.status) {
               case 1:
-                counts.submitted++;
-                break;
               case 2:
-                counts.underReview++;
+                pending++;
                 break;
               case 3:
-                counts.needsRevision++;
+                needsRevision++;
                 break;
               case 4:
-                counts.approved++;
+                approved++;
                 break;
               case 5:
-                counts.rejected++;
+                rejected++;
+                break;
+              case 6:
+              case 7:
+              case 8:
+                payments++;
+                break;
+              case 9:
+                inspecting++;
+                break;
+              case 10:
+                completed++;
                 break;
               default:
                 break;
             }
           });
-          
-          setStatusCounts(counts);
+          setStatusCounts({
+            pending,
+            needsRevision,
+            approved,
+            rejected,
+            payments,
+            inspecting,
+            completed
+          });
           setTotalApplications(data.length);
         }
       } catch (error) {
         console.error("Error fetching application analytics:", error);
         // Set mock data for demonstration
         setStatusCounts({
-          submitted: userRole === 3 ? 2 : 17, 
-          underReview: userRole === 3 ? 1 : 5,
-          needsRevision: userRole === 3 ? 1 : 4,
+          pending: userRole === 3 ? 4 : 26,
+          needsRevision: userRole === 3 ? 0 : 2,
           approved: userRole === 3 ? 1 : 10,
-          rejected: userRole === 3 ? 0 : 2
+          rejected: userRole === 3 ? 0 : 2,
+          payments: userRole === 3 ? 0 : 3,
+          inspecting: userRole === 3 ? 0 : 1,
+          completed: userRole === 3 ? 0 : 1
         });
         setTotalApplications(userRole === 3 ? 5 : 38);
       } finally {
@@ -136,41 +164,74 @@ function Dashboard() {
   }, [userRole, currentUser]);
 
   const handleCardClick = (status) => {
-    // Determine destination based on user role
+    let statusFilter = status;
+    // Map card names to status codes or arrays
+    switch (status) {
+      case 'Pending':
+        statusFilter = [1, 2];
+        break;
+      case 'Needs Revision':
+        statusFilter = [3];
+        break;
+      case 'Approved':
+        statusFilter = [4];
+        break;
+      case 'Rejected':
+        statusFilter = [5];
+        break;
+      case 'Payments':
+        statusFilter = [6, 7, 8];
+        break;
+      case 'Inspecting':
+        statusFilter = [9];
+        break;
+      case 'Completed':
+        statusFilter = [10];
+        break;
+      case 'all':
+        statusFilter = 'all';
+        break;
+      default:
+        statusFilter = status;
+    }
     if (userRole === 1 || userRole === 2) {
-      // Admin or Staff: Navigate to ApplicationList with status filter
-      navigate('/ApplicationList', { state: { statusFilter: status } });
+      navigate('/ApplicationList', { state: { statusFilter } });
     } else {
-      // Regular User: Navigate to MyApplication with status filter
-      navigate('/MyApplication', { state: { statusFilter: status } });
+      navigate('/MyApplication', { state: { statusFilter } });
     }
   };
 
   // Chart data configuration
   const chartData = {
-    labels: ['Submitted', 'Under Review', 'Needs Rev.', 'Approved', 'Rejected'],
+    labels: ['Pending', 'Needs Revision', 'Approved', 'Rejected', 'Payments', 'Inspecting', 'Completed'],
     datasets: [
       {
         data: [
-          statusCounts.submitted,
-          statusCounts.underReview,
+          statusCounts.pending,
           statusCounts.needsRevision,
           statusCounts.approved,
-          statusCounts.rejected
+          statusCounts.rejected,
+          statusCounts.payments,
+          statusCounts.inspecting,
+          statusCounts.completed
         ],
         backgroundColor: [
-          '#FFB74D', // Submitted (orange)
-          '#4FC3F7', // Under Review (blue)
-          '#FF9800', // Needs Revision (dark orange)
-          '#81C784', // Approved (green)
-          '#E57373'  // Rejected (red)
+          '#FFC107', // Pending (amber)
+          '#FF7043', // Needs Revision (deep orange)
+          '#43A047', // Approved (green)
+          '#E53935', // Rejected (red)
+          '#00897B', // Payments (teal)
+          '#1976D2', // Inspecting (blue)
+          '#8E24AA'  // Completed (purple)
         ],
         borderColor: [
-          '#F57C00',
-          '#0288D1',
-          '#E65100',
-          '#2E7D32',
-          '#C62828'
+          '#FFA000', // Pending
+          '#F4511E', // Needs Revision
+          '#2E7D32', // Approved
+          '#B71C1C', // Rejected
+          '#00695C', // Payments
+          '#0D47A1', // Inspecting
+          '#6A1B9A'  // Completed
         ],
         borderWidth: 1,
         hoverOffset: 4
@@ -366,15 +427,22 @@ function Dashboard() {
   const getStatusText = (statusId) => {
     switch (statusId) {
       case 1:
-        return "Submitted";
       case 2:
-        return "Under Review";
+        return "Pending";
       case 3:
         return "Needs Revision";
       case 4:
         return "Approved";
       case 5:
         return "Rejected";
+      case 6:
+      case 7:
+      case 8:
+        return "Payments";
+      case 9:
+        return "Inspecting";
+      case 10:
+        return "Completed";
       default:
         return "Unknown";
     }
@@ -383,15 +451,22 @@ function Dashboard() {
   const getStatusClass = (statusId) => {
     switch (statusId) {
       case 1:
-        return "dashboard-status-pending";
       case 2:
-        return "dashboard-status-review";
+        return "dashboard-status-pending";
       case 3:
-        return "dashboard-status-revision";
+        return "dashboard-status-needs-revision";
       case 4:
         return "dashboard-status-approved";
       case 5:
         return "dashboard-status-rejected";
+      case 6:
+      case 7:
+      case 8:
+        return "dashboard-status-payments";
+      case 9:
+        return "dashboard-status-inspecting";
+      case 10:
+        return "dashboard-status-completed";
       default:
         return "";
     }
@@ -477,6 +552,22 @@ function Dashboard() {
     }
   };
 
+  const getStatusName = (statusId) => {
+    switch (statusId) {
+      case 1: return 'Submitted';
+      case 2: return 'Under Review';
+      case 3: return 'Needs Revision';
+      case 4: return 'Approved';
+      case 5: return 'Rejected';
+      case 6: return 'Payment Pending';
+      case 7: return 'Payment Recieved';
+      case 8: return 'Payment Failed';
+      case 9: return 'Inspecting';
+      case 10: return 'Completed';
+      default: return 'Unknown';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="dashboard-container">
@@ -502,14 +593,14 @@ function Dashboard() {
               <p className="count">{totalApplications}</p>
               <span>from this month</span>
             </div>
-            <div className="box pending" onClick={() => handleCardClick('Submitted')}>
+            <div className="box pending" onClick={() => handleCardClick('Pending')}>
               <h3>Pending Applications</h3>
-              <p className="count">{statusCounts.submitted}</p>
+              <p className="count">{statusCounts.pending}</p>
               <span>from this month</span>
             </div>
-            <div className="box review" onClick={() => handleCardClick('Under Review')}>
-              <h3>Under Review</h3>
-              <p className="count">{statusCounts.underReview}</p>
+            <div className="box needs-revision" onClick={() => handleCardClick('Needs Revision')}>
+              <h3>Needs Revision</h3>
+              <p className="count">{statusCounts.needsRevision}</p>
               <span>from this month</span>
             </div>
             <div className="box approved" onClick={() => handleCardClick('Approved')}>
@@ -520,6 +611,21 @@ function Dashboard() {
             <div className="box rejected" onClick={() => handleCardClick('Rejected')}>
               <h3>Rejected Applications</h3>
               <p className="count">{statusCounts.rejected}</p>
+              <span>from this month</span>
+            </div>
+            <div className="box payments" onClick={() => handleCardClick('Payments')}>
+              <h3>Payments</h3>
+              <p className="count">{statusCounts.payments}</p>
+              <span>from this month</span>
+            </div>
+            <div className="box inspecting" onClick={() => handleCardClick('Inspecting')}>
+              <h3>Inspecting</h3>
+              <p className="count">{statusCounts.inspecting}</p>
+              <span>from this month</span>
+            </div>
+            <div className="box completed" onClick={() => handleCardClick('Completed')}>
+              <h3>Completed</h3>
+              <p className="count">{statusCounts.completed}</p>
               <span>from this month</span>
             </div>
           </div>
@@ -548,16 +654,12 @@ function Dashboard() {
                 
                 <div className="dashboard-chart-legend">
                   <div className="dashboard-legend-item">
-                    <div className="dashboard-legend-color dashboard-legend-submitted"></div>
-                    <div className="dashboard-legend-label">Submitted</div>
-                  </div>
-                  <div className="dashboard-legend-item">
-                    <div className="dashboard-legend-color dashboard-legend-under-review"></div>
-                    <div className="dashboard-legend-label">Under Review</div>
+                    <div className="dashboard-legend-color dashboard-legend-pending"></div>
+                    <div className="dashboard-legend-label">Pending</div>
                   </div>
                   <div className="dashboard-legend-item">
                     <div className="dashboard-legend-color dashboard-legend-needs-revision"></div>
-                    <div className="dashboard-legend-label">Needs Rev.</div>
+                    <div className="dashboard-legend-label">Needs Revision</div>
                   </div>
                   <div className="dashboard-legend-item">
                     <div className="dashboard-legend-color dashboard-legend-approved"></div>
@@ -566,6 +668,18 @@ function Dashboard() {
                   <div className="dashboard-legend-item">
                     <div className="dashboard-legend-color dashboard-legend-rejected"></div>
                     <div className="dashboard-legend-label">Rejected</div>
+                  </div>
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-payments"></div>
+                    <div className="dashboard-legend-label">Payments</div>
+                  </div>
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-inspecting"></div>
+                    <div className="dashboard-legend-label">Inspecting</div>
+                  </div>
+                  <div className="dashboard-legend-item">
+                    <div className="dashboard-legend-color dashboard-legend-completed"></div>
+                    <div className="dashboard-legend-label">Completed</div>
                   </div>
                 </div>
               </div>
@@ -654,14 +768,14 @@ function Dashboard() {
                       onClick={() => handleApplicationClick(app)}
                     >
                       <div className="application-info">
-                        <h3>{app.applications?.title || "Application"}</h3>
+                        <h2>{app.applications?.title || "Application"}</h2>
                         <p><strong>Applicant:</strong> {app.full_name}</p>
                         <p><strong>Purpose:</strong> {app.purpose}</p>
                         <p><strong>Submitted:</strong> {new Date(app.created_at).toLocaleTimeString()}</p>
                       </div>
                       <div className="application-status">
                         <span className={`dashboard-status-badge ${getStatusClass(app.status)}`}>
-                          {getStatusText(app.status)}
+                          {getStatusName(app.status)}
                         </span>
                       </div>
                     </div>

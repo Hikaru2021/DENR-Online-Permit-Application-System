@@ -254,7 +254,14 @@ function ApplicationList() {
         app.application_id.toLowerCase().includes(search.toLowerCase());
       
       // Status filter
-      const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+      let matchesStatus = false;
+      if (statusFilter === "all") {
+        matchesStatus = true;
+      } else if (Array.isArray(statusFilter)) {
+        matchesStatus = statusFilter.includes(app.statusId);
+      } else {
+        matchesStatus = app.statusId === statusFilter;
+      }
       
       // Type filter
       const matchesType = typeFilter === "all" || app.type === typeFilter;
@@ -793,7 +800,9 @@ function ApplicationList() {
         isMobileView ? (
           <div className="application-cards-mobile">
             {filteredAndSortedApplications.length === 0 ? (
-              <div className="empty-state">No applications found</div>
+              <div className="empty-state">
+                <p>No applications found. {search || statusFilter !== "all" || typeFilter !== "all" ? "Try adjusting your filters." : ""}</p>
+              </div>
             ) : (
               filteredAndSortedApplications.map((application) => (
                 <div key={application.id} className="application-card-mobile">

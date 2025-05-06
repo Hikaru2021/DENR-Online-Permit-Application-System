@@ -223,7 +223,11 @@ function MyApplication() {
     
     // Apply status filter
     if (statusFilter !== "all") {
-      result = result.filter(app => app.status === statusFilter);
+      if (Array.isArray(statusFilter)) {
+        result = result.filter(app => statusFilter.includes(app.status));
+      } else {
+        result = result.filter(app => app.status === statusFilter);
+      }
     }
     
     // Apply sorting

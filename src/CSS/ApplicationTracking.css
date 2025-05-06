@@ -94,11 +94,27 @@
   position: absolute;
   top: 50%;
   left: 0;
-  right: 0;
+  width: 100%;
   height: 4px;
-  background: #e0e0e0;
-  transform: translateY(-50%);
+  border-radius: 2px;
+  background: linear-gradient(90deg, #43a047 20%, #66bb6a 40%, #b2ff59 60%, #43a047 80%);
+  background-size: 200% 100%;
+  background-position: 200% 0;
+  box-shadow: 0 0 12px 2px #43a04766;
+  animation:
+    progressLineShimmer 1.5s linear infinite,
+    progressLinePulse 2s ease-in-out infinite;
   z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes progressLineShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes progressLinePulse {
+  0%, 100% { box-shadow: 0 0 12px 2px #43a04766; }
+  50% { box-shadow: 0 0 24px 6px #b2ff5966; }
 }
 
 .progress-line-fill {
@@ -1598,4 +1614,450 @@ div.progress-step.rejected.current > .step-circle {
   animation: superRedPulse 2s infinite !important;
   border-color: #f44336 !important;
   background: #ffebee !important;
+}
+
+.progress-bar.five-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 32px 0 24px 0;
+  position: relative;
+}
+
+.progress-step.five-step {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 0;
+}
+
+.progress-step.five-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 100%;
+  height: 4px;
+  background: #e0e0e0;
+  z-index: 0;
+  transform: translateY(-50%);
+  left: 50%;
+}
+
+.progress-step.five-step .step-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  color: #bdbdbd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.45rem;
+  margin-bottom: 12px;
+  z-index: 1;
+  border: 2px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+
+/* All completed (done) steps: green */
+.progress-step.five-step.completed .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.completed .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Submitted: green */
+.progress-step.five-step.submitted .step-circle,
+.progress-step.five-step.completed.submitted .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.submitted .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Under Review: blue */
+.progress-step.five-step.under-review .step-circle,
+.progress-step.five-step.current.under-review .step-circle {
+  background: #1976d2 !important;
+  border-color: #1976d2 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.under-review .step-label,
+.progress-step.five-step.current.under-review .step-label {
+  color: #1976d2 !important;
+  font-weight: 700;
+}
+
+/* Needs Revision: yellow/orange, hollow unless completed */
+.progress-step.five-step.needs-revision .step-circle {
+  border-color: #ffb300 !important;
+  background: #fff !important;
+  color: #ffb300 !important;
+}
+.progress-step.five-step.needs-revision .step-label {
+  color: #bfa100 !important;
+  font-weight: 700;
+}
+
+/* Completed Needs Revision: solid yellow/orange */
+.progress-step.five-step.completed.needs-revision .step-circle {
+  background: #ffb300 !important;
+  border-color: #ffb300 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.completed.needs-revision .step-label {
+  color: #bfa100 !important;
+  font-weight: 700;
+}
+
+/* Payment Pending: yellow */
+.progress-step.five-step.payment-pending .step-circle,
+.progress-step.five-step.current.payment-pending .step-circle {
+  background: #ffe066 !important;
+  border-color: #ffe066 !important;
+  color: #7a5d00 !important;
+}
+.progress-step.five-step.payment-pending .step-label,
+.progress-step.five-step.current.payment-pending .step-label {
+  color: #bfa100 !important;
+  font-weight: 700;
+}
+
+/* Payment Recieved: green */
+.progress-step.five-step.payment-recieved .step-circle,
+.progress-step.five-step.current.payment-recieved .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.payment-recieved .step-label,
+.progress-step.five-step.current.payment-recieved .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Payment Failed: red */
+.progress-step.five-step.payment-failed .step-circle,
+.progress-step.five-step.current.payment-failed .step-circle {
+  background: #e53935 !important;
+  border-color: #e53935 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.payment-failed .step-label,
+.progress-step.five-step.current.payment-failed .step-label {
+  color: #e53935 !important;
+  font-weight: 700;
+}
+
+/* Inspecting: blue */
+.progress-step.five-step.inspecting .step-circle,
+.progress-step.five-step.current.inspecting .step-circle {
+  background: #1976d2 !important;
+  border-color: #1976d2 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.inspecting .step-label,
+.progress-step.five-step.current.inspecting .step-label {
+  color: #1976d2 !important;
+  font-weight: 700;
+}
+
+/* Approved: green */
+.progress-step.five-step.approved .step-circle,
+.progress-step.five-step.current.approved .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.approved .step-label,
+.progress-step.five-step.current.approved .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Current step: glowing outline in step color */
+.progress-step.five-step.current .step-circle {
+  background: #1976d2 !important; /* Blue for Under Review */
+  border-color: #1976d2 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 6px rgba(25, 118, 210, 0.18), 0 2px 8px rgba(0,0,0,0.04);
+  filter: none;
+}
+.progress-step.five-step.current.under-review .step-circle {
+  box-shadow: 0 0 0 6px rgba(25, 118, 210, 0.25), 0 2px 8px rgba(0,0,0,0.04);
+}
+.progress-step.five-step.current.needs-revision .step-circle {
+  box-shadow: 0 0 0 6px rgba(255, 179, 0, 0.25), 0 2px 8px rgba(0,0,0,0.04);
+}
+.progress-step.five-step.current.payment-pending .step-circle {
+  box-shadow: 0 0 0 6px rgba(255, 224, 102, 0.25), 0 2px 8px rgba(0,0,0,0.04);
+}
+.progress-step.five-step.current.payment-recieved .step-circle {
+  box-shadow: 0 0 0 6px rgba(67,160,71,0.18), 0 2px 8px rgba(0,0,0,0.04);
+}
+.progress-step.five-step.current.payment-failed .step-circle {
+  box-shadow: 0 0 0 6px rgba(229, 57, 53, 0.25), 0 2px 8px rgba(0,0,0,0.04);
+}
+.progress-step.five-step.current.inspecting .step-circle {
+  box-shadow: 0 0 0 6px rgba(25, 118, 210, 0.25), 0 2px 8px rgba(0,0,0,0.04);
+}
+.progress-step.five-step.current.approved .step-circle {
+  box-shadow: 0 0 0 6px rgba(67,160,71,0.18), 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Incomplete/unreached steps: faded */
+.progress-step.five-step:not(.completed):not(.current) .step-circle {
+  background: #f5f5f5 !important;
+  color: #bdbdbd !important;
+  border-color: #e0e0e0 !important;
+  filter: grayscale(0.5) brightness(1.1);
+}
+.progress-step.five-step:not(.completed):not(.current) .step-label {
+  color: #888 !important;
+  font-weight: 500;
+}
+
+/* White background, soft shadow, rounded lines for progress bar */
+.progress-bar.five-steps {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 18px 24px 10px 24px;
+}
+
+.progress-bar.five-steps::before {
+  display: none !important;
+}
+
+/* --- Progress Steps: Enhanced Color and Style --- */
+.progress-step.five-step.current .step-circle {
+  background: #1976d2 !important; /* Blue for Under Review */
+  border-color: #1976d2 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 6px rgba(25, 118, 210, 0.18), 0 2px 8px rgba(0,0,0,0.04);
+  filter: none;
+}
+.progress-step.five-step.current .step-circle svg {
+  color: #fff !important;
+}
+.progress-step.five-step.current .step-label {
+  color: #1976d2 !important;
+  font-weight: 700;
+}
+
+/* Submitted: green */
+.progress-step.five-step.submitted .step-circle,
+.progress-step.five-step.completed.submitted .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.submitted .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Payment: yellow */
+.progress-step.five-step.payment-pending .step-circle,
+.progress-step.five-step.current.payment-pending .step-circle {
+  background: #ffe066 !important;
+  border-color: #ffe066 !important;
+  color: #7a5d00 !important;
+}
+.progress-step.five-step.payment-pending .step-label,
+.progress-step.five-step.current.payment-pending .step-label {
+  color: #bfa100 !important;
+  font-weight: 700;
+}
+
+/* Payment Recieved: green */
+.progress-step.five-step.payment-recieved .step-circle,
+.progress-step.five-step.current.payment-recieved .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.payment-recieved .step-label,
+.progress-step.five-step.current.payment-recieved .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Payment Failed: red */
+.progress-step.five-step.payment-failed .step-circle,
+.progress-step.five-step.current.payment-failed .step-circle {
+  background: #e53935 !important;
+  border-color: #e53935 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.payment-failed .step-label,
+.progress-step.five-step.current.payment-failed .step-label {
+  color: #e53935 !important;
+  font-weight: 700;
+}
+
+/* Inspecting: blue */
+.progress-step.five-step.inspecting .step-circle,
+.progress-step.five-step.current.inspecting .step-circle {
+  background: #1976d2 !important;
+  border-color: #1976d2 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.inspecting .step-label,
+.progress-step.five-step.current.inspecting .step-label {
+  color: #1976d2 !important;
+  font-weight: 700;
+}
+
+/* Approved: green */
+.progress-step.five-step.approved .step-circle,
+.progress-step.five-step.current.approved .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+}
+.progress-step.five-step.approved .step-label,
+.progress-step.five-step.current.approved .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Unreached steps: faded */
+.progress-step.five-step:not(.completed):not(.current) .step-circle {
+  background: #f5f5f5 !important;
+  color: #bdbdbd !important;
+  border-color: #e0e0e0 !important;
+  filter: grayscale(0.5) brightness(1.1);
+}
+.progress-step.five-step:not(.completed):not(.current) .step-label {
+  color: #888 !important;
+  font-weight: 500;
+}
+
+/* Force all completed steps to green, even if they have a status color class */
+.progress-step.five-step.completed .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.progress-step.five-step.completed .step-label {
+  color: #43a047 !important;
+  font-weight: 700 !important;
+}
+
+/* Make the progress line after a completed step green */
+.progress-step.five-step.completed:not(:last-child)::after {
+  background: #43a047 !important;
+}
+
+/* Endless loading animation for the progress line after the current done step */
+.progress-step.five-step.completed.current:not(:last-child)::after {
+  background: linear-gradient(90deg, #43a047 25%, #66bb6a 50%, #43a047 75%);
+  background-size: 200% 100%;
+  animation: progressLineShimmer 1.2s linear infinite;
+}
+
+@keyframes progressLineShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Shimmer animation for the progress line after the last completed step (robust, endlessly loading) */
+.progress-step.five-step.last-completed:not(:last-child)::after {
+  background: linear-gradient(90deg, #43a047 25%, #66bb6a 50%, #43a047 75%) !important;
+  background-size: 200% 100% !important;
+  background-position: 200% 0 !important;
+  animation: progressLineShimmer 1.2s linear infinite !important;
+  transition: none !important;
+}
+@keyframes progressLineShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* All steps: green border and label except needs revision */
+.progress-step.five-step:not(.needs-revision) .step-circle {
+  border-color: #43a047 !important;
+  background: #fff !important;
+  color: #43a047 !important;
+}
+.progress-step.five-step:not(.needs-revision) .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Needs Revision: yellow/orange */
+.progress-step.five-step.needs-revision .step-circle {
+  border-color: #ffb300 !important;
+  background: #fff !important;
+  color: #ffb300 !important;
+}
+.progress-step.five-step.needs-revision .step-label {
+  color: #bfa100 !important;
+  font-weight: 700;
+}
+
+/* Completed steps: solid green */
+.progress-step.five-step.completed .step-circle {
+  background: #43a047 !important;
+  border-color: #43a047 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.progress-step.five-step.completed .step-label {
+  color: #43a047 !important;
+  font-weight: 700 !important;
+}
+
+/* Current step: green border, white background, green icon */
+.progress-step.five-step.current:not(.completed):not(.needs-revision) .step-circle {
+  border-color: #43a047 !important;
+  background: #fff !important;
+  color: #43a047 !important;
+  box-shadow: 0 0 0 6px rgba(67, 160, 71, 0.18), 0 2px 8px rgba(0,0,0,0.04);
+}
+.progress-step.five-step.current:not(.completed):not(.needs-revision) .step-label {
+  color: #43a047 !important;
+  font-weight: 700;
+}
+
+/* Icon color for hollow steps */
+.progress-step.five-step:not(.completed) .step-circle svg {
+  color: #43a047 !important;
+}
+
+/* Icon color for completed steps */
+.progress-step.five-step.completed .step-circle svg {
+  color: #fff !important;
+}
+
+/* Icon color for hollow Needs Revision step */
+.progress-step.five-step.needs-revision:not(.completed) .step-circle svg {
+  color: #ffb300 !important;
+}
+/* Icon color for completed Needs Revision step */
+.progress-step.five-step.completed.needs-revision .step-circle svg {
+  color: #fff !important;
 } 

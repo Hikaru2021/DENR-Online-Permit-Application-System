@@ -43,7 +43,7 @@
 /* Dashboard Boxes */
 .dashboard-boxes {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     margin-bottom: 0.5rem;
     width: 100%;
@@ -95,7 +95,7 @@
 }
 
 .box.pending {
-    border-left: 4px solid #FFB74D;
+    border-left: 4px solid #FFC107;
 }
 
 .box.review {
@@ -103,11 +103,27 @@
 }
 
 .box.approved {
-    border-left: 4px solid #81C784;
+    border-left: 4px solid #43A047;
 }
 
 .box.rejected {
-    border-left: 4px solid #E57373;
+    border-left: 4px solid #E53935;
+}
+
+.box.payments {
+    border-left: 4px solid #00897B;
+}
+
+.box.inspecting {
+    border-left: 4px solid #1976D2;
+}
+
+.box.completed {
+    border-left: 4px solid #8E24AA;
+}
+
+.box.needs-revision {
+    border-left: 4px solid #FF7043;
 }
 
 /* Dashboard Grid */
@@ -354,6 +370,9 @@
     .dashboard-grid {
         grid-template-columns: 2fr 1fr;
     }
+    .dashboard-boxes {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -386,9 +405,7 @@
         width: 100vw;
     }
     .dashboard-boxes {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        grid-template-columns: 1fr;
         gap: 12px;
         width: 100vw;
         margin-bottom: 16px;
@@ -591,31 +608,35 @@
 
 .dashboard-chart-legend {
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
-    gap: 1.25rem;
-    padding: 0.75rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+    padding: 0.25rem 0;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
     width: 100%;
 }
 
 .dashboard-legend-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
+    min-width: 80px;
+}
+
+.dashboard-legend-label {
+    font-size: 0.85rem;
+    color: #333;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .dashboard-legend-color {
     width: 14px;
     height: 14px;
     border-radius: 3px;
-}
-
-.dashboard-legend-label {
-    font-size: 0.875rem;
-    color: #555;
-    font-weight: 500;
+    flex-shrink: 0;
 }
 
 .dashboard-legend-submitted {
@@ -627,15 +648,31 @@
 }
 
 .dashboard-legend-needs-revision {
-    background-color: #FF9800;
+    background-color: #FF7043;
 }
 
 .dashboard-legend-approved {
-    background-color: #81C784;
+    background-color: #43A047;
 }
 
 .dashboard-legend-rejected {
-    background-color: #E57373;
+    background-color: #E53935;
+}
+
+.dashboard-legend-payments {
+    background-color: #00897B;
+}
+
+.dashboard-legend-inspecting {
+    background-color: #1976D2;
+}
+
+.dashboard-legend-completed {
+    background-color: #8E24AA;
+}
+
+.dashboard-legend-pending {
+    background-color: #FFC107;
 }
 
 .total-count {
@@ -664,6 +701,7 @@
     display: flex;
     flex-direction: column;
     max-height: 340px;
+    margin-bottom: 2rem;
 }
 
 .calendar-container {
@@ -1032,6 +1070,7 @@
     flex-direction: column;
     padding-bottom: 1rem;
     max-height: 340px;
+    margin-bottom: 2rem;
 }
 
 .dashboard-analytics-container {
@@ -1073,15 +1112,15 @@
 }
 
 .dashboard-status-item.needs-revision .dashboard-status-color {
-    background-color: #FF9800;
+    background-color: #FF7043;
 }
 
 .dashboard-status-item.approved .dashboard-status-color {
-    background-color: #81C784;
+    background-color: #43A047;
 }
 
 .dashboard-status-item.rejected .dashboard-status-color {
-    background-color: #E57373;
+    background-color: #E53935;
 }
 
 .dashboard-status-label {
@@ -1118,4 +1157,54 @@
     .dashboard-container {
         padding: 1rem;
     }
+}
+
+.calendar-modal-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+}
+.calendar-modal-status.submitted {
+    background-color: #fff3cd;
+    color: #856404;
+}
+.calendar-modal-status.under-review {
+    background-color: #BBDEFB;
+    color: #1565C0;
+}
+.calendar-modal-status.needs-revision {
+    background-color: #FFCCBC;
+    color: #FF7043;
+}
+.calendar-modal-status.approved {
+    background-color: #C8E6C9;
+    color: #388E3C;
+}
+.calendar-modal-status.rejected {
+    background-color: #FFCDD2;
+    color: #E53935;
+}
+.calendar-modal-status.payment-pending {
+    background-color: #B2DFDB;
+    color: #00897B;
+}
+.calendar-modal-status.payment-recieved {
+    background-color: #E1BEE7;
+    color: #8E24AA;
+}
+.calendar-modal-status.payment-failed {
+    background-color: #FFE0B2;
+    color: #F57C00;
+}
+.calendar-modal-status.inspecting {
+    background-color: #BBDEFB;
+    color: #1976D2;
+}
+.calendar-modal-status.completed {
+    background-color: #E1BEE7;
+    color: #8E24AA;
 }

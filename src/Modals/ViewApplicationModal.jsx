@@ -134,7 +134,7 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
           <div className="content-section">
             <div className="section-header">
               <FaFileAlt className="section-icon" />
-              <h3>Required Documents</h3>
+              <h3>Documents</h3>
             </div>
             <div className="section-content">
               {isLoading ? (

@@ -41,11 +41,11 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
     1: 'Application submitted on [date_now with time]. Review will begin shortly.',
     2: 'Application is under review as of [date_now with time].',
     3: 'Revision required. Please submit the revised application by [revision_deadline]',
-    4: 'Approved on [date_now]. Further instructions will be sent.',
-    5: 'Payment pending. Please complete the payment by [payment_deadline].',
+    4: 'Approved on [date_now with time]. Further instructions will be sent.',
+    5: 'Your application has been rejected. If you have any questions, please contact us.',
     6: 'Payment pending. Please complete the payment by [payment_deadline].',
     7: 'Payment confirmed on [date_now with time]. Next steps will follow.',
-    8: 'Payment failed. Please complete the payment by [newpayment_deadline].',
+    8: 'Payment failed. Please complete the payment by [insert deadline date].',
     9: 'Inspection scheduled. Please be prepared and ensure all necessary documents are available for the inspection.',
     10: 'Process completed on [date_now with time].'
   };
@@ -226,9 +226,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
         throw new Error('Please provide revision instructions');
       }
 
-      if (!comment.trim() && status !== '3') {
-        throw new Error('Please provide a comment');
-      }
+      // Official comment is now optional (nullable)
 
       // Convert status to integer for database
       const numericStatus = parseInt(status, 10);
@@ -523,8 +521,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                             {formatDate(comment.comment_date)}
                           </span>
                         </div>
-                        
-                        {comment.official_comment && (
+                        {comment.official_comment && comment.official_comment.trim() && (
                           <div className="comment-content">
                             <h4>Official Comment:</h4>
                             <div 
@@ -533,7 +530,6 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                             />
                           </div>
                         )}
-                        
                         {comment.revision_comment && (
                           <div className="revision-content">
                             <h4>Revision Instructions:</h4>
@@ -544,7 +540,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
                           </div>
                         )}
                       </div>
-                    ))}
+                    )).filter(commentElement => commentElement.props.children.some(child => child && child.props && ((child.props.children && child.props.children[1] && child.props.children[1].props && child.props.children[1].props.dangerouslySetInnerHTML && child.props.children[1].props.dangerouslySetInnerHTML.__html.trim()) || (child.props.children && child.props.children[2] && child.props.children[2].props && child.props.children[2].props.dangerouslySetInnerHTML && child.props.children[2].props.dangerouslySetInnerHTML.__html.trim()))))}
                   </div>
                 ) : (
                   <div className="no-comments">No comments available for this application</div>
