@@ -2060,4 +2060,19 @@ div.progress-step.rejected.current > .step-circle {
 /* Icon color for completed Needs Revision step */
 .progress-step.five-step.completed.needs-revision .step-circle svg {
   color: #fff !important;
+}
+
+.shared-table,
+.application-table,
+.one-line-table {
+  table-layout: fixed !important;
+}
+
+.status-col, .status-col th, .status-col td {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap !important;
 } 

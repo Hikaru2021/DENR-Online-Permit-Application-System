@@ -160,11 +160,14 @@
 
 /* Status Badges */
 .status-badge {
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 1.5rem;
+  min-width: 150px;
+  display: inline-block;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
-  display: inline-block;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .status-pending {
@@ -1141,8 +1144,11 @@
 }
 
 .ref-col {
-  width: 1%;
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 160px;
   text-align: left;
+  white-space: nowrap;
 }
 
 .title-col {
@@ -1190,10 +1196,13 @@
   text-overflow: unset;
 }
 
-.status-col {
-  width: 0.5%;
-  white-space: nowrap;
+.status-col, .status-col th, .status-col td {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
   text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap !important;
 }
 
 .shared-table {
@@ -1216,5 +1225,28 @@
 .table-pagination-wrapper .pagination-container {
   flex-shrink: 0;
   margin-top: 0 !important;
+}
+
+.shared-table,
+.application-table,
+.one-line-table {
+  table-layout: fixed !important;
+}
+
+.status-col, .status-col th, .status-col td {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap !important;
+}
+
+.submission-date-col {
+  width: 160px !important;
+  min-width: 140px !important;
+  max-width: 200px;
+  text-align: center;
+  white-space: nowrap;
 }
 

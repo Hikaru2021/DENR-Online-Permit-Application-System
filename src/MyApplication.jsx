@@ -698,7 +698,7 @@ function MyApplication() {
                         <th className="title-col">Title</th>
                         <th>Type</th>
                         <th className="status-col th-center">Status</th>
-                        <th className="th-center">Submission Date</th>
+                        <th className="submission-date-col th-center">Submission Date</th>
                         <th className="th-center">Actions</th>
                       </tr>
                     </thead>
@@ -711,7 +711,7 @@ function MyApplication() {
                           <td className="status-col td-center">
                             <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span>
                           </td>
-                          <td className="td-center">{formatDateMMDDYYYY(application.submissionDate)}</td>
+                          <td className="submission-date-col td-center">{formatDateMMDDYYYY(application.submissionDate)}</td>
                           <td className="td-center">
                             <div className="action-buttons">
                               <button 
