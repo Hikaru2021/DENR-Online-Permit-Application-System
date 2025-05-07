@@ -168,7 +168,7 @@ function ApplicationList() {
       const transformedApplications = user_applications.map(app => ({
         id: app.id,
         referenceNumber: `REF-${app.id.toString().padStart(6, '0')}`,
-        application_id: `APP-${app.id.toString().padStart(6, '0')}`,
+        application_id: `REF-${app.id.toString().padStart(6, '0')}`,
         applicant_name: app.full_name,
         title: app.applications.title,
         type: app.applications.type,
@@ -1069,7 +1069,7 @@ function ApplicationList() {
               </div>
               <div className="modal-section">
                 <h3><FaClock /> Submitted Date</h3>
-                <p>{formatTime12hr(selectedApplication.submitted_at)}</p>
+                <p>{formatDateMMDDYYYY(selectedApplication.submitted_at)} at {formatTime12hr(selectedApplication.submitted_at)}</p>
               </div>
               {selectedApplication.notes && (
                 <div className="modal-section">
