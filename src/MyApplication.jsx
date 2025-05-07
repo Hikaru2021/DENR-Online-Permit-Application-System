@@ -696,7 +696,7 @@ function MyApplication() {
                       <tr>
                         <th className="ref-col">Reference #</th>
                         <th className="title-col">Title</th>
-                        <th>Type</th>
+                        <th className="type-col">Type</th>
                         <th className="status-col th-center">Status</th>
                         <th className="submission-date-col th-center">Submission Date</th>
                         <th className="th-center">Actions</th>
@@ -707,7 +707,7 @@ function MyApplication() {
                         <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
                           <td className="ref-col"><span className="nowrap-text">{application.referenceNumber}</span></td>
                           <td className="title-col"><DraggableTitle>{application.title}</DraggableTitle></td>
-                          <td>{application.type}</td>
+                          <td className="type-col">{application.type}</td>
                           <td className="status-col td-center">
                             <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span>
                           </td>

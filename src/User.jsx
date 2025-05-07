@@ -433,14 +433,14 @@ const User = () => {
         ) : (
           <div className="table-pagination-wrapper">
             <div className="table-container">
-          <table className="shared-table">
+          <table className="shared-table user-table">
             <thead>
               <tr>
-                <th></th>
-                <th>Username</th>
-                <th>Email</th>
+                <th className="profile-picture-col"></th>
+                <th className="user-name-col">Username</th>
+                <th className="title-col">Email</th>
                 <th className="th-center">Role Permission</th>
-                <th>Created At</th>
+                <th className="created-at-col">Created At</th>
                 <th className="th-center">Status</th>
                 <th className="th-center">Actions</th>
               </tr>
@@ -449,7 +449,7 @@ const User = () => {
                   {currentUsers.length > 0 ? (
                     currentUsers.map((user) => (
                   <tr key={user.id}>
-                    <td>
+                    <td className="profile-picture-col">
                       <div className="profile-picture-container">
                         {user.profile_link ? (
                           <img 
@@ -468,8 +468,8 @@ const User = () => {
                         )}
                       </div>
                     </td>
-                    <td>{user.user_name || "N/A"}</td>
-                    <td>{user.email || "N/A"}</td>
+                    <td className="user-name-col">{user.user_name || "N/A"}</td>
+                    <td className="title-col">{user.email || "N/A"}</td>
                     <td className="td-center">
                       <select
                         value={user.role_id || ""}
@@ -481,7 +481,7 @@ const User = () => {
                         <option value="3">User</option>
                       </select>
                     </td>
-                    <td>{formatDateMMDDYYYY(user.created_at)}</td>
+                    <td className="created-at-col">{formatDateMMDDYYYY(user.created_at)}</td>
                     <td className="td-center">
                       <select
                         value={user.status || ""}

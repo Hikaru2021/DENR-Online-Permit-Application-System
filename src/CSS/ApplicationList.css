@@ -1783,14 +1783,16 @@
 }
 
 .ref-col {
-  width: 1%;
+  width: 0.5% !important;
+  min-width: unset !important;
+  max-width: unset !important;
   text-align: left;
 }
 
 .title-col {
-  width: 22%;
-  min-width: 120px;
-  max-width: 220px;
+  width: 20% !important;
+  min-width: 125px !important;
+  max-width: 200px !important;
 }
 
 .nowrap-text {
@@ -1826,4 +1828,14 @@
   height: auto !important;
   max-height: none !important;
   overflow-y: auto !important;
+}
+
+.shared-table .ref-col {
+  width: 12% !important;
+  min-width: 120px !important;
+  max-width: 180px !important;
+}
+
+.shared-table .applicant-col, .shared-table td.applicant-col {
+  text-transform: capitalize;
 }

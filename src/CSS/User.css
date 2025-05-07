@@ -877,7 +877,18 @@ tr:hover {
 .shared-table {
   width: 1200px !important;
   margin: 0 auto !important;
+  table-layout: fixed !important;
 }
+
+.shared-table th.profile-picture-col,
+.shared-table td.profile-picture-col {
+  width: 125px !important;
+  min-width: 125px !important;
+  max-width: 125px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 .table-pagination-wrapper {
   display: flex;
   flex-direction: column;
@@ -891,4 +902,29 @@ tr:hover {
 .table-pagination-wrapper .pagination-container {
   flex-shrink: 0;
   margin-top: auto;
+}
+
+.shared-table .created-at-col {
+  text-align: center;
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+}
+
+.title-col {
+  width: 20% !important;
+  min-width: 200px !important;
+  max-width: 400px !important;
+}
+
+.user-table .title-col {
+  width: 25% !important;
+  min-width: 200px !important;
+  max-width: 400px !important;
+}
+
+.user-table .user-name-col {
+  width: 15% !important;
+  min-width: 120px !important;
+  max-width: 220px !important;
 }

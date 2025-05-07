@@ -150,6 +150,7 @@ function ApplicationList() {
           contact_number,
           address,
           purpose,
+          email_address,
           applications (
             id,
             title,
@@ -157,10 +158,6 @@ function ApplicationList() {
             description,
             application_fee,
             processing_fee
-          ),
-          users (
-            id,
-            email
           )
         `)
         .order('created_at', { ascending: false });
@@ -182,7 +179,7 @@ function ApplicationList() {
         notes: "",
         // User details
         fullName: app.full_name,
-        email: app.users?.email,
+        email: app.email_address,
         contactNumber: app.contact_number,
         address: app.address,
         purpose: app.purpose,
@@ -808,6 +805,7 @@ function ApplicationList() {
                 <div key={application.id} className="application-card-mobile">
                   <div><strong>Reference #:</strong> {application.referenceNumber}</div>
                   <div><strong>Applicant:</strong> {application.applicant_name}</div>
+                  <div><strong>Email:</strong> {application.email}</div>
                   <div><strong>Title:</strong> {application.title}</div>
                   <div><strong>Type:</strong> {application.type}</div>
                   <div><strong>Status:</strong> <span className={`status-badge ${application.status.toLowerCase().replace(' ', '-')}`}>{application.status}</span></div>
@@ -854,9 +852,9 @@ function ApplicationList() {
             <table className="shared-table">
               <thead>
                 <tr>
-                  <th>Reference #</th>
+                  <th className="ref-col">Reference #</th>
                   <th>Applicant</th>
-                  <th>Title</th>
+                  <th className="title-col">Title</th>
                   <th className="th-center">Type</th>
                   <th className="th-center">Submitted Date</th>
                   <th className="th-center">Status</th>
@@ -871,9 +869,9 @@ function ApplicationList() {
                 ) : (
                   currentItems.map((application) => (
                     <tr key={application.id} className={deletingRowId === application.id ? 'fade-out-row' : ''}>
-                      <td>{application.referenceNumber}</td>
+                      <td className="ref-col">{application.referenceNumber}</td>
                       <td>{application.applicant_name}</td>
-                      <td><DraggableTitle>{application.title}</DraggableTitle></td>
+                      <td className="title-col"><DraggableTitle>{application.title}</DraggableTitle></td>
                       <td className="td-center">{application.type}</td>
                       <td className="td-center">{formatDateMMDDYYYY(application.submitted_at)}</td>
                       <td className="td-center">

@@ -1256,3 +1256,14 @@
   white-space: nowrap;
 }
 
+.one-line-table .title-col {
+  width: 32% !important;
+  min-width: 180px !important;
+  max-width: 350px !important;
+}
+
+.one-line-table .type-col,
+.one-line-table td.type-col {
+  text-align: center;
+}
+
