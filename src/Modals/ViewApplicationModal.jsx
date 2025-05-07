@@ -140,7 +140,7 @@ const ViewApplicationModal = ({ isOpen, onClose, application, onStartApplication
               {isLoading ? (
                 <div className="loading-indicator">Loading documents...</div>
               ) : documents.length === 0 ? (
-                <div className="no-documents">No required documents available</div>
+                <div className="no-documents">No documents available</div>
               ) : (
                 <div className="documents-grid">
                   {documents.map((doc) => {
