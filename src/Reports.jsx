@@ -6,6 +6,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { supabase } from "./library/supabaseClient";
 import { useReactToPrint } from 'react-to-print';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
 
@@ -817,30 +818,65 @@ function Reports() {
 
   // Export to PDF function
   const exportToPDF = async () => {
-    if (!reportTemplateRef.current) return;
-    
+    if (!reportData || !reportData.applications || reportData.applications.length === 0) return;
     try {
       setGeneratingReport(true);
-      const report = reportTemplateRef.current;
-      const canvas = await html2canvas(report, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      // Title and header
+      pdf.setFontSize(18);
+      pdf.text(reportData.title, 14, 18);
+      pdf.setFontSize(12);
+      pdf.text('Department of Environment and Natural Resources', 14, 26);
+      pdf.text('Online Permit Application System', 14, 34);
+      pdf.setFontSize(10);
+      pdf.text(`Period: ${reportData.dateLabel}`, 14, 42);
+      pdf.text(`Total Applications: ${reportData.totalApplications}`, 14, 48);
+      pdf.text(`Generated On: ${formatDateMMDDYYYY(reportData.generatedDate)}`, 14, 54);
+
+      // Table columns
+      const columns = [
+        { header: 'Ref #', dataKey: 'ref' },
+        { header: 'Full Name', dataKey: 'fullName' },
+        { header: 'Contact', dataKey: 'contact' },
+        { header: 'Address', dataKey: 'address' },
+        { header: 'Purpose', dataKey: 'purpose' },
+        { header: 'Submission Date', dataKey: 'submissionDate' }
+      ];
+      // Table rows
+      const rows = reportData.applications.map(app => ({
+        ref: `REF-${app.id.toString().padStart(6, '0')}`,
+        fullName: app.full_name || 'N/A',
+        contact: app.contact_number || 'N/A',
+        address: app.address || 'N/A',
+        purpose: app.purpose || 'N/A',
+        submissionDate: formatDateMMDDYYYY(app.created_at)
+      }));
+
+      // Use autoTable (ESM style)
+      autoTable(pdf, {
+        startY: 50,
+        head: [columns.map(col => col.header)],
+        body: rows.map(row => columns.map(col => row[col.dataKey])),
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [76, 175, 80], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] },
+        margin: { left: 14, right: 14 },
+        tableWidth: 'auto',
+        didDrawPage: (data) => {
+          // Add the report title to the bottom-right of every page
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          pdf.setFontSize(10);
+          pdf.text(
+            `${reportData.title} - Page ${data.pageNumber}`,
+            pageWidth - pdf.getTextWidth(`${reportData.title} - Page ${data.pageNumber}`) - 14,
+            pageHeight - 10
+          );
+        }
       });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      
-      pdf.addImage(imgData, 'PNG', imgX, 10, imgWidth * ratio, imgHeight * ratio);
-      
-      // Generate a standardized filename based on report period
+
+      // Save the PDF
       let fileName = '';
       if (reportPeriod === "daily") {
         const reportDate = new Date(selectedDate);
@@ -853,7 +889,6 @@ function Reports() {
       } else if (reportPeriod === "yearly") {
         fileName = `YearlyReport_${reportYear}.pdf`;
       }
-      
       pdf.save(fileName);
     } catch (err) {
       console.error('Error generating PDF:', err);
@@ -953,12 +988,17 @@ function Reports() {
       // Get status names for display
       const getStatusName = (statusCode) => {
         switch(statusCode) {
-          case 1: return 'Under Review';
-          case 2: return 'Additional Requirements';
-          case 3: return 'On Hold';
+          case 1: return 'Submitted';
+          case 2: return 'Under Review';
+          case 3: return 'Needs Revision';
           case 4: return 'Approved';
           case 5: return 'Rejected';
-          default: return 'Pending';
+          case 6: return 'Payment Pending';
+          case 7: return 'Payment Recieved';
+          case 8: return 'Payment Failed';
+          case 9: return 'Inspecting';
+          case 10: return 'Completed';
+          default: return 'Unknown';
         }
       };
       
@@ -1015,12 +1055,16 @@ function Reports() {
       
       // Calculate status statistics
       const statusCounts = {
-        'Pending': 0,
+        'Submitted': 0,
         'Under Review': 0,
-        'Additional Requirements': 0,
-        'On Hold': 0,
+        'Needs Revision': 0,
         'Approved': 0,
-        'Rejected': 0
+        'Rejected': 0,
+        'Payment Pending': 0,
+        'Payment Recieved': 0,
+        'Payment Failed': 0,
+        'Inspecting': 0,
+        'Completed': 0
       };
       
       // Count applications by status
@@ -1205,19 +1249,18 @@ function Reports() {
 
   // Get the status name from status ID
   const getStatusName = (statusCode) => {
-    switch (statusCode) {
-      case 1:
-        return 'Submitted';
-      case 2:
-        return 'Under Review';
-      case 3:
-        return 'Needs Revision';
-      case 4:
-        return 'Approved';
-      case 5:
-        return 'Rejected';
-      default:
-        return 'Unknown';
+    switch(statusCode) {
+      case 1: return 'Submitted';
+      case 2: return 'Under Review';
+      case 3: return 'Needs Revision';
+      case 4: return 'Approved';
+      case 5: return 'Rejected';
+      case 6: return 'Payment Pending';
+      case 7: return 'Payment Recieved';
+      case 8: return 'Payment Failed';
+      case 9: return 'Inspecting';
+      case 10: return 'Completed';
+      default: return 'Unknown';
     }
   };
 
