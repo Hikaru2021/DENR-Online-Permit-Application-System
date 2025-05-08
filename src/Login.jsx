@@ -168,6 +168,10 @@ const Login = () => {
             {fieldErrors.password && <small className="field-error">{fieldErrors.password}</small>}
           </div>
 
+          <div className="forgot-password-link" style={{ textAlign: 'right', marginBottom: '1rem' }}>
+            <Link to="/forgot-password" className="auth-link">Forgot Password?</Link>
+          </div>
+
           <button 
             type="submit" 
             className={`auth-submit-button ${isLoading ? 'loading' : ''}`}

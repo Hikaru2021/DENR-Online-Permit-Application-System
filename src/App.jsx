@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import Login from "./Login";
 import Signup from "./Signup";
@@ -16,22 +16,51 @@ import ErrorPage from "./Components/ErrorPage";
 import RoleProtectedRoute from "./Components/RoleProtectedRoute";
 import NotFound from "./NotFound";
 import AccessDenied from "./Components/AccessDenied";
+import ForgotPassword from "./ForgotPassword";
+import Update from "./Update";
+
+function RecoveryRedirector() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (window.location.hash.includes("type=recovery")) {
+      navigate("/update" + window.location.hash, { replace: true });
+    }
+  }, [navigate]);
+  return null;
+}
 
 function App() {
   return (
     <Router>
+      <RecoveryRedirector />
       <Routes>
         {/* Public routes without layout */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/update" element={<Update />} />
 
         {/* Protected routes with layout */}
         <Route path="/" element={<Layout />}>
-          <Route path="Dashboard" element={<Dashboard />} />
-          <Route path="ApplicationCatalog" element={<ApplicationCatalog />} />
-          <Route path="MyApplication" element={<MyApplication />} />
-          
+          <Route path="Dashboard" element={
+            <RoleProtectedRoute 
+              element={<Dashboard />} 
+              allowedRoles={[1,2,3]} 
+            />
+          } />
+          <Route path="ApplicationCatalog" element={
+            <RoleProtectedRoute 
+              element={<ApplicationCatalog />} 
+              allowedRoles={[1,2,3]} 
+            />
+          } />
+          <Route path="MyApplication" element={
+            <RoleProtectedRoute 
+              element={<MyApplication />} 
+              allowedRoles={[1,2,3]} 
+            />
+          } />
           {/* Admin/Manager only routes */}
           <Route path="User" element={
             <RoleProtectedRoute 
@@ -54,14 +83,21 @@ function App() {
               errorMessage="Only Admin and Manager roles can access reports"
             />
           } />
-          
-          <Route path="Settings" element={<Settings />} />
-          <Route path="application/:id" element={<ApplicationTracking />} />
-          
+          <Route path="Settings" element={
+            <RoleProtectedRoute 
+              element={<Settings />} 
+              allowedRoles={[1,2,3]} 
+            />
+          } />
+          <Route path="application/:id" element={
+            <RoleProtectedRoute 
+              element={<ApplicationTracking />} 
+              allowedRoles={[1,2,3]} 
+            />
+          } />
           {/* Error pages */}
           <Route path="forbidden" element={<AccessDenied requiredRoles={[1, 2]} />} />
           <Route path="not-found" element={<ErrorPage statusCode={404} />} />
-          
           {/* Redirect to not-found if no route matches within layout */}
           <Route path="*" element={<Navigate to="/not-found" replace />} />
         </Route>

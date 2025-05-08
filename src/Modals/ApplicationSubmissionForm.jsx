@@ -3,6 +3,7 @@ import { FaTimes, FaCloudUploadAlt, FaInfoCircle, FaFileAlt, FaMoneyBillWave, Fa
 import { useDropzone } from "react-dropzone";
 import { supabase } from "../library/supabaseClient";
 import "../CSS/ApplicationSubmissionList.css";
+import "../CSS/forms.css";
 
 // Supabase storage constants
 const STORAGE_BUCKET = 'guidelines';
@@ -27,6 +28,7 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [activeStep, setActiveStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -64,34 +66,51 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
   };
 
   const validateStep2 = () => {
+    const errors = {};
     if (!formData.full_name.trim()) {
-      setFormError('Full name is required');
+      errors.full_name = 'Full name is required';
+      setFieldErrors(errors);
+      return false;
+    }
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+      setFieldErrors(errors);
+      return false;
+    }
+    // Simple email regex for validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+      setFieldErrors(errors);
       return false;
     }
     if (!formData.contact_number.trim()) {
-      setFormError('Contact number is required');
+      errors.contact_number = 'Contact number is required';
+      setFieldErrors(errors);
       return false;
     }
     if (!formData.address.trim()) {
-      setFormError('Address is required');
+      errors.address = 'Address is required';
+      setFieldErrors(errors);
       return false;
     }
     if (!formData.purpose.trim()) {
-      setFormError('Purpose is required');
+      errors.purpose = 'Purpose is required';
+      setFieldErrors(errors);
       return false;
     }
+    setFieldErrors({});
     return true;
   };
 
   const handleNextStep = () => {
     setFormError(null);
-
+    setFieldErrors({});
     if (activeStep === 2) {
       if (!validateStep2()) {
         return;
       }
     }
-
     setActiveStep(prev => prev + 1);
   };
 
@@ -387,10 +406,13 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                         onChange={handleInputChange}
                         required
                         placeholder="Enter your full name"
-                        className="form-input"
+                        className={`form-input${fieldErrors.full_name ? ' input-error' : ''}`}
+                        autoComplete="off"
                       />
+                      {fieldErrors.full_name && (
+                        <div className="error-tooltip">{fieldErrors.full_name}</div>
+                      )}
                     </div>
-
                     <div className="form-group">
                       <label htmlFor="email">Email Address</label>
                       <input
@@ -401,10 +423,13 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                         onChange={handleInputChange}
                         required
                         placeholder="Enter your email"
-                        className="form-input"
+                        className={`form-input${fieldErrors.email ? ' input-error' : ''}`}
+                        autoComplete="off"
                       />
+                      {fieldErrors.email && (
+                        <div className="error-tooltip">{fieldErrors.email}</div>
+                      )}
                     </div>
-
                     <div className="form-group">
                       <label htmlFor="contact_number">Contact Number</label>
                       <input
@@ -415,10 +440,13 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                         onChange={handleInputChange}
                         required
                         placeholder="Enter your contact number"
-                        className="form-input"
+                        className={`form-input${fieldErrors.contact_number ? ' input-error' : ''}`}
+                        autoComplete="off"
                       />
+                      {fieldErrors.contact_number && (
+                        <div className="error-tooltip">{fieldErrors.contact_number}</div>
+                      )}
                     </div>
-
                     <div className="form-group">
                       <label htmlFor="address">Address</label>
                       <textarea
@@ -429,10 +457,13 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                         required
                         placeholder="Enter your complete address"
                         rows="3"
-                        className="form-input"
+                        className={`form-input${fieldErrors.address ? ' input-error' : ''}`}
+                        autoComplete="off"
                       />
+                      {fieldErrors.address && (
+                        <div className="error-tooltip">{fieldErrors.address}</div>
+                      )}
                     </div>
-
                     <div className="form-group">
                       <label htmlFor="purpose">Purpose of Application</label>
                       <textarea
@@ -443,8 +474,12 @@ const ApplicationSubmissionForm = ({ isOpen, onClose, application }) => {
                         required
                         placeholder="Describe the purpose of your application"
                         rows="3"
-                        className="form-input"
+                        className={`form-input${fieldErrors.purpose ? ' input-error' : ''}`}
+                        autoComplete="off"
                       />
+                      {fieldErrors.purpose && (
+                        <div className="error-tooltip">{fieldErrors.purpose}</div>
+                      )}
                     </div>
                   </div>
                 </div>
