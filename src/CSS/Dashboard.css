@@ -514,11 +514,14 @@
     }
     .application-list-title {
         font-size: 1.5rem !important;
-        margin-top: 18px !important;
+        margin-top: 30px !important;
     }
     .application-list-header {
-        margin-left: 15px !important;
+        margin-left: 20px !important;
         margin-top: 50px !important;
+    }
+    .application-list-mobile{
+        margin-top: 10px !important;
     }
     .dashboard-title,
     .application-list-title {
@@ -526,6 +529,9 @@
     }
     .application-list-subtitle {
         font-size: 12.8px !important;
+    }
+    .dashboard-mobile-title {
+        margin-top: 45px !important;
     }
 }
 

@@ -38,6 +38,7 @@ function Dashboard() {
     completed: 0
   });
   const [totalApplications, setTotalApplications] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Fetch user and role information
   useEffect(() => {
@@ -162,6 +163,12 @@ function Dashboard() {
       fetchApplicationAnalytics();
     }
   }, [userRole, currentUser]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleCardClick = (status) => {
     let statusFilter = status;
@@ -583,7 +590,7 @@ function Dashboard() {
     <div className="dashboard-container">
       <div className="dashboard-content">
         <div className="application-list-header">
-          <h1 className="application-list-title">Dashboard</h1>
+          <h1 className={`application-list-title${isMobile ? ' dashboard-mobile-title' : ''}`}>Dashboard</h1>
         </div>
         <div className="dashboard-body">
           {/* Application Status Cards */}

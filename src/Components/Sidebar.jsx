@@ -16,6 +16,10 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Minimize sidebar by default on mobile view
+    if (window.innerWidth <= 768) {
+      setMinimized(true);
+    }
     getUserProfile();
   }, []);
 
