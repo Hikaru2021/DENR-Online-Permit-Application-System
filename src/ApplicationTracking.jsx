@@ -74,11 +74,16 @@ const ApplicationTracking = () => {
   // Format date and time helper function
   const formatDateTime = (dateString) => {
     if (!dateString) return { date: '', time: '' };
-    
     const date = new Date(dateString);
+    // Format time as 12-hour with AM/PM
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
     return {
       date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: `${hours}:${minutes} ${ampm}`
     };
   };
 

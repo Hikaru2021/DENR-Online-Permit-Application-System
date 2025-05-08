@@ -54,14 +54,19 @@ const ManageApplicationModal = ({ isOpen, onClose, application, onUpdateStatus }
   const formatDateTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
+    // Format time as 12-hour with AM/PM
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    // Format: 'MMM DD, YYYY, HH:MM AM/PM'
+    const datePart = date.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
+      day: '2-digit'
     });
+    return `${datePart}, ${hours}:${minutes} ${ampm}`;
   };
 
   // Get dynamic status remarks
