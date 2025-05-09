@@ -1655,7 +1655,7 @@ function Reports() {
             <table>
               <thead>
                 <tr>
-                  <th>Application ID</th>
+                  <th>Refrence #</th>
                   <th>Applicant</th>
                   <th>Purpose</th>
                   <th>Date Submitted</th>
@@ -1690,7 +1690,7 @@ function Reports() {
                     
                     return (
                       <tr key={app.id}>
-                        <td>APP-{app.id.toString().padStart(6, '0')}</td>
+                        <td>REF-{app.id.toString().padStart(6, '0')}</td>
                         <td>{app.full_name || 'N/A'}</td>
                         <td>{app.purpose || 'N/A'}</td>
                         <td>{formatDateMMDDYYYY(app.created_at)}</td>
